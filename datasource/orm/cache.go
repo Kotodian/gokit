@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
 	"github.com/Kotodian/gokit/datasource/orm/cache"
 )
 
@@ -35,6 +34,8 @@ func SetCacheEnabled(args ...string) {
 		mc, _ = cache.NewCache("mc", `{"interval":300}`)
 	case "memcache":
 		mc, _ = cache.NewCache("memcache", fmt.Sprintf(`{"server":"memcached:11211", "prefix":"%s", "maxIdleConns":100, "timeout":1}`, args[1]))
+	case "redis":
+		mc, _ = cache.NewCache("redis", "")
 	}
 	InitCache(mc)
 }
@@ -48,7 +49,6 @@ func SaveToMC(obj IBase, ttl time.Duration) {
 	if keyName, ok := getCacheEnabled(obj); ok {
 		saveToMC(keyName, obj, ttl)
 	}
-	return
 }
 
 // GetByMC 在内存中获取对象
