@@ -372,10 +372,10 @@ func (c *Client) ReadPump() {
 			var sendQos byte
 
 			if !trData.IsTelemetry {
-				sendTopic = "/core/ocpp/U/C/" + c.PfEvseID.String()
+				sendTopic = "core/"+ c.Hub.Protocol + "/U/C/" + c.PfEvseID.String()
 				sendQos = 2
 			} else {
-				sendTopic = "/core/ocpp/U/M/" + c.PfEvseID.String()
+				sendTopic = "core/"+ c.Hub.Protocol + "/U/M/" + c.PfEvseID.String()
 				sendQos = 0
 			}
 

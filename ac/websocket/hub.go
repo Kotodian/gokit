@@ -26,8 +26,7 @@ type MqttMessage struct {
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
-	TopicPrefix string
-	Protocol    string
+	Protocol        string
 	// MqttClient MQTT连接
 	MqttClient *mqtt.MQTTClient
 
@@ -50,7 +49,7 @@ type Hub struct {
 	RegClients sync.Map
 }
 
-func NewHub(protocol string, topicPrefix string, username string, password string) *Hub {
+func NewHub(protocol string, username string, password string) *Hub {
 	//监听MQTT信息
 	hostname, _ := os.Hostname()
 	mqClient := mqtt.NewMQTTClient(mqtt.NewMQTTOptions(hostname, username, password, func(c mqttClient.Client) {
@@ -69,7 +68,6 @@ func NewHub(protocol string, topicPrefix string, username string, password strin
 	hub := &Hub{
 		MqttClient:  mqClient,
 		PubMqttMsg:  make(chan MqttMessage, 1000),
-		TopicPrefix: topicPrefix,
 		Protocol:    protocol,
 	}
 	return hub
@@ -98,7 +96,7 @@ func (h *Hub) Run() {
 
 	//监听注册报文
 	g.Go(func(ctx context.Context) (err error) {
-		token := h.MqttClient.GetMQTT().Subscribe(h.TopicPrefix+"core/"+h.Protocol+"/D/R/#", 2, func(mqc mqttClient.Client, m mqttClient.Message) {
+		token := h.MqttClient.GetMQTT().Subscribe("core/"+h.Protocol+"/D/R/#", 2, func(mqc mqttClient.Client, m mqttClient.Message) {
 			var err error
 			topic := m.Topic()
 
@@ -153,8 +151,8 @@ func (h *Hub) Run() {
 	//监听下发给设备的CMD报文
 	g.Go(func(ctx context.Context) (err error) {
 		topics := map[string]byte{
-			h.TopicPrefix + "/core/"+ h.Protocol +"/D/C/#": 2,
-			h.TopicPrefix + "/core/"+ h.Protocol +"/D/M/#": 2,
+			"core/" + h.Protocol + "/D/C/#": 2,
+			"core/" + h.Protocol + "/D/M/#": 2,
 		}
 
 		token := h.MqttClient.GetMQTT().SubscribeMultiple(topics, func(mqc mqttClient.Client, m mqttClient.Message) {
