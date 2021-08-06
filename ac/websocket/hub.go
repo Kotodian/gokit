@@ -26,7 +26,7 @@ type MqttMessage struct {
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
-	Protocol        string
+	Protocol string
 	// MqttClient MQTT连接
 	MqttClient *mqtt.MQTTClient
 
@@ -66,9 +66,9 @@ func NewHub(protocol string, username string, password string) *Hub {
 	}
 
 	hub := &Hub{
-		MqttClient:  mqClient,
-		PubMqttMsg:  make(chan MqttMessage, 1000),
-		Protocol:    protocol,
+		MqttClient: mqClient,
+		PubMqttMsg: make(chan MqttMessage, 1000),
+		Protocol:   protocol,
 	}
 	return hub
 }
@@ -77,16 +77,16 @@ func (h *Hub) SetTR(tr lib.ITranslate) {
 	h.TR = tr
 }
 
-func (h *Hub) SendMsgToDevice(evseID string, msg []byte) error {
-	if c, ok := h.Clients.Load(evseID); ok {
+func (h *Hub) SendMsgToDevice(evse string, msg []byte) error {
+	if c, ok := h.Clients.Load(evse); ok {
 		return c.(*Client).Send(msg)
 	}
-	return fmt.Errorf("evse_id:%s offline", evseID)
+	return fmt.Errorf("sn:%s offline", evse)
 }
 
 // CloseClient 断开连接
-func (h *Hub) CloseClient(evseID string) {
-	h.Clients.Delete(evseID)
+func (h *Hub) CloseClient(evse string) {
+	h.Clients.Delete(evse)
 }
 
 func (h *Hub) Run() {
@@ -173,17 +173,17 @@ func (h *Hub) Run() {
 
 			fmt.Println("go mqtt msg", fmt.Sprintf("%+v", m))
 
-			var evseID string
+			var evse string
 			//根据topic获取sn
 			if topics := strings.Split(topic, "/"); len(topics) < 5 {
 				err = fmt.Errorf("cannot find sn from topic")
 				return
 			} else {
-				evseID = topics[5]
+				evse = topics[5]
 			}
-			fmt.Println("go mqtt msg sn", evseID)
+			fmt.Println("go mqtt msg sn", evse)
 
-			c, ok := h.Clients.Load(evseID)
+			c, ok := h.Clients.Load(evse)
 
 			var _client *Client
 			if !ok {

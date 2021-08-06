@@ -22,7 +22,7 @@ var (
 // Ctx ac上下文
 type Ctx struct {
 	Raw         interface{}
-	EvseID      string
+	evse        string
 	EvseOffset  int
 	Data        map[string]interface{}
 	Log         *log.Entry
@@ -57,8 +57,8 @@ type IMqttBase interface {
 	//GetEvsePubTopic 获取设备常规消息发送的topic
 	GetEvsePubTopics() map[string]byte
 
-	//GetEvseID 获取设备ID
-	GetEvseIDWithTopic(string) string
+	//Getevse 获取设备ID
+	GetevseWithTopic(string) string
 }
 
 // ITranslateTCP mqtt->tcp基本转发
@@ -185,13 +185,13 @@ var evses sync.Map
 // 		ID = data.(string)
 // 		return
 // 	}
-// 	var evseID datasource.UUID
-// 	if evseID, err = datasource.ParseUUID(evse); err != nil {
+// 	var evse datasource.UUID
+// 	if evse, err = datasource.ParseUUID(evse); err != nil {
 // 		return
 // 	}
-// 	reqEvse := &coregw.EvseReq{EvseID: evseID.Uint64()}
+// 	reqEvse := &coregw.EvseReq{evse: evse.Uint64()}
 // 	respEvse := &coregw.EvseResp{}
-// 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("requestID", fmt.Sprintf("%d", time.Now().UnixNano()), "ClientID", evseID.String()))
+// 	ctx := metadata.NewOutgoingContext(context.Background(), metadata.Pairs("requestID", fmt.Sprintf("%d", time.Now().UnixNano()), "ClientID", evse.String()))
 // 	if err = grpc.Invoke(ctx, coregw.LogicServicesServer.Evse, reqEvse, respEvse); err != nil {
 // 		return
 // 	}
@@ -201,10 +201,10 @@ var evses sync.Map
 // 	return
 // }
 
-// LoadEvseIDWithUUID 根据uuid获取evseid
-// func LoadEvseIDWithUUID(topicPrefix, uuid string) (evseID string, err error) {
+// LoadevseWithUUID 根据uuid获取evse
+// func LoadevseWithUUID(topicPrefix, uuid string) (evse string, err error) {
 // 	if data, ok := evses.Load(uuid); ok {
-// 		evseID = data.(string)
+// 		evse = data.(string)
 // 		return
 // 	}
 // 	reqEvse := &coregw.EvseWithTopicPrefixAndUUIDReq{TopicPrefix: topicPrefix, Uuid: uuid}
@@ -215,8 +215,8 @@ var evses sync.Map
 // 		return
 // 	}
 
-// 	evseID = fmt.Sprintf("%d", respEvse.Evse.ID)
-// 	evses.Store(uuid, evseID)
+// 	evse = fmt.Sprintf("%d", respEvse.Evse.ID)
+// 	evses.Store(uuid, evse)
 // 	return
 // }
 
@@ -244,9 +244,9 @@ func (seq Seq) SetCMD(uuid string, cmd uint32) error {
 }
 
 // // TraficSize 进出流量监控
-// func TraficSize(evseID string, inOrOut string, size int) error {
+// func TraficSize(evse string, inOrOut string, size int) error {
 // 	return redis.PublishStreamWithMaxlen("evses:metric", 10000, &common.MetricValue{
-// 		Instance:   evseID,
+// 		Instance:   evse,
 // 		EntryPoint: "trafic",
 // 		Values: map[string]interface{}{
 // 			"value": size,

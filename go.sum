@@ -83,8 +83,12 @@ github.com/HdrHistogram/hdrhistogram-go v1.1.0 h1:6dpdDPTRoo78HxAJ6T1HfMiKSnqhgR
 github.com/HdrHistogram/hdrhistogram-go v1.1.0/go.mod h1:yDgFjdqOqDEKOvasDdhWNXYg9BVp4O+o5f6V/ehm6Oo=
 github.com/Knetic/govaluate v3.0.0+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
+github.com/Kotodian/protocol v0.1.2 h1:Bmab4GrRXJS8KGEDjgj9pAbKFCiT6h0IOuh6f9ru6/w=
+github.com/Kotodian/protocol v0.1.2/go.mod h1:ShCqmhPaVUmAKqt5uhyO7qxUDcsjUGqiBQiD2X9T2D8=
 github.com/Kotodian/protocol v1.0.1 h1:6RRywLPPx2caym8XHXcPWCrq7WhrqV5FlPqGKnDarXI=
 github.com/Kotodian/protocol v1.0.1/go.mod h1:XS9LCHH0jo3P1QR+9XhiiQ+TUDPJvv5GLOVI7smTnrU=
+github.com/Kotodian/protocol v1.0.3 h1:8lKs7AGpjp8JxWl4U4WLjZLw4iHktnylKdCWZs7n3VQ=
+github.com/Kotodian/protocol v1.0.3/go.mod h1:ShCqmhPaVUmAKqt5uhyO7qxUDcsjUGqiBQiD2X9T2D8=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/sprig v2.16.0+incompatible/go.mod h1:y6hNFY5UBTIWBxnzTeuNhlNS5hqE0NB0E6fgfo2Br3o=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
@@ -228,6 +232,8 @@ github.com/edwardhey/beanstalk v0.0.0-20180821021108-0249555409a1 h1:amk4DCWdLbF
 github.com/edwardhey/beanstalk v0.0.0-20180821021108-0249555409a1/go.mod h1:U9J6ZR0PbRB91hscu7YA4v2UwVelJ1NqM4up+nS+rmw=
 github.com/edwardhey/circuit v3.0.0+incompatible h1:maBNnioQQ5MaKp+m2MZPxFyqQkf83Qerv3PhdHPU/QE=
 github.com/edwardhey/circuit v3.0.0+incompatible/go.mod h1:ZxrzppwEBU9HwzjP5YV2WCF0OTZgKEMKn9LmsoPcJoc=
+github.com/edwardhey/fsm v1.0.10 h1:ajw8F7kx2/WTkzBrD/zscS/iJU4Wz9bvFlvQKqINi0E=
+github.com/edwardhey/fsm v1.0.10/go.mod h1:r3rwJub6psh7+k3wxJn8O2orwAc/aLsDqoNWtK+oW8I=
 github.com/edwardhey/gb2260 v1.0.2 h1:UEyQwQPJ6DxRWmjiVKSZpzreQzG/f4M/GgaX9/SHIHs=
 github.com/edwardhey/gb2260 v1.0.2/go.mod h1:XiTC+el5HmLxdVTu8rtShub3aV0aXdWnlfoeq5VTbmI=
 github.com/edwardhey/gorequest v1.0.1 h1:PlPl/rwYO/EESHWFKMOd8Sl3C4nrgJdXskj2CiVkGJE=

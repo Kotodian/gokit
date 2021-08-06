@@ -6,14 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Kotodian/gokit/ac/lib"
-	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/workpool"
 	pCharger "github.com/Kotodian/protocol/golang/hardware/charger"
+	"github.com/Kotodian/protocol/interfaces"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -34,21 +35,20 @@ var (
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	EvseID                  string          //设备SN
+	Evse                    interfaces.Evse
 	Hub                     *Hub            //中间件
 	conn                    *websocket.Conn //socket连接
 	send                    chan []byte     //发送消息的管道
 	sendPing                chan struct{}
-	close                   chan struct{}    //退出的通知
-	PongWait                time.Duration    //pong
-	PingPeriod              time.Duration    //ping的周期
-	Log                     *logrus.Entry    //日志
-	HBTime                  time.Time        //心跳时间
-	PfEvseID                datasource.UUID  //平台ID
-	once                    sync.Once        //主要处理关闭通道
-	Lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
-	SyncOnline              bool             //是否已同步在线，如果未同步在线就不回复其他报文
-	Data                    sync.Map         //存储的上下文数据
+	close                   chan struct{} //退出的通知
+	PongWait                time.Duration //pong
+	PingPeriod              time.Duration //ping的周期
+	Log                     *logrus.Entry //日志
+	HBTime                  time.Time     //心跳时间
+	once                    sync.Once     //主要处理关闭通道
+	Lock                    sync.RWMutex  //加锁，一次只能同步一个报文，减少并发
+	SyncOnline              bool          //是否已同步在线，如果未同步在线就不回复其他报文
+	Data                    sync.Map
 	ClientOfflineNotifyFunc func(err error)  // 网络断开同步到core的函数
 	MqttRegCh               chan MqttMessage //注册信息
 	MqttMsgCh               chan MqttMessage //返回或下发的信息
@@ -69,11 +69,11 @@ func (c *Client) Send(msg []byte) (err error) {
 }
 
 func (c *Client) Close(err error) error {
-	fmt.Println("关闭连接 1", c.PfEvseID, c.EvseID)
+	fmt.Println("关闭连接 1", c.Evse.CoreID(), c.Evse.SN())
 	c.once.Do(func() {
-		c.Hub.Clients.Delete(c.PfEvseID.String())
-		c.Hub.RegClients.Delete(c.EvseID)
-		fmt.Println("关闭连接 2", c.PfEvseID, c.EvseID)
+		c.Hub.Clients.Delete(c.Evse.SN())
+		c.Hub.RegClients.Delete(c.Evse.SN())
+		fmt.Println("关闭连接 2", c.Evse.CoreID(), c.Evse.SN())
 		//c.Hub.MqttClient.GetMQTT().Unsubscribe(c.subTopics...)
 		_ = c.conn.Close()
 		c.conn = nil
@@ -88,14 +88,14 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(evseID string, hub *Hub, conn *websocket.Conn, pongWait time.Duration) *Client {
+func NewClient(evse interfaces.Evse, hub *Hub, conn *websocket.Conn, pongWait time.Duration) *Client {
 	_log := logrus.WithFields(logrus.Fields{
-		"evse_id": evseID,
+		"sn": evse.SN(),
 	})
 	pingPeriod := (pongWait * 9) / 10
 	return &Client{
 		Log:        _log,
-		EvseID:     evseID,
+		Evse:       evse,
 		Hub:        hub,
 		HBTime:     time.Now().Local(),
 		conn:       conn,
@@ -111,13 +111,13 @@ func NewClient(evseID string, hub *Hub, conn *websocket.Conn, pongWait time.Dura
 
 //SubRegMQTT 监听MQTT的注册报文回复信息
 func (c *Client) SubRegMQTT() {
-	c.Hub.RegClients.Store(c.EvseID, c)
-	//if c.PfEvseID == 0 {
+	c.Hub.RegClients.Store(c.Evse.SN(), c)
+	//if c.Evse.CoreID() == 0 {
 	for {
-		fmt.Println("------------> loop reg msg start", c.EvseID)
+		fmt.Println("------------> loop reg msg start", c.Evse.SN())
 		select {
 		case <-c.close:
-			fmt.Println("------------> loop reg msg end", c.EvseID)
+			fmt.Println("------------> loop reg msg end", c.Evse.SN())
 			return
 		case m := <-c.MqttRegCh:
 			func() {
@@ -134,16 +134,16 @@ func (c *Client) SubRegMQTT() {
 				}
 				ctx := context.WithValue(context.TODO(), "client", c)
 				ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-					"sn": c.EvseID,
+					"sn": c.Evse.SN(),
 				}))
 				ctx = context.WithValue(ctx, "trData", trData)
 
 				_log := logrus.WithFields(logrus.Fields{
-					"evse_id":    c.EvseID,
-					"pf_evse_id": c.PfEvseID,
-					"topic":      topic,
-					"from":       "core",
-					"action":     pCharger.MessageID_name[int32(apdu.MessageId)],
+					"sn":     c.Evse.SN(),
+					"pf_sn":  c.Evse.CoreID(),
+					"topic":  topic,
+					"from":   "core",
+					"action": pCharger.MessageID_name[int32(apdu.MessageId)],
 				})
 				ctx = context.WithValue(ctx, "log", _log)
 
@@ -173,12 +173,12 @@ func (c *Client) SubRegMQTT() {
 				var bMsg []byte
 				if bMsg, err = json.Marshal(msg); err != nil {
 					return
-				} else if err = c.Hub.SendMsgToDevice(c.EvseID, bMsg); err != nil {
+				} else if err = c.Hub.SendMsgToDevice(c.Evse.SN(), bMsg); err != nil {
 					logrus.Errorf("send msg error:%s", err.Error())
 					return
 				}
 			}()
-			//logrus.Infof("reg resp:%s, evse_id:%s", string(bMsg), c.EvseID)
+			//logrus.Infof("reg resp:%s, sn:%s", string(bMsg), c.Evse.SN())
 		}
 	}
 	//}
@@ -187,7 +187,7 @@ func (c *Client) SubRegMQTT() {
 
 //SubMQTT 监听MQTT非注册的一般信息
 func (c *Client) SubMQTT() {
-	c.Hub.Clients.Store(c.PfEvseID.String(), c)
+	c.Hub.Clients.Store(c.Evse.SN(), c)
 	wp := workpool.New(1, 5).Start()
 	for {
 		select {
@@ -215,16 +215,16 @@ func (c *Client) SubMQTT() {
 					}
 					ctx := context.WithValue(context.TODO(), "client", c)
 					ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-						"sn": c.EvseID,
+						"sn": c.Evse.SN(),
 					}))
 					ctx = context.WithValue(ctx, "trData", trData)
 
 					_log := logrus.WithFields(logrus.Fields{
-						"evse_id":    c.EvseID,
-						"pf_evse_id": c.PfEvseID,
-						"topic":      topic,
-						"from":       "core",
-						"action":     pCharger.MessageID_name[int32(apdu.MessageId)],
+						"sn":     c.Evse.SN(),
+						"pf_sn":  c.Evse.CoreID(),
+						"topic":  topic,
+						"from":   "core",
+						"action": pCharger.MessageID_name[int32(apdu.MessageId)],
 					})
 					var msg interface{}
 
@@ -270,7 +270,7 @@ func (c *Client) SubMQTT() {
 					var bMsg []byte
 					if bMsg, err = json.Marshal(msg); err != nil {
 						return
-					} else if err = c.Hub.SendMsgToDevice(c.PfEvseID.String(), bMsg); err != nil {
+					} else if err = c.Hub.SendMsgToDevice(c.Evse.SN(), bMsg); err != nil {
 						return
 					}
 					//}()
@@ -306,7 +306,7 @@ func (c *Client) ReadPump() {
 		}
 		ctx := context.WithValue(context.TODO(), "client", c)
 		ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-			"sn": c.EvseID,
+			"sn": c.Evse.SN(),
 		}))
 		if c.conn == nil {
 			return
@@ -372,10 +372,10 @@ func (c *Client) ReadPump() {
 			var sendQos byte
 
 			if !trData.IsTelemetry {
-				sendTopic = "core/"+ c.Hub.Protocol + "/U/C/" + c.PfEvseID.String()
+				sendTopic = "core/" + c.Hub.Protocol + "/U/C/" + strconv.FormatUint(c.Evse.CoreID(), 10)
 				sendQos = 2
 			} else {
-				sendTopic = "core/"+ c.Hub.Protocol + "/U/M/" + c.PfEvseID.String()
+				sendTopic = "core/" + c.Hub.Protocol + "/U/M/" + strconv.FormatUint(c.Evse.CoreID(),10)
 				sendQos = 0
 			}
 
