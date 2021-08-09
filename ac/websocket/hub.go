@@ -26,7 +26,10 @@ type MqttMessage struct {
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
-	Protocol string
+	// Protocol 协议
+	Protocol        string
+	// ProtocolVersion 协议版本
+	ProtocolVersion string
 	// MqttClient MQTT连接
 	MqttClient *mqtt.MQTTClient
 
@@ -49,7 +52,7 @@ type Hub struct {
 	RegClients sync.Map
 }
 
-func NewHub(protocol string, username string, password string) *Hub {
+func NewHub(protocol string, protocolVersion, username string, password string) *Hub {
 	//监听MQTT信息
 	hostname, _ := os.Hostname()
 	mqClient := mqtt.NewMQTTClient(mqtt.NewMQTTOptions(hostname, username, password, func(c mqttClient.Client) {
@@ -66,9 +69,10 @@ func NewHub(protocol string, username string, password string) *Hub {
 	}
 
 	hub := &Hub{
-		MqttClient: mqClient,
-		PubMqttMsg: make(chan MqttMessage, 1000),
-		Protocol:   protocol,
+		MqttClient: 		mqClient,
+		PubMqttMsg: 		make(chan MqttMessage, 1000),
+		Protocol:   		protocol,
+		ProtocolVersion: 	protocolVersion,
 	}
 	return hub
 }
