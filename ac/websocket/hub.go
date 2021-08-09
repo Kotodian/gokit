@@ -232,5 +232,53 @@ func (h *Hub) Run() {
 			}
 		}
 	})
+	// 监听踢掉设备的报文
+	g.Go(func(ctx context.Context) error {
+		token := h.MqttClient.GetMQTT().Subscribe("core/"+h.Protocol+"/D/K/#", 2, func(mqc mqttClient.Client, message mqttClient.Message) {
+			var err error
+			topic := message.Topic()
+
+			logEntry := logrus.WithFields(logrus.Fields{
+				"topic": topic,
+			})
+			defer func() {
+				if e := recover(); e != nil {
+					err = e.(error)
+				}
+				if err != nil {
+					logEntry.Error(err)
+				}
+			}()
+
+			fmt.Println("go mqtt msg", fmt.Sprintf("%+v", message))
+
+			var evse string
+			//根据topic获取sn
+			if topics := strings.Split(topic, "/"); len(topics) < 5 {
+				err = fmt.Errorf("cannot find sn from topic")
+				return
+			} else {
+				evse = topics[5]
+			}
+			fmt.Println("go mqtt msg sn", evse)
+
+			c, ok := h.Clients.Load(evse)
+
+			var _client *Client
+			if !ok {
+				return
+			} else {
+				_client = c.(*Client)
+				_client.Close(nil)
+				fmt.Println("go mqtt msg client", fmt.Sprintf("%+v", _client))
+				h.Clients.Delete(evse)
+			}
+		})
+		token.WaitTimeout(10 * time.Second)
+		if err := token.Error(); err != nil {
+			return fmt.Errorf("sub reg cmd chan error, err:%v", err.Error())
+		}
+		return nil
+	})
 	_ = g.Wait()
 }
