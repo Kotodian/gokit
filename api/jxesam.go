@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"path"
 	"strconv"
 )
 
@@ -38,10 +39,10 @@ type registerStatusResponse struct {
 	Data string   `json:"data"`
 }
 
-const defaultURL = "http://jx-esam:8080/"
-const device = "device/"
+const defaultURL = "http://jx-esam:8080"
+const device = "device"
 const defaultContentType = "application/json"
-const defaultVersion = "v1/"
+const defaultVersion = "v1"
 
 // 设备接入校验接口
 func AccessVerify(request *AccessVerifyRequest) (bool, error) {
@@ -51,7 +52,7 @@ func AccessVerify(request *AccessVerifyRequest) (bool, error) {
 	}
 	client := http.DefaultClient
 	r := bytes.NewReader(body)
-	resp, err := client.Post(defaultURL+device+defaultVersion+"accessVerify", defaultContentType, r)
+	resp, err := client.Post(path.Join(defaultURL,device, defaultVersion, "accessVerify"), defaultContentType, r)
 	if err != nil {
 		return false, err
 	}
@@ -76,7 +77,7 @@ func RegisterStatus(request *RegisterStatusRequest) (uint64, error) {
 	}
 	client := http.DefaultClient
 	r := bytes.NewReader(body)
-	resp, err := client.Post(defaultURL+device+defaultVersion+"registerStatus", defaultContentType, r)
+	resp, err := client.Post(path.Join(defaultURL,device, defaultVersion,"registerStatus"), defaultContentType, r)
 	if err != nil {
 		return 0, err
 	}
