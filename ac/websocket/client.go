@@ -492,3 +492,7 @@ func (c *Client) WritePump() {
 func (c *Client) SendPing() {
 	c.sendPing <- struct{}{}
 }
+
+func (c *Client) RemoteAddr() string {
+	return c.conn.RemoteAddr().String()
+}
