@@ -1,16 +1,13 @@
 package orm
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"sync"
 	"time"
 
-	"github.com/Kotodian/gokit/boot"
 	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/ecode"
-	"github.com/Kotodian/gokit/id"
 	"github.com/didi/gendry/builder"
 	"github.com/edwardhey/gorm"
 	"github.com/edwardhey/mysql"
@@ -947,34 +944,3 @@ func UpdateColumn(obj IBase, f interface{}) error {
 	return nil
 }
 
-var (
-	idGenr *id.SnowFlake
-	// UUID 生成uuid
-	UUID chan datasource.UUID
-)
-
-func gearIDDaemon(ctx context.Context) {
-	//fmt.Println("qqqq")
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-		//fmt.Println("qqqqqqqqqqqqqqqsIs")
-		_id, err := idGenr.Next()
-		//fmt.Println(_id, err)
-		if err != nil {
-			//logEntry.Warningf("id genr error=%s", err)
-			continue
-		}
-		UUID <- datasource.UUID(_id)
-	}
-	//return nil
-}
-
-func init() {
-	idGenr, _ = id.NewSnowFlake(0, 0)
-	UUID = make(chan datasource.UUID, 100)
-	go gearIDDaemon(boot.Context())
-}

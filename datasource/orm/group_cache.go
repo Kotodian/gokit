@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Kotodian/gokit/id"
 	"github.com/Kotodian/gokit/utils"
 	"go.uber.org/atomic"
 )
@@ -24,7 +25,7 @@ func (c *CacheVer) Get() (uint64, uint64, error) {
 
 func (c *CacheVer) load() (ver uint64, search uint64, err error) {
 	if ver = c.ver.Load(); ver == 0 {
-		ver, err = idGenr.Next()
+		ver = uint64(id.Next())
 		if err != nil {
 			return 0, 0, err
 		}
@@ -32,7 +33,7 @@ func (c *CacheVer) load() (ver uint64, search uint64, err error) {
 		//c.ver = &ver
 	}
 	if search = c.search.Load(); ver == 0 {
-		search, err = idGenr.Next()
+		search = id.Next().Uint64()
 		if err != nil {
 			return 0, 0, err
 		}
@@ -43,11 +44,7 @@ func (c *CacheVer) load() (ver uint64, search uint64, err error) {
 
 func (c *CacheVer) Incr() error {
 	if c.ver.Add(1) == 1 {
-		if ver, err := idGenr.Next(); err != nil {
-			return err
-		} else {
-			c.ver.Store(ver)
-		}
+		c.ver.Add(id.Next().Uint64())
 	}
 	return nil
 	//c.l.Lock()
@@ -63,11 +60,7 @@ func (c *CacheVer) Incr() error {
 
 func (c *CacheVer) IncrSearch() error {
 	if c.search.Add(1) == 1 {
-		if ver, err := idGenr.Next(); err != nil {
-			return err
-		} else {
-			c.search.Store(ver)
-		}
+		c.search.Store(id.Next().Uint64())
 	}
 	return nil
 }

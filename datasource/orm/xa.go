@@ -10,6 +10,7 @@ import (
 
 	"github.com/Kotodian/gokit/business"
 	"github.com/Kotodian/gokit/datasource/rabbitmq"
+	"github.com/Kotodian/gokit/id"
 	"github.com/streadway/amqp"
 	"google.golang.org/grpc/metadata"
 
@@ -60,16 +61,16 @@ func (xa XA) GetXID() string {
 //	return xa
 //}
 
-func NewMasterXA(id datasource.UUID, level ...sql.IsolationLevel) (context.Context, *XA, error) {
-	branchID := <-UUID
+func NewMasterXA(uuid datasource.UUID, level ...sql.IsolationLevel) (context.Context, *XA, error) {
+	branchID := id.Next()
 	xa := &XA{
-		ID: id,
+		ID: uuid,
 		//Module: db.Dialect().CurrentDatabase(),
 		BranchID: branchID,
 		//DB:    db.New().Debug(),
 		log: logrus.WithFields(logrus.Fields{
 			"module": "xa",
-			"gtid":   id,
+			"gtid":   uuid,
 			"bid":    branchID,
 		}),
 	}
@@ -81,9 +82,9 @@ func NewMasterXA(id datasource.UUID, level ...sql.IsolationLevel) (context.Conte
 	txOptions := &sql.TxOptions{}
 	if len(level) > 0 {
 		txOptions.Isolation = level[0]
-		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("xid", id.String(), "isolation_level", fmt.Sprintf("%d", txOptions.Isolation)))
+		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("xid", uuid.String(), "isolation_level", fmt.Sprintf("%d", txOptions.Isolation)))
 	} else {
-		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("xid", id.String()))
+		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("xid", uuid.String()))
 	}
 	xa.DB = db.BeginTx(ctx, txOptions)
 	if xa.DB.Error != nil {
@@ -115,16 +116,16 @@ func NewSlaveXAWithContext(ctx context.Context) (context.Context, *XA, error) {
 	return NewSlaveXA(xid)
 }
 
-func NewSlaveXA(id datasource.UUID, level ...sql.IsolationLevel) (context.Context, *XA, error) {
-	branchID := <-UUID
+func NewSlaveXA(uuid datasource.UUID, level ...sql.IsolationLevel) (context.Context, *XA, error) {
+	branchID := id.Next()
 
 	xa := &XA{
-		ID: id,
+		ID: uuid,
 		//Module: db.Dialect().CurrentDatabase(),
 		BranchID: branchID,
 		//DB:    db.New().Debug(),
 		log: logrus.WithFields(logrus.Fields{
-			"gtid": id,
+			"gtid": uuid,
 			"bid":  branchID,
 		}),
 	}
@@ -298,7 +299,7 @@ func (xa *XA) ListenCommitOrRollback(ctx context.Context, e error, commitCallbac
 
 					//fmt.Println("------------------------ ListenCommitOrRollback")
 					Exchange.Start(ctx, 1, rabbitmq.Receiver{
-						Name:      fmt.Sprintf("xa_notify_%d_%d", xa.ID, <-UUID),
+						Name:      fmt.Sprintf("xa_notify_%d_%d", xa.ID, id.Next()),
 						RouterKey: fmt.Sprintf("notify:%d", xa.ID),
 						Exclusive: true,
 						QOSFn: func() (prefetchCount, prefetchSize int, global bool) {

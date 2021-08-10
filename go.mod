@@ -40,6 +40,7 @@ require (
 	github.com/tidwall/gjson v1.8.1
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
 	github.com/yangwenmai/ratelimit v0.0.0-20180104140304-44221c2292e1
+	github.com/yitter/idgenerator-go v1.2.1 // indirect
 	go.uber.org/atomic v1.9.0
 	go.uber.org/zap v1.18.1 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
