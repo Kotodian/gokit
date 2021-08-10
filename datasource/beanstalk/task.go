@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	// beanstalkConn "github.com/Kotodian/gokit/datasource/beanstalk"
-	rdlib "github.com/garyburd/redigo/redis"
+	rdlib "github.com/gomodule/redigo/redis"
 	"github.com/sirupsen/logrus"
 
 	"github.com/Kotodian/gokit/datasource/redis"

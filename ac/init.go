@@ -9,8 +9,8 @@ import (
 	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/gokit/datasource/redis"
 	pCharger "github.com/Kotodian/protocol/golang/hardware/charger"
-	rdlib "github.com/garyburd/redigo/redis"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
+	rdlib "github.com/gomodule/redigo/redis"
 	log "github.com/sirupsen/logrus"
 )
 

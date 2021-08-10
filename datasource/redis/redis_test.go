@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	redislib "github.com/garyburd/redigo/redis"
+	redislib "/redis"
 )
 
 func Test_Setnx(t *testing.T) {

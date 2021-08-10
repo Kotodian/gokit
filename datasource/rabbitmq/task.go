@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Kotodian/gokit/datasource/redis"
-	rdlib "github.com/garyburd/redigo/redis"
+	rdlib "github.com/gomodule/redigo/redis"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )

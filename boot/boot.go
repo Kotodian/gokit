@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Kotodian/gokit/datasource/redis"
-	_ "github.com/Kotodian/gokit/log"
 
 	log "github.com/sirupsen/logrus"
 )

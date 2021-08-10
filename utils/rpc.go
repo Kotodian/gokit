@@ -7,7 +7,7 @@ import (
 
 	"github.com/Kotodian/gokit/datasource/grpc"
 	"github.com/Kotodian/gokit/exerr"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	gorpc "google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

@@ -9,7 +9,7 @@ import (
 
 	"github.com/Kotodian/gokit/datasource/grpc/client"
 	"github.com/Kotodian/gokit/tracing"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
