@@ -79,6 +79,8 @@ github.com/Kotodian/protocol v1.0.3 h1:8lKs7AGpjp8JxWl4U4WLjZLw4iHktnylKdCWZs7n3
 github.com/Kotodian/protocol v1.0.3/go.mod h1:ShCqmhPaVUmAKqt5uhyO7qxUDcsjUGqiBQiD2X9T2D8=
 github.com/Kotodian/protocol v1.0.8 h1:ztMcJnMW2H78mQAJzcAB6DVF6eZxu0bGda81kJRW3ts=
 github.com/Kotodian/protocol v1.0.8/go.mod h1:ShCqmhPaVUmAKqt5uhyO7qxUDcsjUGqiBQiD2X9T2D8=
+github.com/Kotodian/protocol v1.0.9 h1:F20oCghYbXVpFR8dkwOLvnmPiwYCw3JzrfPLXXKqEVw=
+github.com/Kotodian/protocol v1.0.9/go.mod h1:ShCqmhPaVUmAKqt5uhyO7qxUDcsjUGqiBQiD2X9T2D8=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/sprig v2.16.0+incompatible/go.mod h1:y6hNFY5UBTIWBxnzTeuNhlNS5hqE0NB0E6fgfo2Br3o=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
