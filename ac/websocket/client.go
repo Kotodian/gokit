@@ -13,7 +13,7 @@ import (
 
 	"github.com/Kotodian/gokit/ac/lib"
 	"github.com/Kotodian/gokit/workpool"
-	pCharger "github.com/Kotodian/protocol/golang/hardware/charger"
+	"github.com/Kotodian/protocol/golang/hardware/charger"
 	"github.com/Kotodian/protocol/interfaces"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
@@ -35,7 +35,7 @@ var (
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	Evse                    interfaces.Evse
+	ChargeStation           interfaces.ChargeStation
 	Hub                     *Hub            //中间件
 	conn                    *websocket.Conn //socket连接
 	send                    chan []byte     //发送消息的管道
@@ -69,11 +69,11 @@ func (c *Client) Send(msg []byte) (err error) {
 }
 
 func (c *Client) Close(err error) error {
-	fmt.Println("关闭连接 1", c.Evse.CoreID(), c.Evse.SN())
+	fmt.Println("关闭连接 1", c.ChargeStation.CoreID(), c.ChargeStation.SN())
 	c.once.Do(func() {
-		c.Hub.Clients.Delete(c.Evse.SN())
-		c.Hub.RegClients.Delete(c.Evse.SN())
-		fmt.Println("关闭连接 2", c.Evse.CoreID(), c.Evse.SN())
+		c.Hub.Clients.Delete(c.ChargeStation.SN())
+		c.Hub.RegClients.Delete(c.ChargeStation.SN())
+		fmt.Println("关闭连接 2", c.ChargeStation.CoreID(), c.ChargeStation.SN())
 		//c.Hub.MqttClient.GetMQTT().Unsubscribe(c.subTopics...)
 		_ = c.conn.Close()
 		c.conn = nil
@@ -88,40 +88,40 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(evse interfaces.Evse, hub *Hub, conn *websocket.Conn, pongWait time.Duration) *Client {
+func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, pongWait time.Duration) *Client {
 	_log := logrus.WithFields(logrus.Fields{
-		"sn": evse.SN(),
+		"sn": chargeStation.SN(),
 	})
 	pingPeriod := (pongWait * 9) / 10
 	return &Client{
-		Log:        _log,
-		Evse:       evse,
-		Hub:        hub,
-		HBTime:     time.Now().Local(),
-		conn:       conn,
-		PingPeriod: pingPeriod,
-		PongWait:   pongWait + 10*time.Second,
-		send:       make(chan []byte, 5),
-		sendPing:   make(chan struct{}, 1),
-		MqttMsgCh:  make(chan MqttMessage, 5),
-		MqttRegCh:  make(chan MqttMessage, 5),
-		close:      make(chan struct{}, 0),
+		Log:           _log,
+		ChargeStation: chargeStation,
+		Hub:           hub,
+		HBTime:        time.Now().Local(),
+		conn:          conn,
+		PingPeriod:    pingPeriod,
+		PongWait:      pongWait + 10*time.Second,
+		send:          make(chan []byte, 5),
+		sendPing:      make(chan struct{}, 1),
+		MqttMsgCh:     make(chan MqttMessage, 5),
+		MqttRegCh:     make(chan MqttMessage, 5),
+		close:         make(chan struct{}, 0),
 	}
 }
 
 //SubRegMQTT 监听MQTT的注册报文回复信息
 func (c *Client) SubRegMQTT() {
-	c.Hub.RegClients.Store(c.Evse.SN(), c)
+	c.Hub.RegClients.Store(c.ChargeStation.SN(), c)
 	//if c.Evse.CoreID() == 0 {
 	for {
-		fmt.Println("------------> loop reg msg start", c.Evse.SN())
+		fmt.Println("------------> loop reg msg start", c.ChargeStation.SN())
 		select {
 		case <-c.close:
-			fmt.Println("------------> loop reg msg end", c.Evse.SN())
+			fmt.Println("------------> loop reg msg end", c.ChargeStation.SN())
 			return
 		case m := <-c.MqttRegCh:
 			func() {
-				var apdu pCharger.APDU
+				var apdu charger.APDU
 				var err error
 				topic := m.Topic
 				if err = proto.Unmarshal(m.Payload, &apdu); err != nil {
@@ -134,16 +134,16 @@ func (c *Client) SubRegMQTT() {
 				}
 				ctx := context.WithValue(context.TODO(), "client", c)
 				ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-					"sn": c.Evse.SN(),
+					"sn": c.ChargeStation.SN(),
 				}))
 				ctx = context.WithValue(ctx, "trData", trData)
 
 				_log := logrus.WithFields(logrus.Fields{
-					"sn":     c.Evse.SN(),
-					"pf_sn":  c.Evse.CoreID(),
+					"sn":     c.ChargeStation.SN(),
+					"pf_sn":  c.ChargeStation.CoreID(),
 					"topic":  topic,
 					"from":   "core",
-					"action": pCharger.MessageID_name[int32(apdu.MessageId)],
+					"action": charger.MessageID_name[int32(apdu.MessageId)],
 				})
 				ctx = context.WithValue(ctx, "log", _log)
 
@@ -173,7 +173,7 @@ func (c *Client) SubRegMQTT() {
 				var bMsg []byte
 				if bMsg, err = json.Marshal(msg); err != nil {
 					return
-				} else if err = c.Hub.SendMsgToDevice(c.Evse.SN(), bMsg); err != nil {
+				} else if err = c.Hub.SendMsgToDevice(c.ChargeStation.SN(), bMsg); err != nil {
 					logrus.Errorf("send msg error:%s", err.Error())
 					return
 				}
@@ -187,7 +187,7 @@ func (c *Client) SubRegMQTT() {
 
 //SubMQTT 监听MQTT非注册的一般信息
 func (c *Client) SubMQTT() {
-	c.Hub.Clients.Store(c.Evse.SN(), c)
+	c.Hub.Clients.Store(c.ChargeStation.SN(), c)
 	wp := workpool.New(1, 5).Start()
 	for {
 		select {
@@ -198,7 +198,7 @@ func (c *Client) SubMQTT() {
 				logrus.Warnf("get empty payload, topic:%s, ignore", m.Topic)
 				break
 			}
-			var apdu pCharger.APDU
+			var apdu charger.APDU
 			if err := proto.Unmarshal(m.Payload, &apdu); err != nil {
 				logrus.Errorf("decode cmd or measure msg error, err:%s topic:%s", err.Error(), m.Topic)
 				break
@@ -208,23 +208,23 @@ func (c *Client) SubMQTT() {
 					flag = workpool.FLAG_OK
 					topic := m.Topic
 
-					apdu := args[0].(pCharger.APDU)
+					apdu := args[0].(charger.APDU)
 					trData := &lib.TRData{
 						APDU:  &apdu,
 						Topic: topic,
 					}
 					ctx := context.WithValue(context.TODO(), "client", c)
 					ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-						"sn": c.Evse.SN(),
+						"sn": c.ChargeStation.SN(),
 					}))
 					ctx = context.WithValue(ctx, "trData", trData)
 
 					_log := logrus.WithFields(logrus.Fields{
-						"sn":     c.Evse.SN(),
-						"pf_sn":  c.Evse.CoreID(),
+						"sn":     c.ChargeStation.SN(),
+						"pf_sn":  c.ChargeStation.CoreID(),
 						"topic":  topic,
 						"from":   "core",
-						"action": pCharger.MessageID_name[int32(apdu.MessageId)],
+						"action": charger.MessageID_name[int32(apdu.MessageId)],
 					})
 					var msg interface{}
 
@@ -233,11 +233,11 @@ func (c *Client) SubMQTT() {
 						//如果没有错误就转发到设备上，否则写日志，回复到平台的错误日志有FromAPDU实现了
 						if err != nil {
 							_log.Errorf(err.Error())
-							if trData.Ignore == false && (int32(apdu.MessageId)>>7 == 0 || apdu.MessageId == pCharger.MessageID_ID_MessageError) {
-								if apdu.MessageId != pCharger.MessageID_ID_MessageError {
-									apdu.MessageId = pCharger.MessageID_ID_MessageError
-									apdu.Payload, _ = proto.Marshal(&pCharger.MessageError{
-										Error:       pCharger.ErrorCode_EC_GenericError,
+							if trData.Ignore == false && (int32(apdu.MessageId)>>7 == 0 || apdu.MessageId == charger.MessageID_ID_MessageError) {
+								if apdu.MessageId != charger.MessageID_ID_MessageError {
+									apdu.MessageId = charger.MessageID_ID_MessageError
+									apdu.Payload, _ = proto.Marshal(&charger.MessageError{
+										Error:       charger.ErrorCode_EC_GenericError,
 										Description: err.Error(),
 									})
 								}
@@ -270,7 +270,7 @@ func (c *Client) SubMQTT() {
 					var bMsg []byte
 					if bMsg, err = json.Marshal(msg); err != nil {
 						return
-					} else if err = c.Hub.SendMsgToDevice(c.Evse.SN(), bMsg); err != nil {
+					} else if err = c.Hub.SendMsgToDevice(c.ChargeStation.SN(), bMsg); err != nil {
 						return
 					}
 					//}()
@@ -306,7 +306,7 @@ func (c *Client) ReadPump() {
 		}
 		ctx := context.WithValue(context.TODO(), "client", c)
 		ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-			"sn": c.Evse.SN(),
+			"sn": c.ChargeStation.SN(),
 		}))
 		if c.conn == nil {
 			return
@@ -372,10 +372,10 @@ func (c *Client) ReadPump() {
 			var sendQos byte
 
 			if !trData.IsTelemetry {
-				sendTopic = "core/" + c.Hub.Protocol + "/U/C/" + strconv.FormatUint(c.Evse.CoreID(), 10)
+				sendTopic = "core/" + c.Hub.Protocol + "/U/C/" + strconv.FormatUint(c.ChargeStation.CoreID(), 10)
 				sendQos = 2
 			} else {
-				sendTopic = "core/" + c.Hub.Protocol + "/U/M/" + strconv.FormatUint(c.Evse.CoreID(),10)
+				sendTopic = "core/" + c.Hub.Protocol + "/U/M/" + strconv.FormatUint(c.ChargeStation.CoreID(), 10)
 				sendQos = 0
 			}
 
