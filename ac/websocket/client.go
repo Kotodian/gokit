@@ -243,7 +243,7 @@ func (c *Client) SubMQTT() {
 								}
 								apduEncoded, _ := proto.Marshal(&apdu)
 								pubMqttMsg := MqttMessage{
-									Topic:    strings.Replace(trData.Topic, "/D/", "/U/", 1),
+									Topic:    strings.Replace(trData.Topic, c.Hub.hostname, "coregw", 1),
 									Qos:      2,
 									Retained: false,
 									Payload:  apduEncoded,
@@ -372,10 +372,10 @@ func (c *Client) ReadPump() {
 			var sendQos byte
 
 			if !trData.IsTelemetry {
-				sendTopic = "core/" + c.Hub.Protocol + "/U/C/" + strconv.FormatUint(c.ChargeStation.CoreID(), 10)
+				sendTopic = "coregw/" + c.Hub.Protocol + "/command/" + strconv.FormatUint(c.ChargeStation.CoreID(), 10)
 				sendQos = 2
 			} else {
-				sendTopic = "core/" + c.Hub.Protocol + "/U/M/" + strconv.FormatUint(c.ChargeStation.CoreID(), 10)
+				sendTopic = "coregw/" + c.Hub.Protocol + "/telemetry/" + strconv.FormatUint(c.ChargeStation.CoreID(), 10)
 				sendQos = 0
 			}
 

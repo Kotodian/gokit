@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -26,8 +27,9 @@ type MqttMessage struct {
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
+	hostname string
 	// Protocol 协议
-	Protocol        string
+	Protocol string
 	// ProtocolVersion 协议版本
 	ProtocolVersion string
 	// MqttClient MQTT连接
@@ -69,10 +71,11 @@ func NewHub(protocol string, protocolVersion, username string, password string) 
 	}
 
 	hub := &Hub{
-		MqttClient: 		mqClient,
-		PubMqttMsg: 		make(chan MqttMessage, 1000),
-		Protocol:   		protocol,
-		ProtocolVersion: 	protocolVersion,
+		hostname:        hostname,
+		MqttClient:      mqClient,
+		PubMqttMsg:      make(chan MqttMessage, 1000),
+		Protocol:        protocol,
+		ProtocolVersion: protocolVersion,
 	}
 	return hub
 }
@@ -97,10 +100,11 @@ func (h *Hub) Run() {
 	_, cancelFn := context.WithCancel(context.Background())
 	g := errgroup.WithCancel(context.Background())
 	defer cancelFn()
-
+	topicPrefix := path.Join(h.hostname, h.Protocol) + "/"
+	topicEnd := "/#"
 	//监听注册报文
 	g.Go(func(ctx context.Context) (err error) {
-		token := h.MqttClient.GetMQTT().Subscribe("core/"+h.Protocol+"/D/R/#", 2, func(mqc mqttClient.Client, m mqttClient.Message) {
+		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"register"+topicEnd, 2, func(mqc mqttClient.Client, m mqttClient.Message) {
 			var err error
 			topic := m.Topic()
 
@@ -118,14 +122,7 @@ func (h *Hub) Run() {
 
 			fmt.Println("go reg mqtt msg", fmt.Sprintf("%+v", m))
 
-			var sn string
-			//根据topic获取sn
-			if topics := strings.Split(topic, "/"); len(topics) < 5 {
-				err = fmt.Errorf("cannot find sn from topic")
-				return
-			} else {
-				sn = topics[5]
-			}
+			sn := getSnFromTopic(m.Topic())
 
 			fmt.Println("go reg mqtt sn", sn)
 
@@ -155,8 +152,8 @@ func (h *Hub) Run() {
 	//监听下发给设备的CMD报文
 	g.Go(func(ctx context.Context) (err error) {
 		topics := map[string]byte{
-			"core/" + h.Protocol + "/D/C/#": 2,
-			"core/" + h.Protocol + "/D/M/#": 2,
+			topicPrefix + "command" + topicEnd:   2,
+			topicPrefix + "telemetry" + topicEnd: 2,
 		}
 
 		token := h.MqttClient.GetMQTT().SubscribeMultiple(topics, func(mqc mqttClient.Client, m mqttClient.Message) {
@@ -177,17 +174,9 @@ func (h *Hub) Run() {
 
 			fmt.Println("go mqtt msg", fmt.Sprintf("%+v", m))
 
-			var evse string
-			//根据topic获取sn
-			if topics := strings.Split(topic, "/"); len(topics) < 5 {
-				err = fmt.Errorf("cannot find sn from topic")
-				return
-			} else {
-				evse = topics[5]
-			}
-			fmt.Println("go mqtt msg sn", evse)
+			sn := getSnFromTopic(topic)
 
-			c, ok := h.Clients.Load(evse)
+			c, ok := h.Clients.Load(sn)
 
 			var _client *Client
 			if !ok {
@@ -238,7 +227,7 @@ func (h *Hub) Run() {
 	})
 	// 监听踢掉设备的报文
 	g.Go(func(ctx context.Context) error {
-		token := h.MqttClient.GetMQTT().Subscribe("core/"+h.Protocol+"/D/K/#", 2, func(mqc mqttClient.Client, message mqttClient.Message) {
+		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"kick"+topicEnd, 2, func(mqc mqttClient.Client, message mqttClient.Message) {
 			var err error
 			topic := message.Topic()
 
@@ -256,17 +245,11 @@ func (h *Hub) Run() {
 
 			fmt.Println("go mqtt msg", fmt.Sprintf("%+v", message))
 
-			var evse string
 			//根据topic获取sn
-			if topics := strings.Split(topic, "/"); len(topics) < 5 {
-				err = fmt.Errorf("cannot find sn from topic")
-				return
-			} else {
-				evse = topics[5]
-			}
-			fmt.Println("go mqtt msg sn", evse)
+			var sn string
+			sn = getSnFromTopic(message.Topic())
 
-			c, ok := h.Clients.Load(evse)
+			c, ok := h.Clients.Load(sn)
 
 			var _client *Client
 			if !ok {
@@ -275,7 +258,7 @@ func (h *Hub) Run() {
 				_client = c.(*Client)
 				_client.Close(nil)
 				fmt.Println("go mqtt msg client", fmt.Sprintf("%+v", _client))
-				h.Clients.Delete(evse)
+				h.Clients.Delete(sn)
 			}
 		})
 		token.WaitTimeout(10 * time.Second)
@@ -285,4 +268,12 @@ func (h *Hub) Run() {
 		return nil
 	})
 	_ = g.Wait()
+}
+
+func getSnFromTopic(topic string) (sn string) {
+	//根据topic获取sn
+	topics := strings.Split(topic, "/")
+	lastIndex := len(topics) - 1
+	sn = topics[lastIndex]
+	return
 }
