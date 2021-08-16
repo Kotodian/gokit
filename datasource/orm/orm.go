@@ -11,6 +11,9 @@ import (
 var (
 	db *gorm.DB
 )
+var (
+	ErrRetryMax = errors.New("maximum number of retries exceeded")
+)
 
 func GetDB() *gorm.DB {
 	return db
@@ -40,6 +43,9 @@ type Object interface {
 	UpdatedAt() int64
 	// 删除时间
 	DeletedAt() int64
+	GetVersion() int
+	SetVersion(version int)
+
 	// 钩子函数
 	AfterCreate(db *gorm.DB) error
 	AfterUpdate(db *gorm.DB) error
@@ -74,4 +80,32 @@ func Delete(obj Object, deleteFunc ...DeleteFunc) error {
 
 func UpdateColumn(obj Object, f map[string]interface{}) error {
 	return db.Model(obj).Updates(f).Error
+}
+
+func UpdateWithOptimistic(db *gorm.DB, obj Object, f map[string]interface{}) error {
+	if f == nil {
+		return nil
+	}
+	return updateWithOptimistic(db, obj, f, 3, 0)
+}
+
+func updateWithOptimistic(db *gorm.DB, obj Object, f map[string]interface{}, retryCount, currentRetryCount int) error {
+	if currentRetryCount > retryCount {
+		return ErrRetryMax
+	}
+	currentVersion := obj.GetVersion()
+	obj.SetVersion(currentVersion + 1)
+	f["version"] = currentVersion + 1
+	column := db.Model(obj).Where("version", currentVersion).Updates(f)
+	affected := column.RowsAffected
+	if affected == 0 {
+		time.Sleep(100 * time.Millisecond)
+		db.First(obj)
+		currentRetryCount++
+		err := updateWithOptimistic(db, obj, f, retryCount, currentRetryCount)
+		if err != nil {
+			return err
+		}
+	}
+	return column.Error
 }
