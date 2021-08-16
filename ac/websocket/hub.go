@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 	"strings"
 	"sync"
 	"time"
@@ -100,7 +99,7 @@ func (h *Hub) Run() {
 	_, cancelFn := context.WithCancel(context.Background())
 	g := errgroup.WithCancel(context.Background())
 	defer cancelFn()
-	topicPrefix := path.Join(h.Hostname, h.Protocol) + "/"
+	topicPrefix := h.Hostname + "/"
 	topicEnd := "/#"
 	//监听注册报文
 	g.Go(func(ctx context.Context) (err error) {
