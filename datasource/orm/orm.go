@@ -109,3 +109,8 @@ func updateWithOptimistic(db *gorm.DB, obj Object, f map[string]interface{}, ret
 	}
 	return column.Error
 }
+
+func Create(obj Object) error {
+	err := db.Create(obj).Error
+	return err
+}
