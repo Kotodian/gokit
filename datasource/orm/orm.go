@@ -82,14 +82,14 @@ func UpdateColumn(obj Object, f map[string]interface{}) error {
 	return db.Model(obj).Updates(f).Error
 }
 
-func UpdateWithOptimistic(db *gorm.DB, obj Object, f map[string]interface{}) error {
+func UpdateWithOptimistic(obj Object, f map[string]interface{}) error {
 	if f == nil {
 		return nil
 	}
-	return updateWithOptimistic(db, obj, f, 3, 0)
+	return updateWithOptimistic(obj, f, 3, 0)
 }
 
-func updateWithOptimistic(db *gorm.DB, obj Object, f map[string]interface{}, retryCount, currentRetryCount int) error {
+func updateWithOptimistic(obj Object, f map[string]interface{}, retryCount, currentRetryCount int) error {
 	if currentRetryCount > retryCount {
 		return ErrRetryMax
 	}
@@ -102,7 +102,7 @@ func updateWithOptimistic(db *gorm.DB, obj Object, f map[string]interface{}, ret
 		time.Sleep(100 * time.Millisecond)
 		db.First(obj)
 		currentRetryCount++
-		err := updateWithOptimistic(db, obj, f, retryCount, currentRetryCount)
+		err := updateWithOptimistic(obj, f, retryCount, currentRetryCount)
 		if err != nil {
 			return err
 		}
