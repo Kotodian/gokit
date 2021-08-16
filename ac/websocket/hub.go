@@ -27,7 +27,7 @@ type MqttMessage struct {
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
-	hostname string
+	Hostname string
 	// Protocol 协议
 	Protocol string
 	// ProtocolVersion 协议版本
@@ -71,7 +71,7 @@ func NewHub(protocol string, protocolVersion, username string, password string) 
 	}
 
 	hub := &Hub{
-		hostname:        hostname,
+		Hostname:        hostname,
 		MqttClient:      mqClient,
 		PubMqttMsg:      make(chan MqttMessage, 1000),
 		Protocol:        protocol,
@@ -100,7 +100,7 @@ func (h *Hub) Run() {
 	_, cancelFn := context.WithCancel(context.Background())
 	g := errgroup.WithCancel(context.Background())
 	defer cancelFn()
-	topicPrefix := path.Join(h.hostname, h.Protocol) + "/"
+	topicPrefix := path.Join(h.Hostname, h.Protocol) + "/"
 	topicEnd := "/#"
 	//监听注册报文
 	g.Go(func(ctx context.Context) (err error) {
