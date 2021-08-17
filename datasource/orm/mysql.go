@@ -7,9 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/edwardhey/gorm"
-	//_ "github.com/go-sql-driver/mysql"
-	_ "gorm.io/driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 const (
@@ -61,11 +60,11 @@ func NewMysql(dns string) (*gorm.DB, error) {
 	} else {
 		dns = dns + "?" + condition
 	}
-	db, err := gorm.Open("mysql", dns)
+	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	d := db.DB()
+	d, _ := db.DB()
 	d.SetConnMaxLifetime(300 * time.Second)
 	d.SetMaxIdleConns(getIntEnv(EnvMaxIdleConns, 100))
 	d.SetMaxOpenConns(getIntEnv(EnvMaxOpenConns, 2000))

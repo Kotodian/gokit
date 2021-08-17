@@ -8,14 +8,11 @@ require (
 	github.com/beanstalkd/go-beanstalk v0.1.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/cep21/circuit/v3 v3.2.0 // indirect
-	github.com/didi/gendry v1.7.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/edwardhey/beanstalk v0.0.0-20180821021108-0249555409a1
 	github.com/edwardhey/circuit v3.0.0+incompatible
 	github.com/edwardhey/gb2260 v1.0.2
 	github.com/edwardhey/gorequest v1.0.1
-	github.com/edwardhey/gorm v1.9.16
-	github.com/edwardhey/mysql v1.4.3
 	github.com/elazarl/goproxy v0.0.0-20180725130230-947c36da3153 // indirect
 	github.com/funny/link v0.0.0-20190805113223-98708916287b
 	github.com/funny/slab v0.0.0-20180511031532-b1fad5e5d478
@@ -44,5 +41,5 @@ require (
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect
 	google.golang.org/grpc v1.39.0
 	gorm.io/driver/mysql v1.1.1
-	gorm.io/gorm v1.21.12 // indirect
+	gorm.io/gorm v1.21.12
 )
