@@ -19,6 +19,10 @@ func GetDB() *gorm.DB {
 	return db
 }
 
+func SetDB(_db *gorm.DB) {
+	db = _db
+}
+
 type DeleteFunc func(object Object) error
 type CreateFunc func(object Object) error
 
@@ -100,7 +104,8 @@ func updateWithOptimistic(obj Object, f map[string]interface{}, retryCount, curr
 	affected := column.RowsAffected
 	if affected == 0 {
 		time.Sleep(100 * time.Millisecond)
-		db.First(obj)
+		id := obj.ID()
+		db.First(obj, id)
 		currentRetryCount++
 		err := updateWithOptimistic(obj, f, retryCount, currentRetryCount)
 		if err != nil {

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Kotodian/gokit/ac/lib"
+	"github.com/Kotodian/gokit/datasource/redis"
 	"github.com/Kotodian/gokit/workpool"
 	"github.com/Kotodian/protocol/golang/hardware/charger"
 	"github.com/Kotodian/protocol/interfaces"
@@ -100,12 +101,12 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket
 		HBTime:        time.Now().Local(),
 		conn:          conn,
 		PingPeriod:    pingPeriod,
-		PongWait:      pongWait + 10*time.Second,
+		PongWait:      pongWait,
 		send:          make(chan []byte, 5),
 		sendPing:      make(chan struct{}, 1),
 		MqttMsgCh:     make(chan MqttMessage, 5),
 		MqttRegCh:     make(chan MqttMessage, 5),
-		close:         make(chan struct{}, 0),
+		close:         make(chan struct{}),
 	}
 }
 
@@ -295,6 +296,9 @@ func (c *Client) ReadPump() {
 	_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
 	c.conn.SetPongHandler(func(s string) error {
 		c.Log.Infoln("pong")
+		redisConn := redis.GetRedis()
+		defer redisConn.Close()
+		redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), int64(c.PongWait)+10)
 		_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
 		return nil
 	})
