@@ -6,6 +6,7 @@ require (
 	github.com/FZambia/sentinel v1.1.0
 	github.com/Kotodian/protocol v1.1.1
 	github.com/beanstalkd/go-beanstalk v0.1.0
+	github.com/benbjohnson/immutable v0.2.1 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/cep21/circuit/v3 v3.2.0 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.3.5
@@ -22,6 +23,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.2
 	github.com/influxdata/influxdb v1.9.3
+	github.com/influxdata/influxdb-client-go/v2 v2.4.0 // indirect
 	github.com/jameskeane/bcrypt v0.0.0-20120420032655-c3cd44c1e20f
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/olivere/elastic/v7 v7.0.27
