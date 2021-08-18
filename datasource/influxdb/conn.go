@@ -66,6 +66,7 @@ func WriteAPIBlocking(bucket, measurement string, tags map[string]string, fields
 	if err != nil {
 		return err
 	}
+	defer client.Close()
 	writeAPI := client.WriteAPIBlocking(org, bucket)
 	p := influxdb.NewPoint(measurement, tags, fields, ts)
 	err = writeAPI.WritePoint(context.Background(), p)
@@ -77,6 +78,7 @@ func Query(query string) (*api.QueryTableResult, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer client.Close()
 	queryAPI := client.QueryAPI(org)
 	result, err := queryAPI.Query(context.Background(), query)
 	if err != nil {
