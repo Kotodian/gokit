@@ -35,6 +35,8 @@ func FakeDelete(object Object) error {
 }
 
 type Object interface {
+	// Exists 判断是否存在
+	Exists() bool
 	// ID 数据库中的唯一值
 	ID() datasource.UUID
 	// 缓存的键
@@ -68,7 +70,6 @@ func GetByID(obj Object, id datasource.UUID) (err error) {
 func Get(obj Object, cond string, where ...interface{}) (err error) {
 	err = db.Where(cond, where).First(obj).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		obj = nil
 		err = nil
 	}
 	return err
