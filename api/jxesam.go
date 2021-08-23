@@ -52,7 +52,7 @@ const defaultContentType = "application/json"
 const defaultVersion = "/v1"
 const verify = "/verify"
 
-// 设备接入校验接口
+// AccessVerify 设备接入校验接口
 func AccessVerify(request *AccessVerifyRequest) (*Equipment, error) {
 	body, err := json.Marshal(request)
 	if err != nil {
