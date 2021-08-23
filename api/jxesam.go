@@ -40,8 +40,9 @@ type registerStatusResponse struct {
 }
 
 type Equipment struct {
-	KeepAlive int    `json:"keepalive"`
-	CoreID    string `json:"id"`
+	KeepAlive  int    `json:"keepalive"`
+	CoreID     string `json:"id"`
+	Registered bool   `json:"registered"`
 }
 
 //const defaultURL = "http://jx-esam:8080"

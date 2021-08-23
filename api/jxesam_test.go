@@ -15,5 +15,5 @@ func TestAccessVerify(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	fmt.Println(verify.CoreID, verify.KeepAlive)
+	fmt.Println(verify.CoreID, verify.KeepAlive, verify.Registered)
 }
