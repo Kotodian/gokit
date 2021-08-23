@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -376,10 +375,10 @@ func (c *Client) ReadPump() {
 			var sendQos byte
 
 			if !trData.IsTelemetry {
-				sendTopic = "coregw/" + c.Hub.Hostname + "/command/" + strconv.FormatUint(c.ChargeStation.CoreID(), 10)
-				sendQos = 2
+				sendTopic = "coregw/" + c.Hub.Hostname + "/command/" + c.ChargeStation.SN()
+				sendQos = 0
 			} else {
-				sendTopic = "coregw/" + c.Hub.Hostname + "/telemetry/" + strconv.FormatUint(c.ChargeStation.CoreID(), 10)
+				sendTopic = "coregw/" + c.Hub.Hostname + "/telemetry/" + c.ChargeStation.SN()
 				sendQos = 0
 			}
 
