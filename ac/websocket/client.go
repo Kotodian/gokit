@@ -40,18 +40,18 @@ type Client struct {
 	conn                    *websocket.Conn //socket连接
 	send                    chan []byte     //发送消息的管道
 	sendPing                chan struct{}
-	close                   chan struct{} //退出的通知
-	PongWait                time.Duration //pong
-	PingPeriod              time.Duration //ping的周期
-	Log                     *logrus.Entry //日志
-	HBTime                  time.Time     //心跳时间
-	once                    sync.Once     //主要处理关闭通道
-	Lock                    sync.RWMutex  //加锁，一次只能同步一个报文，减少并发
-	SyncOnline              bool          //是否已同步在线，如果未同步在线就不回复其他报文
-	Data                    sync.Map
+	close                   chan struct{}    //退出的通知
+	PongWait                time.Duration    //pong
+	PingPeriod              time.Duration    //ping的周期
+	Log                     *logrus.Entry    //日志
+	HBTime                  time.Time        //心跳时间
+	once                    sync.Once        //主要处理关闭通道
+	Lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
+	SyncOnline              bool             //是否已同步在线，如果未同步在线就不回复其他报文
 	ClientOfflineNotifyFunc func(err error)  // 网络断开同步到core的函数
 	MqttRegCh               chan MqttMessage //注册信息
 	MqttMsgCh               chan MqttMessage //返回或下发的信息
+	RemoteAddress           string
 	//subTopics               []string        //监听的MQTT路径
 }
 
@@ -88,7 +88,7 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, pongWait time.Duration) *Client {
+func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, pongWait time.Duration, remoteAddress string) *Client {
 	_log := logrus.WithFields(logrus.Fields{
 		"sn": chargeStation.SN(),
 	})
@@ -99,6 +99,7 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket
 		Hub:           hub,
 		HBTime:        time.Now().Local(),
 		conn:          conn,
+		RemoteAddress: remoteAddress,
 		PingPeriod:    pingPeriod,
 		PongWait:      pongWait,
 		send:          make(chan []byte, 5),
