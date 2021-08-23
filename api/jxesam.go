@@ -31,11 +31,11 @@ type response struct {
 	Rows      int    `json:"rows"`
 	Code      string `json:"code"`
 	Msg       string `json:"msg"`
-	Timestamp string `json:"timestamp"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 type registerStatusResponse struct {
-	Resp response   `json:",inline"`
+	response
 	Data *Equipment `json:"data,omitempty"`
 }
 
@@ -77,8 +77,8 @@ func AccessVerify(request *AccessVerifyRequest) (*Equipment, error) {
 		return nil, err
 	}
 
-	if response.Resp.Status != 0 {
-		return nil, errors.New(response.Resp.Msg)
+	if response.Status != 0 {
+		return nil, errors.New(response.Msg)
 	}
 
 	return response.Data, nil
