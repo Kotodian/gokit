@@ -11,14 +11,14 @@ import (
 
 type AccessVerifyRequest struct {
 	DeviceSerialNumber     string `json:"equipmentSN"`
-	DeviceProtocol         string `json:"deviceProtocol"`
-	DeviceProtocolVersion  string `json:"deviceProtocolVersion"`
+	DeviceProtocol         string `json:"deviceProtocol,omitempty"`
+	DeviceProtocolVersion  string `json:"deviceProtocolVersion,omitempty"`
 	RequestPort            string `json:"requestPort"`
 	RemoteAddress          string `json:"remoteAddress"`
-	CertDeviceSerialNumber string `json:"certEquipmentSN"`
-	CertSerialNumber       string `json:"certSerialNumber"`
-	Username               string `json:"account_code"`
-	Password               string `json:"account_password"`
+	CertDeviceSerialNumber string `json:"certEquipmentSN,omitempty"`
+	CertSerialNumber       string `json:"certSerialNumber,omitempty"`
+	Username               string `json:"account_code,omitempty"`
+	Password               string `json:"account_password,omitempty"`
 }
 
 type RegisterStatusRequest struct {
