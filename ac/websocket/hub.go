@@ -111,9 +111,6 @@ func (h *Hub) Run() {
 				"topic": topic,
 			})
 			defer func() {
-				if e := recover(); e != nil {
-					err = e.(error)
-				}
 				if err != nil {
 					logEntry.Error(err)
 				}
@@ -163,9 +160,6 @@ func (h *Hub) Run() {
 				"topic": topic,
 			})
 			defer func() {
-				if e := recover(); e != nil {
-					err = e.(error)
-				}
 				if err != nil {
 					logEntry.Error(err)
 				}
@@ -234,9 +228,6 @@ func (h *Hub) Run() {
 				"topic": topic,
 			})
 			defer func() {
-				if e := recover(); e != nil {
-					err = e.(error)
-				}
 				if err != nil {
 					logEntry.Error(err)
 				}

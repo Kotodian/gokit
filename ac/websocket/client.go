@@ -57,12 +57,6 @@ type Client struct {
 
 func (c *Client) Send(msg []byte) (err error) {
 	_log := c.Log.Dup()
-	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
-			_log.Error(err)
-		}
-	}()
 	c.send <- msg
 	_log.Info("<- ", string(msg))
 	return
@@ -395,11 +389,6 @@ func (c *Client) ReadPump() {
 
 func (c *Client) Reply(ctx context.Context, payload interface{}) {
 	_log := c.Log.Dup()
-	defer func() {
-		if e := recover(); e != nil {
-			_log.Error(e)
-		}
-	}()
 	resp, err := c.Hub.ResponseFn(ctx, payload)
 	if err != nil {
 		_log.Error(err)
@@ -415,12 +404,6 @@ func (c *Client) Reply(ctx context.Context, payload interface{}) {
 }
 
 func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
-	defer func() {
-		if e := recover(); e != nil {
-			_log := c.Log.Dup()
-			_log.Error(e)
-		}
-	}()
 	b := c.Hub.ResponseErrFn(ctx, err, desc...)
 	if b != nil {
 		_ = c.Send(b)
