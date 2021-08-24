@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
 	"io"
 	"strings"
 	"sync"
@@ -17,7 +18,6 @@ import (
 	"github.com/Kotodian/protocol/interfaces"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -43,7 +43,6 @@ type Client struct {
 	close                   chan struct{}    //退出的通知
 	PongWait                time.Duration    //pong
 	PingPeriod              time.Duration    //ping的周期
-	Log                     *logrus.Entry    //日志
 	HBTime                  time.Time        //心跳时间
 	once                    sync.Once        //主要处理关闭通道
 	Lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
@@ -52,13 +51,13 @@ type Client struct {
 	MqttRegCh               chan MqttMessage //注册信息
 	MqttMsgCh               chan MqttMessage //返回或下发的信息
 	RemoteAddress           string
+	log                     *zap.Logger
 	//subTopics               []string        //监听的MQTT路径
 }
 
 func (c *Client) Send(msg []byte) (err error) {
-	_log := c.Log.Dup()
 	c.send <- msg
-	_log.Info("<- ", string(msg))
+	c.log.Info("<-" + string(msg))
 	return
 }
 
@@ -82,13 +81,10 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, pongWait time.Duration, remoteAddress string) *Client {
-	_log := logrus.WithFields(logrus.Fields{
-		"sn": chargeStation.SN(),
-	})
+func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, pongWait time.Duration, remoteAddress string, log *zap.Logger) *Client {
 	pingPeriod := (pongWait * 9) / 10
 	return &Client{
-		Log:           _log,
+		log:           log,
 		ChargeStation: chargeStation,
 		Hub:           hub,
 		HBTime:        time.Now().Local(),
@@ -119,8 +115,12 @@ func (c *Client) SubRegMQTT() {
 				var apdu charger.APDU
 				var err error
 				topic := m.Topic
+				defer func() {
+					if err != nil {
+						c.log.Error(err.Error(), zap.String("sn", c.ChargeStation.SN()))
+					}
+				}()
 				if err = proto.Unmarshal(m.Payload, &apdu); err != nil {
-					logrus.Errorf("decode register conf error, err:%v topic:%s", err.Error(), topic)
 					return
 				}
 
@@ -128,26 +128,7 @@ func (c *Client) SubRegMQTT() {
 					APDU: &apdu,
 				}
 				ctx := context.WithValue(context.TODO(), "client", c)
-				ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-					"sn": c.ChargeStation.SN(),
-				}))
 				ctx = context.WithValue(ctx, "trData", trData)
-
-				_log := logrus.WithFields(logrus.Fields{
-					"sn":     c.ChargeStation.SN(),
-					"pf_sn":  c.ChargeStation.CoreID(),
-					"topic":  topic,
-					"from":   "core",
-					"action": charger.MessageID_name[int32(apdu.MessageId)],
-				})
-				ctx = context.WithValue(ctx, "log", _log)
-
-				defer func() {
-					//如果没有错误就转发到设备上，否则只记录日志
-					if err != nil {
-						_log.Error(err)
-					}
-				}()
 
 				var msg interface{}
 				//var f lib.FromAPDUFunc
@@ -169,7 +150,6 @@ func (c *Client) SubRegMQTT() {
 				if bMsg, err = json.Marshal(msg); err != nil {
 					return
 				} else if err = c.Hub.SendMsgToDevice(c.ChargeStation.SN(), bMsg); err != nil {
-					logrus.Errorf("send msg error:%s", err.Error())
 					return
 				}
 			}()
@@ -190,12 +170,10 @@ func (c *Client) SubMQTT() {
 			return
 		case m := <-c.MqttMsgCh:
 			if len(m.Payload) == 0 {
-				logrus.Warnf("get empty payload, topic:%s, ignore", m.Topic)
 				break
 			}
 			var apdu charger.APDU
 			if err := proto.Unmarshal(m.Payload, &apdu); err != nil {
-				logrus.Errorf("decode cmd or measure msg error, err:%s topic:%s", err.Error(), m.Topic)
 				break
 			}
 			wp.PushTask(workpool.Task{
@@ -209,25 +187,14 @@ func (c *Client) SubMQTT() {
 						Topic: topic,
 					}
 					ctx := context.WithValue(context.TODO(), "client", c)
-					ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-						"sn": c.ChargeStation.SN(),
-					}))
 					ctx = context.WithValue(ctx, "trData", trData)
-
-					_log := logrus.WithFields(logrus.Fields{
-						"sn":     c.ChargeStation.SN(),
-						"pf_sn":  c.ChargeStation.CoreID(),
-						"topic":  topic,
-						"from":   "core",
-						"action": charger.MessageID_name[int32(apdu.MessageId)],
-					})
 					var msg interface{}
 
 					var err error
 					defer func() {
 						//如果没有错误就转发到设备上，否则写日志，回复到平台的错误日志有FromAPDU实现了
 						if err != nil {
-							_log.Errorf(err.Error())
+							c.log.Error(err.Error(), zap.String("sn", c.ChargeStation.SN()))
 							if trData.Ignore == false && (int32(apdu.MessageId)>>7 == 0 || apdu.MessageId == charger.MessageID_ID_MessageError) {
 								if apdu.MessageId != charger.MessageID_ID_MessageError {
 									apdu.MessageId = charger.MessageID_ID_MessageError
@@ -289,7 +256,6 @@ func (c *Client) ReadPump() {
 	c.conn.SetReadLimit(maxMessageSize)
 	_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
 	c.conn.SetPongHandler(func(s string) error {
-		c.Log.Infoln("pong")
 		redisConn := redis.GetRedis()
 		defer redisConn.Close()
 		redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), int64(c.PongWait)+10)
@@ -303,9 +269,6 @@ func (c *Client) ReadPump() {
 		default:
 		}
 		ctx := context.WithValue(context.TODO(), "client", c)
-		ctx = context.WithValue(ctx, "log", logrus.WithFields(logrus.Fields{
-			"sn": c.ChargeStation.SN(),
-		}))
 		if c.conn == nil {
 			return
 		}
@@ -313,7 +276,6 @@ func (c *Client) ReadPump() {
 		var msg []byte
 		_, msg, err = c.conn.ReadMessage()
 		if err != nil {
-			c.Log.Errorf("error: %v", err)
 			break
 			//if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 			//}
@@ -388,10 +350,8 @@ func (c *Client) ReadPump() {
 }
 
 func (c *Client) Reply(ctx context.Context, payload interface{}) {
-	_log := c.Log.Dup()
 	resp, err := c.Hub.ResponseFn(ctx, payload)
 	if err != nil {
-		_log.Error(err)
 		return
 	}
 	//resp := protocol.NewCallResult(ctx, payload)
@@ -438,7 +398,6 @@ func (c *Client) WritePump() {
 			var w io.WriteCloser
 			w, err = c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				c.Log.Error(err)
 				return
 			}
 			_, _ = w.Write(message)
@@ -451,7 +410,6 @@ func (c *Client) WritePump() {
 			}
 
 			if err = w.Close(); err != nil {
-				c.Log.Error(err)
 				return
 			}
 		case <-ticker.C:
@@ -460,7 +418,6 @@ func (c *Client) WritePump() {
 			}
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err = c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				c.Log.Error(err)
 				return
 			}
 		case <-c.sendPing:
@@ -469,7 +426,6 @@ func (c *Client) WritePump() {
 			}
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err = c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				c.Log.Error(err)
 				return
 			}
 		}
