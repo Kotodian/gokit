@@ -333,10 +333,10 @@ func (c *Client) ReadPump() {
 
 			if !trData.IsTelemetry {
 				sendTopic = "coregw/" + c.Hub.Hostname + "/command/" + c.ChargeStation.SN()
-				sendQos = 0
+				sendQos = 2
 			} else {
 				sendTopic = "coregw/" + c.Hub.Hostname + "/telemetry/" + c.ChargeStation.SN()
-				sendQos = 0
+				sendQos = 2
 			}
 
 			c.Hub.PubMqttMsg <- MqttMessage{
