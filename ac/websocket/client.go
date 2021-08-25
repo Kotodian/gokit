@@ -255,14 +255,6 @@ func (c *Client) ReadPump() {
 		}
 		return nil
 	})
-	//_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
-	//c.conn.SetPongHandler(func(s string) error {
-	//	redisConn := redis.GetRedis()
-	//	defer redisConn.Close()
-	//	redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), int64(c.PongWait)+10)
-	//	_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
-	//	return nil
-	//})
 	for {
 		select {
 		case <-c.close:
