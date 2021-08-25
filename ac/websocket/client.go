@@ -41,18 +41,14 @@ type Client struct {
 	send                    chan []byte     //发送消息的管道
 	sendPing                chan struct{}
 	close                   chan struct{}    //退出的通知
-	PongWait                time.Duration    //pong
-	PingPeriod              time.Duration    //ping的周期
-	HBTime                  time.Time        //心跳时间
 	once                    sync.Once        //主要处理关闭通道
 	Lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
-	SyncOnline              bool             //是否已同步在线，如果未同步在线就不回复其他报文
 	ClientOfflineNotifyFunc func(err error)  // 网络断开同步到core的函数
 	MqttRegCh               chan MqttMessage //注册信息
 	MqttMsgCh               chan MqttMessage //返回或下发的信息
 	RemoteAddress           string
 	log                     *zap.Logger
-	//subTopics               []string        //监听的MQTT路径
+	keepalive               int64
 }
 
 func (c *Client) Send(msg []byte) (err error) {
@@ -81,22 +77,19 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, pongWait time.Duration, remoteAddress string, log *zap.Logger) *Client {
-	pingPeriod := (pongWait * 9) / 10
+func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) *Client {
 	return &Client{
 		log:           log,
 		ChargeStation: chargeStation,
 		Hub:           hub,
-		HBTime:        time.Now().Local(),
 		conn:          conn,
 		RemoteAddress: remoteAddress,
-		PingPeriod:    pingPeriod,
-		PongWait:      pongWait,
 		send:          make(chan []byte, 5),
 		sendPing:      make(chan struct{}, 1),
 		MqttMsgCh:     make(chan MqttMessage, 5),
 		MqttRegCh:     make(chan MqttMessage, 5),
 		close:         make(chan struct{}),
+		keepalive:     int64(keepalive),
 	}
 }
 
@@ -156,8 +149,6 @@ func (c *Client) SubRegMQTT() {
 			//logrus.Infof("reg resp:%s, sn:%s", string(bMsg), c.Evse.SN())
 		}
 	}
-	//}
-	return
 }
 
 //SubMQTT 监听MQTT非注册的一般信息
@@ -254,14 +245,14 @@ func (c *Client) ReadPump() {
 		_ = c.Close(err)
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
-	_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
-	c.conn.SetPongHandler(func(s string) error {
-		redisConn := redis.GetRedis()
-		defer redisConn.Close()
-		redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), int64(c.PongWait)+10)
-		_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
-		return nil
-	})
+	//_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
+	//c.conn.SetPongHandler(func(s string) error {
+	//	redisConn := redis.GetRedis()
+	//	defer redisConn.Close()
+	//	redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), int64(c.PongWait)+10)
+	//	_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
+	//	return nil
+	//})
 	for {
 		select {
 		case <-c.close:
@@ -274,78 +265,84 @@ func (c *Client) ReadPump() {
 		}
 
 		var msg []byte
-		_, msg, err = c.conn.ReadMessage()
+		var mType int
+		mType, msg, err = c.conn.ReadMessage()
 		if err != nil {
 			break
-			//if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-			//}
-			//c.Hub.Unregister <- c
-			//c.ReplyError(ctx, err)
-			//c.Log.Error(err.Error())
-			//log.Printf("error: %v", err)
-			//break
 		}
-		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+		switch mType {
+		case websocket.PingMessage:
+			if c.conn == nil {
+				break
+			}
+			redisConn := redis.GetRedis()
+			_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), c.keepalive)
+			if err != nil {
+				c.log.Error(err.Error())
+			}
+			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err = c.conn.WriteMessage(websocket.PongMessage, []byte{})
+			if err != nil {
+				break
+			}
+		default:
+			msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
 
-		go func(ctx context.Context, msg []byte) {
-			trData := &lib.TRData{}
-			ctx = context.WithValue(ctx, "trData", trData)
-			//_log := c.log.WithFields(log.Fields{
-			//	"from": "device",
-			//	"action"
-			//})
-			var err error
-			defer func() {
-				//如果发生了错误，都回复给设备，否则发送到平台
-				if err != nil {
-					c.ReplyError(ctx, err)
+			go func(ctx context.Context, msg []byte) {
+				trData := &lib.TRData{}
+				ctx = context.WithValue(ctx, "trData", trData)
+				var err error
+				defer func() {
+					//如果发生了错误，都回复给设备，否则发送到平台
+					if err != nil {
+						c.ReplyError(ctx, err)
+					}
+				}()
+
+				var payload proto.Message
+				if payload, err = c.Hub.TR.ToAPDU(ctx, msg); err != nil {
+					return
 				}
-			}()
 
-			//acCTX.Data["ac"] = c.Hub
-			//acCTX.Data["ctx"] = ctx
-			//var f lib.ToAPDUFunc
-			var payload proto.Message
-			if payload, err = c.Hub.TR.ToAPDU(ctx, msg); err != nil {
-				return
-			}
+				if payload == nil {
+					return
+				}
 
-			if payload == nil {
-				return
-			}
+				if trData.Ignore {
+					return
+				}
 
-			if trData.Ignore {
-				return
-			}
+				if trData.APDU.Payload, err = proto.Marshal(payload); err != nil {
+					err = fmt.Errorf("encode cmd req payload error, err:%s", err.Error())
+					return
+				}
+				var toCoreMSG []byte
+				if toCoreMSG, err = proto.Marshal(trData.APDU); err != nil {
+					err = fmt.Errorf("encode cmd req apdu error, err:%s", err.Error())
+					return
+				}
 
-			if trData.APDU.Payload, err = proto.Marshal(payload); err != nil {
-				err = fmt.Errorf("encode cmd req payload error, err:%s", err.Error())
-				return
-			}
-			var toCoreMSG []byte
-			if toCoreMSG, err = proto.Marshal(trData.APDU); err != nil {
-				err = fmt.Errorf("encode cmd req apdu error, err:%s", err.Error())
-				return
-			}
+				var sendTopic string
+				var sendQos byte
 
-			var sendTopic string
-			var sendQos byte
+				if !trData.IsTelemetry {
+					sendTopic = "coregw/" + c.Hub.Hostname + "/command/" + c.ChargeStation.SN()
+					sendQos = 2
+				} else {
+					sendTopic = "coregw/" + c.Hub.Hostname + "/telemetry/" + c.ChargeStation.SN()
+					sendQos = 2
+				}
 
-			if !trData.IsTelemetry {
-				sendTopic = "coregw/" + c.Hub.Hostname + "/command/" + c.ChargeStation.SN()
-				sendQos = 2
-			} else {
-				sendTopic = "coregw/" + c.Hub.Hostname + "/telemetry/" + c.ChargeStation.SN()
-				sendQos = 2
-			}
+				c.Hub.PubMqttMsg <- MqttMessage{
+					Topic:    sendTopic,
+					Qos:      sendQos,
+					Retained: false,
+					Payload:  toCoreMSG,
+				}
+			}(ctx, msg)
 
-			c.Hub.PubMqttMsg <- MqttMessage{
-				Topic:    sendTopic,
-				Qos:      sendQos,
-				Retained: false,
-				Payload:  toCoreMSG,
-			}
-		}(ctx, msg)
+		}
+
 	}
 }
 
@@ -377,11 +374,6 @@ func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
 // executing all writes from this goroutine.
 func (c *Client) WritePump() {
 	var err error
-	ticker := time.NewTicker(c.PingPeriod)
-	defer func() {
-		ticker.Stop()
-		_ = c.Close(err)
-	}()
 	for {
 		select {
 		case message, ok := <-c.send:
@@ -412,14 +404,14 @@ func (c *Client) WritePump() {
 			if err = w.Close(); err != nil {
 				return
 			}
-		case <-ticker.C:
-			if c.conn == nil {
-				return
-			}
-			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err = c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
-			}
+		//case <-ticker.C:
+		//	if c.conn == nil {
+		//		return
+		//	}
+		//	_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		//	if err = c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+		//		return
+		//	}
 		case <-c.sendPing:
 			if c.conn == nil {
 				return
