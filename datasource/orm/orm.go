@@ -121,6 +121,6 @@ func Create(obj Object) error {
 	return err
 }
 
-func Updates(updates map[string]interface{}, cond string, where ...interface{}) error {
-	return db.Where(cond, where).Updates(updates).Error
+func Updates(tableName string, updates map[string]interface{}, cond string, where ...interface{}) error {
+	return db.Table(tableName).Where(cond, where).Updates(updates).Error
 }
