@@ -59,12 +59,7 @@ type Object interface {
 }
 
 func GetByID(obj Object, id datasource.UUID) (err error) {
-	err = db.Where("id = ?", id).First(obj).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		obj = nil
-		err = nil
-	}
-	return err
+	return Get(obj, "id = ?", id)
 }
 
 func Get(obj Object, cond string, where ...interface{}) (err error) {
