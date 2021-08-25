@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/Kotodian/gokit/ac/lib"
-	"github.com/Kotodian/gokit/datasource/redis"
 	"github.com/Kotodian/gokit/workpool"
 	"github.com/Kotodian/protocol/golang/hardware/charger"
 	"github.com/Kotodian/protocol/interfaces"
@@ -245,6 +244,10 @@ func (c *Client) ReadPump() {
 		_ = c.Close(err)
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
+	c.conn.SetPingHandler(func(appData string) error {
+		c.log.Info("ping message")
+		return nil
+	})
 	//_ = c.conn.SetReadDeadline(time.Now().Add(c.PongWait))
 	//c.conn.SetPongHandler(func(s string) error {
 	//	redisConn := redis.GetRedis()
@@ -265,87 +268,67 @@ func (c *Client) ReadPump() {
 		}
 
 		var msg []byte
-		var mType int
-		mType, msg, err = c.conn.ReadMessage()
+		_, msg, err = c.conn.ReadMessage()
 		if err != nil {
 			break
 		}
-		c.log.Sugar().Infof("message type %d\n", mType)
-		switch mType {
-		case websocket.PingMessage:
-			if c.conn == nil {
-				break
+		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+
+		go func(ctx context.Context, msg []byte) {
+			trData := &lib.TRData{}
+			ctx = context.WithValue(ctx, "trData", trData)
+			var err error
+			defer func() {
+				//如果发生了错误，都回复给设备，否则发送到平台
+				if err != nil {
+					c.ReplyError(ctx, err)
+				}
+			}()
+
+			var payload proto.Message
+			if payload, err = c.Hub.TR.ToAPDU(ctx, msg); err != nil {
+				return
 			}
-			c.log.Info("ping message", zap.String("sn", c.ChargeStation.SN()))
-			redisConn := redis.GetRedis()
-			_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), c.Keepalive)
-			if err != nil {
-				c.log.Error(err.Error())
+
+			if payload == nil {
+				return
 			}
-			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			err = c.conn.WriteMessage(websocket.PongMessage, []byte{})
-			if err != nil {
-				break
+
+			if trData.Ignore {
+				return
 			}
-		default:
-			msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
 
-			go func(ctx context.Context, msg []byte) {
-				trData := &lib.TRData{}
-				ctx = context.WithValue(ctx, "trData", trData)
-				var err error
-				defer func() {
-					//如果发生了错误，都回复给设备，否则发送到平台
-					if err != nil {
-						c.ReplyError(ctx, err)
-					}
-				}()
+			if trData.APDU.Payload, err = proto.Marshal(payload); err != nil {
+				err = fmt.Errorf("encode cmd req payload error, err:%s", err.Error())
+				return
+			}
+			var toCoreMSG []byte
+			if toCoreMSG, err = proto.Marshal(trData.APDU); err != nil {
+				err = fmt.Errorf("encode cmd req apdu error, err:%s", err.Error())
+				return
+			}
 
-				var payload proto.Message
-				if payload, err = c.Hub.TR.ToAPDU(ctx, msg); err != nil {
-					return
-				}
+			var sendTopic string
+			var sendQos byte
 
-				if payload == nil {
-					return
-				}
+			if !trData.IsTelemetry {
+				sendTopic = "coregw/" + c.Hub.Hostname + "/command/" + c.ChargeStation.SN()
+				sendQos = 2
+			} else {
+				sendTopic = "coregw/" + c.Hub.Hostname + "/telemetry/" + c.ChargeStation.SN()
+				sendQos = 2
+			}
 
-				if trData.Ignore {
-					return
-				}
-
-				if trData.APDU.Payload, err = proto.Marshal(payload); err != nil {
-					err = fmt.Errorf("encode cmd req payload error, err:%s", err.Error())
-					return
-				}
-				var toCoreMSG []byte
-				if toCoreMSG, err = proto.Marshal(trData.APDU); err != nil {
-					err = fmt.Errorf("encode cmd req apdu error, err:%s", err.Error())
-					return
-				}
-
-				var sendTopic string
-				var sendQos byte
-
-				if !trData.IsTelemetry {
-					sendTopic = "coregw/" + c.Hub.Hostname + "/command/" + c.ChargeStation.SN()
-					sendQos = 2
-				} else {
-					sendTopic = "coregw/" + c.Hub.Hostname + "/telemetry/" + c.ChargeStation.SN()
-					sendQos = 2
-				}
-
-				c.Hub.PubMqttMsg <- MqttMessage{
-					Topic:    sendTopic,
-					Qos:      sendQos,
-					Retained: false,
-					Payload:  toCoreMSG,
-				}
-			}(ctx, msg)
-
-		}
+			c.Hub.PubMqttMsg <- MqttMessage{
+				Topic:    sendTopic,
+				Qos:      sendQos,
+				Retained: false,
+				Payload:  toCoreMSG,
+			}
+		}(ctx, msg)
 
 	}
+
 }
 
 func (c *Client) Reply(ctx context.Context, payload interface{}) {
