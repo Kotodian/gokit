@@ -45,8 +45,9 @@ type Equipment struct {
 	Registered bool   `json:"registered"`
 }
 
-//const defaultURL = "http://jx-esam:8080"
-const defaultURL = "http://10.43.0.51:8080"
+const defaultURL = "http://jx-esam:8080"
+
+//const defaultURL = "http://10.43.0.51:8080"
 const device = "/device"
 const defaultContentType = "application/json"
 const defaultVersion = "/v1"
