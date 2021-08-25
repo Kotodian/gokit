@@ -275,6 +275,7 @@ func (c *Client) ReadPump() {
 			if c.conn == nil {
 				break
 			}
+			c.log.Info("ping message", zap.String("sn", c.ChargeStation.SN()))
 			redisConn := redis.GetRedis()
 			_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), c.keepalive)
 			if err != nil {
