@@ -48,7 +48,7 @@ type Client struct {
 	MqttMsgCh               chan MqttMessage //返回或下发的信息
 	RemoteAddress           string
 	log                     *zap.Logger
-	keepalive               int64
+	Keepalive               int64
 }
 
 func (c *Client) Send(msg []byte) (err error) {
@@ -89,7 +89,7 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket
 		MqttMsgCh:     make(chan MqttMessage, 5),
 		MqttRegCh:     make(chan MqttMessage, 5),
 		close:         make(chan struct{}),
-		keepalive:     int64(keepalive),
+		Keepalive:     int64(keepalive),
 	}
 }
 
@@ -277,7 +277,7 @@ func (c *Client) ReadPump() {
 			}
 			c.log.Info("ping message", zap.String("sn", c.ChargeStation.SN()))
 			redisConn := redis.GetRedis()
-			_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), c.keepalive)
+			_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), c.Keepalive)
 			if err != nil {
 				c.log.Error(err.Error())
 			}
