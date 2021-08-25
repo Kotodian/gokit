@@ -270,6 +270,7 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			break
 		}
+		c.log.Sugar().Infof("message type %d\n", mType)
 		switch mType {
 		case websocket.PingMessage:
 			if c.conn == nil {
