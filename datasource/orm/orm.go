@@ -120,3 +120,7 @@ func Create(obj Object) error {
 	err := db.Create(obj).Error
 	return err
 }
+
+func Updates(updates map[string]interface{}, cond string, where ...interface{}) error {
+	return db.Where(cond, where).Updates(updates).Error
+}
