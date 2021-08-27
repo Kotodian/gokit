@@ -286,8 +286,11 @@ func (c *Client) ReadPump() {
 		var msg []byte
 		_, msg, err = c.conn.ReadMessage()
 		if err != nil {
-			break
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				c.log.Sugar().Errorf("error: %v", err)
+			}
 		}
+
 		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
 
 		go func(ctx context.Context, msg []byte) {
