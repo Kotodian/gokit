@@ -77,7 +77,7 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) *Client {
+func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) ClientInterface {
 	return &Client{
 		log:           log,
 		chargeStation: chargeStation,
@@ -430,4 +430,8 @@ func (c *Client) Hub() *Hub {
 
 func (c *Client) RemoteAddress() string {
 	return c.remoteAddress
+}
+
+func (c *Client) ChargeStation() interfaces.ChargeStation {
+	return c.chargeStation
 }
