@@ -8,6 +8,7 @@ import (
 	"github.com/Kotodian/gokit/datasource/redis"
 	"go.uber.org/zap"
 	"io"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -253,13 +254,20 @@ func (c *Client) ReadPump() {
 	c.conn.SetPingHandler(func(appData string) error {
 		_ = c.conn.SetReadDeadline(time.Now().Add(90 * time.Second))
 		c.log.Info("ping message received", zap.String("sn", c.chargeStation.SN()))
+		err = c.conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeWait))
+		if err == websocket.ErrCloseSent {
+			return nil
+		} else if e, ok := err.(net.Error); ok && e.Temporary() {
+			return nil
+		}
 		redisConn := redis.GetRedis()
 		defer redisConn.Close()
 		_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.chargeStation.SN(), c.hub.Hostname), c.keepalive+10)
 		if err != nil {
 			c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
 		}
-		return nil
+		return err
+
 	})
 	for {
 		select {
