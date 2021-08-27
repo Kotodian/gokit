@@ -85,7 +85,7 @@ func (h *Hub) SetTR(tr lib.ITranslate) {
 
 func (h *Hub) SendMsgToDevice(evse string, msg []byte) error {
 	if c, ok := h.Clients.Load(evse); ok {
-		return c.(*Client).Send(msg)
+		return c.(ClientInterface).Send(msg)
 	}
 	return fmt.Errorf("sn:%s offline", evse)
 }
@@ -122,21 +122,21 @@ func (h *Hub) Run() {
 
 			fmt.Println("go reg mqtt sn", sn)
 
-			var _client *Client
+			var _client ClientInterface
 			if c, ok := h.RegClients.Load(sn); !ok {
 				return
 			} else {
-				_client = c.(*Client)
+				_client = c.(ClientInterface)
 			}
 
 			fmt.Println("go reg mqtt client", fmt.Sprintf("%+v", _client))
 
-			_client.MqttRegCh <- MqttMessage{
+			_client.PublishReg(MqttMessage{
 				Topic:    topic,
 				Payload:  m.Payload(),
 				Qos:      m.Qos(),
 				Retained: m.Retained(),
-			}
+			})
 		})
 		token.WaitTimeout(10 * time.Second)
 		if err = token.Error(); err != nil {
@@ -171,20 +171,20 @@ func (h *Hub) Run() {
 
 			c, ok := h.Clients.Load(sn)
 
-			var _client *Client
+			var _client ClientInterface
 			if !ok {
 				return
 			} else {
-				_client = c.(*Client)
+				_client = c.(ClientInterface)
 			}
 			fmt.Println("go mqtt msg client", fmt.Sprintf("%+v", _client))
 
-			_client.MqttMsgCh <- MqttMessage{
+			_client.Publish(MqttMessage{
 				Topic:    topic,
 				Payload:  m.Payload(),
 				Qos:      m.Qos(),
 				Retained: m.Retained(),
-			}
+			})
 		})
 		token.WaitTimeout(time.Second * 5)
 		if err = token.Error(); err != nil {

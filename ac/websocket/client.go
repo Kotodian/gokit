@@ -408,10 +408,10 @@ func (c *Client) WritePump() {
 	}
 }
 
-func (c *Client) SendPing() {
-	c.sendPing <- struct{}{}
+func (c *Client) PublishReg(m MqttMessage) {
+	c.MqttRegCh <- m
 }
 
-func (c *Client) RemoteAddr() string {
-	return c.conn.RemoteAddr().String()
+func (c *Client) Publish(m MqttMessage) {
+	c.MqttMsgCh <- m
 }
