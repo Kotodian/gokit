@@ -8,6 +8,7 @@ import (
 
 type KickRequest struct {
 	SN     string `json:"sn"`
+	Host   string `json:"host"`
 	Reason string `json:"reason"`
 }
 
