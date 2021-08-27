@@ -246,6 +246,10 @@ func (c *Client) ReadPump() {
 		_ = c.Close(err)
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
+	err = c.conn.SetReadDeadline(time.Now().Add(90 * time.Second))
+	if err != nil {
+		return
+	}
 	c.conn.SetPingHandler(func(appData string) error {
 		_ = c.conn.SetReadDeadline(time.Now().Add(90 * time.Second))
 		c.log.Info("ping message received", zap.String("sn", c.chargeStation.SN()))
