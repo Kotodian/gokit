@@ -247,6 +247,7 @@ func (c *Client) ReadPump() {
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetPingHandler(func(appData string) error {
+		_ = c.conn.SetReadDeadline(time.Now().Add(time.Duration(c.keepalive+10) * time.Second))
 		c.log.Info("ping message received", zap.String("sn", c.chargeStation.SN()))
 		redisConn := redis.GetRedis()
 		defer redisConn.Close()
