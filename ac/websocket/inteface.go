@@ -1,6 +1,10 @@
 package websocket
 
-import "context"
+import (
+	"context"
+	"github.com/Kotodian/protocol/interfaces"
+	"go.uber.org/zap"
+)
 
 type ClientInterface interface {
 	Send(msg []byte) error
@@ -12,4 +16,9 @@ type ClientInterface interface {
 	Publish(m MqttMessage)
 	PublishReg(m MqttMessage)
 	Close(err error) error
+	ChargeStation() interfaces.ChargeStation
+	Hub() *Hub
+	KeepAlive() int64
+	Logger() *zap.Logger
+	RemoteAddress() string
 }

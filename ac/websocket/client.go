@@ -35,20 +35,20 @@ var (
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
-	ChargeStation           interfaces.ChargeStation
-	Hub                     *Hub            //中间件
+	chargeStation           interfaces.ChargeStation
+	hub                     *Hub            //中间件
 	conn                    *websocket.Conn //socket连接
 	send                    chan []byte     //发送消息的管道
 	sendPing                chan struct{}
 	close                   chan struct{}    //退出的通知
 	once                    sync.Once        //主要处理关闭通道
 	Lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
-	ClientOfflineNotifyFunc func(err error)  // 网络断开同步到core的函数
-	MqttRegCh               chan MqttMessage //注册信息
-	MqttMsgCh               chan MqttMessage //返回或下发的信息
-	RemoteAddress           string
+	clientOfflineNotifyFunc func(err error)  // 网络断开同步到core的函数
+	mqttRegCh               chan MqttMessage //注册信息
+	mqttMsgCh               chan MqttMessage //返回或下发的信息
+	remoteAddress           string
 	log                     *zap.Logger
-	Keepalive               int64
+	keepalive               int64
 }
 
 func (c *Client) Send(msg []byte) (err error) {
@@ -58,19 +58,19 @@ func (c *Client) Send(msg []byte) (err error) {
 }
 
 func (c *Client) Close(err error) error {
-	fmt.Println("关闭连接 1", c.ChargeStation.CoreID(), c.ChargeStation.SN())
+	fmt.Println("关闭连接 1", c.chargeStation.CoreID(), c.chargeStation.SN())
 	c.once.Do(func() {
-		c.Hub.Clients.Delete(c.ChargeStation.SN())
-		c.Hub.RegClients.Delete(c.ChargeStation.SN())
-		fmt.Println("关闭连接 2", c.ChargeStation.CoreID(), c.ChargeStation.SN())
+		c.hub.Clients.Delete(c.chargeStation.SN())
+		c.hub.RegClients.Delete(c.chargeStation.SN())
+		fmt.Println("关闭连接 2", c.chargeStation.CoreID(), c.chargeStation.SN())
 		//c.Hub.MqttClient.GetMQTT().Unsubscribe(c.subTopics...)
 		_ = c.conn.Close()
 		c.conn = nil
 		close(c.send)
 		close(c.close)
-		close(c.MqttRegCh)
-		close(c.MqttMsgCh)
-		c.ClientOfflineNotifyFunc(err)
+		close(c.mqttRegCh)
+		close(c.mqttMsgCh)
+		c.clientOfflineNotifyFunc(err)
 	})
 	return nil
 }
@@ -80,37 +80,37 @@ func (c *Client) Close(err error) error {
 func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) *Client {
 	return &Client{
 		log:           log,
-		ChargeStation: chargeStation,
-		Hub:           hub,
+		chargeStation: chargeStation,
+		hub:           hub,
 		conn:          conn,
-		RemoteAddress: remoteAddress,
+		remoteAddress: remoteAddress,
 		send:          make(chan []byte, 5),
 		sendPing:      make(chan struct{}, 1),
-		MqttMsgCh:     make(chan MqttMessage, 5),
-		MqttRegCh:     make(chan MqttMessage, 5),
+		mqttMsgCh:     make(chan MqttMessage, 5),
+		mqttRegCh:     make(chan MqttMessage, 5),
 		close:         make(chan struct{}),
-		Keepalive:     int64(keepalive),
+		keepalive:     int64(keepalive),
 	}
 }
 
 //SubRegMQTT 监听MQTT的注册报文回复信息
 func (c *Client) SubRegMQTT() {
-	c.Hub.RegClients.Store(c.ChargeStation.SN(), c)
+	c.hub.RegClients.Store(c.chargeStation.SN(), c)
 	//if c.Evse.CoreID() == 0 {
 	for {
-		fmt.Println("------------> loop reg msg start", c.ChargeStation.SN())
+		fmt.Println("------------> loop reg msg start", c.chargeStation.SN())
 		select {
 		case <-c.close:
-			fmt.Println("------------> loop reg msg end", c.ChargeStation.SN())
+			fmt.Println("------------> loop reg msg end", c.chargeStation.SN())
 			return
-		case m := <-c.MqttRegCh:
+		case m := <-c.mqttRegCh:
 			func() {
 				var apdu charger.APDU
 				var err error
 				topic := m.Topic
 				defer func() {
 					if err != nil {
-						c.log.Error(err.Error(), zap.String("sn", c.ChargeStation.SN()))
+						c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
 					}
 				}()
 				if err = proto.Unmarshal(m.Payload, &apdu); err != nil {
@@ -125,7 +125,7 @@ func (c *Client) SubRegMQTT() {
 
 				var msg interface{}
 				//var f lib.FromAPDUFunc
-				if msg, err = c.Hub.TR.FromAPDU(ctx, &apdu); err != nil {
+				if msg, err = c.hub.TR.FromAPDU(ctx, &apdu); err != nil {
 					err = fmt.Errorf("FromAPDU reg error, err:%s topic:%s", err.Error(), topic)
 					return
 				} else if msg == nil {
@@ -142,7 +142,7 @@ func (c *Client) SubRegMQTT() {
 				var bMsg []byte
 				if bMsg, err = json.Marshal(msg); err != nil {
 					return
-				} else if err = c.Hub.SendMsgToDevice(c.ChargeStation.SN(), bMsg); err != nil {
+				} else if err = c.hub.SendMsgToDevice(c.chargeStation.SN(), bMsg); err != nil {
 					return
 				}
 			}()
@@ -153,13 +153,13 @@ func (c *Client) SubRegMQTT() {
 
 //SubMQTT 监听MQTT非注册的一般信息
 func (c *Client) SubMQTT() {
-	c.Hub.Clients.Store(c.ChargeStation.SN(), c)
+	c.hub.Clients.Store(c.chargeStation.SN(), c)
 	wp := workpool.New(1, 5).Start()
 	for {
 		select {
 		case <-c.close:
 			return
-		case m := <-c.MqttMsgCh:
+		case m := <-c.mqttMsgCh:
 			if len(m.Payload) == 0 {
 				break
 			}
@@ -185,7 +185,7 @@ func (c *Client) SubMQTT() {
 					defer func() {
 						//如果没有错误就转发到设备上，否则写日志，回复到平台的错误日志有FromAPDU实现了
 						if err != nil {
-							c.log.Error(err.Error(), zap.String("sn", c.ChargeStation.SN()))
+							c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
 							if trData.Ignore == false && (int32(apdu.MessageId)>>7 == 0 || apdu.MessageId == charger.MessageID_ID_MessageError) {
 								if apdu.MessageId != charger.MessageID_ID_MessageError {
 									apdu.MessageId = charger.MessageID_ID_MessageError
@@ -196,17 +196,17 @@ func (c *Client) SubMQTT() {
 								}
 								apduEncoded, _ := proto.Marshal(&apdu)
 								pubMqttMsg := MqttMessage{
-									Topic:    strings.Replace(trData.Topic, c.Hub.Hostname, "coregw", 1),
+									Topic:    strings.Replace(trData.Topic, c.hub.Hostname, "coregw", 1),
 									Qos:      2,
 									Retained: false,
 									Payload:  apduEncoded,
 								}
-								c.Hub.PubMqttMsg <- pubMqttMsg
+								c.hub.PubMqttMsg <- pubMqttMsg
 							}
 						}
 					}()
 
-					if msg, err = c.Hub.TR.FromAPDU(ctx, &apdu); err != nil {
+					if msg, err = c.hub.TR.FromAPDU(ctx, &apdu); err != nil {
 						return
 					} else if msg == nil {
 						return
@@ -223,7 +223,7 @@ func (c *Client) SubMQTT() {
 					var bMsg []byte
 					if bMsg, err = json.Marshal(msg); err != nil {
 						return
-					} else if err = c.Hub.SendMsgToDevice(c.ChargeStation.SN(), bMsg); err != nil {
+					} else if err = c.hub.SendMsgToDevice(c.chargeStation.SN(), bMsg); err != nil {
 						return
 					}
 					//}()
@@ -246,12 +246,12 @@ func (c *Client) ReadPump() {
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetPingHandler(func(appData string) error {
-		c.log.Info("ping message received", zap.String("sn", c.ChargeStation.SN()))
+		c.log.Info("ping message received", zap.String("sn", c.chargeStation.SN()))
 		redisConn := redis.GetRedis()
 		defer redisConn.Close()
-		_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.ChargeStation.SN(), c.Hub.Hostname), c.Keepalive+10)
+		_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.chargeStation.SN(), c.hub.Hostname), c.keepalive+10)
 		if err != nil {
-			c.log.Error(err.Error(), zap.String("sn", c.ChargeStation.SN()))
+			c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
 		}
 		return nil
 	})
@@ -285,7 +285,7 @@ func (c *Client) ReadPump() {
 			}()
 
 			var payload proto.Message
-			if payload, err = c.Hub.TR.ToAPDU(ctx, msg); err != nil {
+			if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
 				return
 			}
 
@@ -311,14 +311,14 @@ func (c *Client) ReadPump() {
 			var sendQos byte
 
 			if !trData.IsTelemetry {
-				sendTopic = "coregw/" + c.Hub.Hostname + "/command/" + c.ChargeStation.SN()
+				sendTopic = "coregw/" + c.hub.Hostname + "/command/" + c.chargeStation.SN()
 				sendQos = 2
 			} else {
-				sendTopic = "coregw/" + c.Hub.Hostname + "/telemetry/" + c.ChargeStation.SN()
+				sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + c.chargeStation.SN()
 				sendQos = 2
 			}
 
-			c.Hub.PubMqttMsg <- MqttMessage{
+			c.hub.PubMqttMsg <- MqttMessage{
 				Topic:    sendTopic,
 				Qos:      sendQos,
 				Retained: false,
@@ -331,7 +331,7 @@ func (c *Client) ReadPump() {
 }
 
 func (c *Client) Reply(ctx context.Context, payload interface{}) {
-	resp, err := c.Hub.ResponseFn(ctx, payload)
+	resp, err := c.hub.ResponseFn(ctx, payload)
 	if err != nil {
 		return
 	}
@@ -345,7 +345,7 @@ func (c *Client) Reply(ctx context.Context, payload interface{}) {
 }
 
 func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
-	b := c.Hub.ResponseErrFn(ctx, err, desc...)
+	b := c.hub.ResponseErrFn(ctx, err, desc...)
 	if b != nil {
 		_ = c.Send(b)
 	}
@@ -409,9 +409,25 @@ func (c *Client) WritePump() {
 }
 
 func (c *Client) PublishReg(m MqttMessage) {
-	c.MqttRegCh <- m
+	c.mqttRegCh <- m
 }
 
 func (c *Client) Publish(m MqttMessage) {
-	c.MqttMsgCh <- m
+	c.mqttMsgCh <- m
+}
+
+func (c *Client) KeepAlive() int64 {
+	return c.keepalive
+}
+
+func (c *Client) Logger() *zap.Logger {
+	return c.log
+}
+
+func (c *Client) Hub() *Hub {
+	return c.hub
+}
+
+func (c *Client) RemoteAddress() string {
+	return c.remoteAddress
 }
