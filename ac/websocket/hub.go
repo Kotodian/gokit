@@ -241,11 +241,11 @@ func (h *Hub) Run() {
 
 			c, ok := h.Clients.Load(sn)
 
-			var _client *Client
+			var _client ClientInterface
 			if !ok {
 				return
 			} else {
-				_client = c.(*Client)
+				_client = c.(ClientInterface)
 				_client.Close(nil)
 				fmt.Println("go mqtt msg client", fmt.Sprintf("%+v", _client))
 				h.Clients.Delete(sn)

@@ -11,4 +11,5 @@ type ClientInterface interface {
 	ReplyError(ctx context.Context, err error, desc ...string)
 	Publish(m MqttMessage)
 	PublishReg(m MqttMessage)
+	Close(err error) error
 }
