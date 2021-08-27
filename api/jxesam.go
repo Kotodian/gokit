@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -72,7 +71,6 @@ func AccessVerify(request *AccessVerifyRequest) (*Equipment, error) {
 		return nil, err
 	}
 	response := &registerStatusResponse{}
-	fmt.Println(string(body))
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return nil, err
