@@ -60,6 +60,7 @@ func (c *Client) Send(msg []byte) (err error) {
 func (c *Client) Close(err error) error {
 	fmt.Println("关闭连接 1", c.chargeStation.CoreID(), c.chargeStation.SN())
 	c.once.Do(func() {
+		c.log.Error(err.Error())
 		c.hub.Clients.Delete(c.chargeStation.SN())
 		c.hub.RegClients.Delete(c.chargeStation.SN())
 		fmt.Println("关闭连接 2", c.chargeStation.CoreID(), c.chargeStation.SN())
