@@ -435,3 +435,11 @@ func (c *Client) RemoteAddress() string {
 func (c *Client) ChargeStation() interfaces.ChargeStation {
 	return c.chargeStation
 }
+
+func (c *Client) SetClientOfflineFunc(clientOfflineFunc func(err error)) {
+	c.clientOfflineNotifyFunc = clientOfflineFunc
+}
+
+func (c *Client) ClientOfflineFunc() func(err error) {
+	return c.clientOfflineNotifyFunc
+}

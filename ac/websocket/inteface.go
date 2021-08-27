@@ -22,4 +22,6 @@ type ClientInterface interface {
 	KeepAlive() int64
 	Logger() *zap.Logger
 	RemoteAddress() string
+	SetClientOfflineFunc(func(err error))
+	ClientOfflineFunc() func(err error)
 }
