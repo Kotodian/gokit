@@ -24,4 +24,6 @@ type ClientInterface interface {
 	RemoteAddress() string
 	SetClientOfflineFunc(func(err error))
 	ClientOfflineFunc() func(err error)
+	Lock()
+	Unlock()
 }

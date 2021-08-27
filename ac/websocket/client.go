@@ -42,7 +42,7 @@ type Client struct {
 	sendPing                chan struct{}
 	close                   chan struct{}    //退出的通知
 	once                    sync.Once        //主要处理关闭通道
-	Lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
+	lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
 	clientOfflineNotifyFunc func(err error)  // 网络断开同步到core的函数
 	mqttRegCh               chan MqttMessage //注册信息
 	mqttMsgCh               chan MqttMessage //返回或下发的信息
@@ -442,4 +442,12 @@ func (c *Client) SetClientOfflineFunc(clientOfflineFunc func(err error)) {
 
 func (c *Client) ClientOfflineFunc() func(err error) {
 	return c.clientOfflineNotifyFunc
+}
+
+func (c *Client) Lock() {
+	c.lock.Lock()
+}
+
+func (c *Client) Unlock() {
+	c.lock.Unlock()
 }
