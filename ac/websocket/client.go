@@ -266,7 +266,10 @@ func (c *Client) ReadPump() {
 		if c.conn == nil {
 			return
 		}
-
+		err = c.conn.SetReadDeadline(time.Now().Add(time.Duration(c.keepalive+10) * time.Second))
+		if err != nil {
+			break
+		}
 		var msg []byte
 		_, msg, err = c.conn.ReadMessage()
 		if err != nil {
