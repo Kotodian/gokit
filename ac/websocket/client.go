@@ -289,6 +289,7 @@ func (c *Client) ReadPump() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				c.log.Sugar().Errorf("error: %v", err)
 			}
+			break
 		}
 
 		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
