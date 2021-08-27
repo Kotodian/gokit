@@ -10,6 +10,7 @@ type ClientInterface interface {
 	Send(msg []byte) error
 	SubRegMQTT()
 	SubMQTT()
+	WritePump()
 	ReadPump()
 	Reply(ctx context.Context, payload interface{})
 	ReplyError(ctx context.Context, err error, desc ...string)
