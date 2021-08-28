@@ -24,6 +24,7 @@ import (
 const (
 	// Time allowed to write a message to the peer.
 	writeWait = 10 * time.Second
+	readWait  = 100 * time.Second
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 4096
@@ -247,12 +248,12 @@ func (c *Client) ReadPump() {
 		_ = c.Close(err)
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
-	err = c.conn.SetReadDeadline(time.Now().Add(90 * time.Second))
+	err = c.conn.SetReadDeadline(time.Now().Add(readWait * time.Second))
 	if err != nil {
 		return
 	}
 	c.conn.SetPingHandler(func(appData string) error {
-		_ = c.conn.SetReadDeadline(time.Now().Add(90 * time.Second))
+		_ = c.conn.SetReadDeadline(time.Now().Add(readWait * time.Second))
 		c.log.Info("ping message received", zap.String("sn", c.chargeStation.SN()))
 		err = c.conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeWait))
 		if err == websocket.ErrCloseSent {
@@ -270,23 +271,18 @@ func (c *Client) ReadPump() {
 
 	})
 	for {
-		select {
-		case <-c.close:
-			return
-		default:
-		}
 		ctx := context.WithValue(context.TODO(), "client", c)
 		if c.conn == nil {
 			return
 		}
-		err = c.conn.SetReadDeadline(time.Now().Add(90 * time.Second))
+		err = c.conn.SetReadDeadline(time.Now().Add(readWait * time.Second))
 		if err != nil {
 			break
 		}
 		var msg []byte
 		_, msg, err = c.conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
 				c.log.Sugar().Errorf("error: %v", err)
 			}
 			break
