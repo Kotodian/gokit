@@ -248,12 +248,12 @@ func (c *Client) ReadPump() {
 		_ = c.Close(err)
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
-	err = c.conn.SetReadDeadline(time.Now().Add(readWait * time.Second))
+	err = c.conn.SetReadDeadline(time.Now().Add(readWait))
 	if err != nil {
 		return
 	}
 	c.conn.SetPingHandler(func(appData string) error {
-		_ = c.conn.SetReadDeadline(time.Now().Add(readWait * time.Second))
+		_ = c.conn.SetReadDeadline(time.Now().Add(readWait))
 		c.log.Info("ping message received", zap.String("sn", c.chargeStation.SN()))
 		err = c.conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeWait))
 		if err == websocket.ErrCloseSent {
@@ -275,7 +275,7 @@ func (c *Client) ReadPump() {
 		if c.conn == nil {
 			return
 		}
-		err = c.conn.SetReadDeadline(time.Now().Add(readWait * time.Second))
+		err = c.conn.SetReadDeadline(time.Now().Add(readWait))
 		if err != nil {
 			break
 		}
