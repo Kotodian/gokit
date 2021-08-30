@@ -264,7 +264,7 @@ func (c *Client) ReadPump() {
 		}
 		redisConn := redis.GetRedis()
 		defer redisConn.Close()
-		_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.chargeStation.SN(), c.hub.Hostname), c.keepalive+10)
+		_, err = redisConn.Do("expire", fmt.Sprintf("%s:%s:%s", "online", c.chargeStation.SN(), c.hub.Hostname), readWait)
 		if err != nil {
 			c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
 		}
