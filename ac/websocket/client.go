@@ -51,6 +51,7 @@ type Client struct {
 	remoteAddress           string
 	log                     *zap.Logger
 	keepalive               int64
+	coregw                  string
 }
 
 func (c *Client) Send(msg []byte) (err error) {
@@ -467,4 +468,12 @@ func (c *Client) Lock() {
 
 func (c *Client) Unlock() {
 	c.lock.Unlock()
+}
+
+func (c *Client) Coregw() string {
+	return c.coregw
+}
+
+func (c *Client) SetCoregw(coregw string) {
+	c.coregw = coregw
 }

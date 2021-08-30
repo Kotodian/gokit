@@ -118,7 +118,7 @@ func (h *Hub) Run() {
 
 			fmt.Println("go reg mqtt msg", fmt.Sprintf("%+v", m))
 
-			sn := getSnFromTopic(m.Topic())
+			_, sn := getSnFromTopic(m.Topic())
 
 			fmt.Println("go reg mqtt sn", sn)
 
@@ -165,9 +165,9 @@ func (h *Hub) Run() {
 				}
 			}()
 
-			fmt.Println("go mqtt msg", fmt.Sprintf("%+v", m))
+			//fmt.Println("go mqtt msg", fmt.Sprintf("%+v", m))
 
-			sn := getSnFromTopic(topic)
+			coregw, sn := getSnFromTopic(topic)
 
 			c, ok := h.Clients.Load(sn)
 
@@ -177,7 +177,10 @@ func (h *Hub) Run() {
 			} else {
 				_client = c.(ClientInterface)
 			}
-			fmt.Println("go mqtt msg client", fmt.Sprintf("%+v", _client))
+			if coregw != "" {
+				_client.SetCoregw(coregw)
+			}
+			//fmt.Println("go mqtt msg client", fmt.Sprintf("%+v", _client))
 
 			_client.Publish(MqttMessage{
 				Topic:    topic,
@@ -237,7 +240,8 @@ func (h *Hub) Run() {
 
 			//根据topic获取sn
 			var sn string
-			sn = getSnFromTopic(message.Topic())
+
+			_, sn = getSnFromTopic(message.Topic())
 
 			c, ok := h.Clients.Load(sn)
 
@@ -260,10 +264,14 @@ func (h *Hub) Run() {
 	_ = g.Wait()
 }
 
-func getSnFromTopic(topic string) (sn string) {
+func getSnFromTopic(topic string) (coregw string, sn string) {
 	//根据topic获取sn
 	topics := strings.Split(topic, "/")
-	lastIndex := len(topics) - 1
+	length := len(topics)
+	lastIndex, secondLastIndex := length-1, length-2
 	sn = topics[lastIndex]
+	if topics[secondLastIndex] != "command" && topics[secondLastIndex] != "telemetry" {
+		coregw = topics[secondLastIndex]
+	}
 	return
 }

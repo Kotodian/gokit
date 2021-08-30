@@ -26,4 +26,6 @@ type ClientInterface interface {
 	ClientOfflineFunc() func(err error)
 	Lock()
 	Unlock()
+	Coregw() string
+	SetCoregw(coregw string)
 }
