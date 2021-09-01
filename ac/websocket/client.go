@@ -56,7 +56,6 @@ type Client struct {
 
 func (c *Client) Send(msg []byte) (err error) {
 	c.send <- msg
-	c.log.Info("<-" + string(msg))
 	return
 }
 

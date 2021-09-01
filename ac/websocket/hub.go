@@ -104,17 +104,7 @@ func (h *Hub) Run() {
 	//监听注册报文
 	g.Go(func(ctx context.Context) (err error) {
 		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"register"+topicEnd, 2, func(mqc mqttClient.Client, m mqttClient.Message) {
-			var err error
 			topic := m.Topic()
-
-			logEntry := logrus.WithFields(logrus.Fields{
-				"topic": topic,
-			})
-			defer func() {
-				if err != nil {
-					logEntry.Error(err)
-				}
-			}()
 
 			fmt.Println("go reg mqtt msg", fmt.Sprintf("%+v", m))
 
@@ -156,12 +146,9 @@ func (h *Hub) Run() {
 			var err error
 			topic := m.Topic()
 
-			logEntry := logrus.WithFields(logrus.Fields{
-				"topic": topic,
-			})
 			defer func() {
 				if err != nil {
-					logEntry.Error(err)
+
 				}
 			}()
 
@@ -224,17 +211,6 @@ func (h *Hub) Run() {
 	// 监听踢掉设备的报文
 	g.Go(func(ctx context.Context) error {
 		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"kick"+topicEnd, 2, func(mqc mqttClient.Client, message mqttClient.Message) {
-			var err error
-			topic := message.Topic()
-
-			logEntry := logrus.WithFields(logrus.Fields{
-				"topic": topic,
-			})
-			defer func() {
-				if err != nil {
-					logEntry.Error(err)
-				}
-			}()
 
 			fmt.Println("go mqtt msg", fmt.Sprintf("%+v", message))
 

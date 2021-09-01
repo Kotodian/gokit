@@ -13,7 +13,7 @@ func TestConn(t *testing.T) {
 	os.Setenv("MONGO_HOST", "10.43.0.13")
 	os.Setenv("MONGO_PORT", "27017")
 	InitEnv()
-	_, err := Connect()
+	_, err := connect()
 	if err != nil {
 		t.Error(err)
 		return
