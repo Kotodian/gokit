@@ -25,16 +25,8 @@ type RegisterStatusRequest struct {
 	TimeStamp          int64  `json:"timeStamp"`
 }
 
-type response struct {
-	Status    int    `json:"status"`
-	Rows      int    `json:"rows"`
-	Code      string `json:"code"`
-	Msg       string `json:"msg"`
-	Timestamp int64  `json:"timestamp"`
-}
-
 type registerStatusResponse struct {
-	response
+	Response
 	Data *Equipment `json:"data,omitempty"`
 }
 
