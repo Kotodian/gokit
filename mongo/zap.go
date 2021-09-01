@@ -52,7 +52,7 @@ func (m *MongoLogHook) insertLogToMongo(data []byte) (err error) {
 	host, _ := os.Hostname()
 	dataMap["host"] = host
 	dataMap["date"] = time.Now().Format("2006-01-02")
-	dataMap["date_time"] = time.Now().Format("15:04:05")
+	dataMap["time"] = time.Now().Format("15:04:05")
 	_, err = collection.InsertOne(ctx, dataMap)
 	if err != nil {
 		return
@@ -63,7 +63,7 @@ func (m *MongoLogHook) insertLogToMongo(data []byte) (err error) {
 func NewEncoderConfig() zapcore.EncoderConfig {
 	return zapcore.EncoderConfig{
 		// Keys can be anything except the empty string.
-		TimeKey:        "time",
+		TimeKey:        "date_time",
 		LevelKey:       "level",
 		NameKey:        "name",
 		CallerKey:      "caller",
