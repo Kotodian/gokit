@@ -254,7 +254,6 @@ func (c *Client) ReadPump() {
 	}
 	c.conn.SetPingHandler(func(appData string) error {
 		_ = c.conn.SetReadDeadline(time.Now().Add(readWait))
-		c.log.Info("ping message received", zap.String("sn", c.chargeStation.SN()))
 		err = c.conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeWait))
 		if err == websocket.ErrCloseSent {
 			return nil
