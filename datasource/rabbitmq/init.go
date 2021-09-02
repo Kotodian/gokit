@@ -3,9 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-
 	"github.com/Kotodian/gokit/workpool"
-	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"go.uber.org/atomic"
 )
@@ -52,23 +50,11 @@ func NewExchange(exchangeType ExchangeType, exchangeName string) (rmq *Exchange,
 // Start 启动Rabbitmq的客户端
 func (mq *Exchange) Start(ctx context.Context, workerNum int, receiver Receiver) {
 	var err error
-	logEntry := logrus.WithFields(logrus.Fields{
-		"ex":    mq.Name,
-		"act":   "listen",
-		"queue": receiver.Name,
-	})
-	ctx = context.WithValue(ctx, "log", logEntry)
-	defer func() {
-		if err != nil {
-			logEntry.Error(err.Error())
-		}
-	}()
 
 	//isBreak := func(rawCtx context.Context) (isBreak bool) {
 	if _, ch := mq.GetConnAndChannelWithContext(ctx); ch == nil {
 		var closeFn func()
 		if ctx, closeFn, err = mq.NewConnAndChannelIfNotExists(ctx); err != nil {
-			logEntry.Errorf("new rabbitmq connection err:%s", err)
 			return
 		}
 		defer func() {
