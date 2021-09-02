@@ -11,11 +11,13 @@ import (
 
 type MongoLogHook struct {
 	collection string
+	version    string
 }
 
-func NewMongoLogHook(collection string) (*MongoLogHook, error) {
+func NewMongoLogHook(collection, version string) (*MongoLogHook, error) {
 	hook := &MongoLogHook{
 		collection: collection,
+		version:    version,
 	}
 	db, err := connect()
 	if err != nil {
@@ -53,6 +55,7 @@ func (m *MongoLogHook) insertLogToMongo(data []byte) (err error) {
 	dataMap["host"] = host
 	dataMap["date"] = time.Now().Format("2006-01-02")
 	dataMap["time"] = time.Now().Format("15:04:05")
+	dataMap["version"] = m.version
 	_, err = collection.InsertOne(ctx, dataMap)
 	if err != nil {
 		return
@@ -81,7 +84,7 @@ func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
 }
 
-func NewZapLogger(collection ...string) *zap.Logger {
+func NewZapLogger(version string, collection ...string) *zap.Logger {
 	development := zap.Development()
 	writeSyncerList := make([]zapcore.WriteSyncer, 0)
 	coreList := make([]zapcore.Core, 0)
@@ -89,7 +92,7 @@ func NewZapLogger(collection ...string) *zap.Logger {
 		debugLevel := zap.LevelEnablerFunc(func(level zapcore.Level) bool {
 			return level >= zapcore.DebugLevel
 		})
-		hook, err := NewMongoLogHook(collection[0])
+		hook, err := NewMongoLogHook(collection[0], version)
 		if err != nil {
 			return nil
 		}
