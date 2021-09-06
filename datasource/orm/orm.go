@@ -119,3 +119,12 @@ func Create(obj Object) error {
 func Updates(tableName string, updates map[string]interface{}, cond string, where ...interface{}) error {
 	return db.Table(tableName).Where(cond, where).Updates(updates).Error
 }
+
+func Count(tableName string, cond string, where ...interface{}) (count int64, err error) {
+	count = 0
+	err = db.Table(tableName).Where(cond, where).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
