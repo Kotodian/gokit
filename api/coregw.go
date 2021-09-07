@@ -19,7 +19,7 @@ func Kick(req *KickRequest) error {
 	}
 	client := http.DefaultClient
 	reader := bytes.NewReader(reqBytes)
-	resp, err := client.Post("http://jx-coregw:8080/ac/v1/kick", defaultContentType, reader)
+	resp, err := client.Post("http://jx-coregw:8080/ac/v1/kickOffline", defaultContentType, reader)
 	if err != nil {
 		return err
 	}
