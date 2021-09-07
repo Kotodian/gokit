@@ -42,11 +42,13 @@ require (
 	github.com/yitter/idgenerator-go v1.2.1
 	go.mongodb.org/mongo-driver v1.7.1
 	go.uber.org/atomic v1.9.0
-	go.uber.org/zap v1.17.0
+	go.uber.org/multierr v1.7.0 // indirect
+	go.uber.org/zap v1.19.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
 	golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 // indirect
 	google.golang.org/grpc v1.39.0
 	gorm.io/driver/mysql v1.1.1
-	gorm.io/gorm v1.21.12
+	gorm.io/gorm v1.21.14
+	moul.io/zapgorm2 v1.1.0
 )
