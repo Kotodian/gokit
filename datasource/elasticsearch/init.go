@@ -7,6 +7,14 @@ import (
 )
 
 var client *elastic.Client
+var mapping = `
+	{
+		"settings":{
+			"number_of_shards":5,
+			"number_of_replicas":1
+		}
+	}
+`
 
 func init() {
 	var err error
@@ -23,7 +31,10 @@ func init() {
 }
 
 func IndexCreate(ctx context.Context, index string) error {
-	_, err := client.CreateIndex(index).Do(ctx)
+	_, err := client.CreateIndex(index).Body(mapping).Do(ctx)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
