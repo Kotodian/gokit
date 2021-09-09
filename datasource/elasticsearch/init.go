@@ -23,6 +23,7 @@ func init() {
 		elastic.SetHealthcheck(true),
 		elastic.SetHealthcheckTimeout(5*time.Second),
 		elastic.SetURL("http://elasticsearch-master:9200"),
+		//elastic.SetURL("http://10.43.0.30:9200"),
 		elastic.SetRetrier(elastic.NewBackoffRetrier(elastic.NewSimpleBackoff(200))),
 	)
 	if err != nil {
@@ -85,8 +86,8 @@ func Update(ctx context.Context, index string, id string, fields map[string]inte
 	return err
 }
 
-func UpdateBulk(ctx context.Context, es *elastic.Client, index string, body []map[string]string) error {
-	bulkRequest := es.Bulk()
+func UpdateBulk(ctx context.Context, index string, body []map[string]string) error {
+	bulkRequest := client.Bulk()
 	for _, v := range body {
 		tmp := v
 		tmps := copyMap(tmp)
@@ -98,8 +99,8 @@ func UpdateBulk(ctx context.Context, es *elastic.Client, index string, body []ma
 	return err
 }
 
-func Delete(ctx context.Context, es *elastic.Client, index, id string) error {
-	_, err := es.Delete().Index(index).Id(id).Do(ctx)
+func Delete(ctx context.Context, index, id string) error {
+	_, err := client.Delete().Index(index).Id(id).Do(ctx)
 	if err != nil {
 		return err
 	}
@@ -112,4 +113,16 @@ func copyMap(m map[string]string) map[string]string {
 		cp[is] = vs
 	}
 	return cp
+}
+
+func UpdateByQuery(ctx context.Context, index, script string, params map[string]interface{}, where string, value interface{}, valueIsString bool) error {
+	if valueIsString {
+		where += ".keyword"
+	}
+	_, err := client.UpdateByQuery(index).Script(elastic.NewScript(script).Params(params)).Query(elastic.NewTermQuery(where, value)).Do(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = client.Refresh(index).Do(ctx)
+	return err
 }
