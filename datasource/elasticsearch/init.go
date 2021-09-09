@@ -3,6 +3,7 @@ package elasticsearch
 import (
 	"context"
 	"github.com/olivere/elastic/v7"
+	"reflect"
 	"time"
 )
 
@@ -22,8 +23,8 @@ func init() {
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(true),
 		elastic.SetHealthcheckTimeout(5*time.Second),
-		elastic.SetURL("http://elasticsearch-master:9200"),
-		//elastic.SetURL("http://10.43.0.30:9200"),
+		//elastic.SetURL("http://elasticsearch-master:9200"),
+		elastic.SetURL("http://10.43.0.30:9200"),
 		elastic.SetRetrier(elastic.NewBackoffRetrier(elastic.NewSimpleBackoff(200))),
 	)
 	if err != nil {
@@ -115,14 +116,30 @@ func copyMap(m map[string]string) map[string]string {
 	return cp
 }
 
-func UpdateByQuery(ctx context.Context, index, script string, params map[string]interface{}, where string, value interface{}, valueIsString bool) error {
-	if valueIsString {
-		where += ".keyword"
+func UpdateByQuery(ctx context.Context, index string, params, query map[string]interface{}) error {
+	script := buildScript(params)
+	updateByQueryService := client.UpdateByQuery(index).Script(elastic.NewScript(script).Params(params))
+	for k, v := range query {
+		if reflect.TypeOf(v).Kind() == reflect.String {
+			k += ".keyword"
+		}
+		updateByQueryService.Query(elastic.NewTermQuery(k, v))
 	}
-	_, err := client.UpdateByQuery(index).Script(elastic.NewScript(script).Params(params)).Query(elastic.NewTermQuery(where, value)).Do(ctx)
+	_, err := updateByQueryService.Do(ctx)
 	if err != nil {
 		return err
 	}
 	_, err = client.Refresh(index).Do(ctx)
 	return err
+}
+
+const scriptPrefix = "ctx._source."
+const paramPrefix = "params."
+
+func buildScript(params map[string]interface{}) string {
+	var script string
+	for k, _ := range params {
+		script += scriptPrefix + k + "=" + paramPrefix + k + ";"
+	}
+	return script
 }
