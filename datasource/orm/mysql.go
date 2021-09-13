@@ -3,6 +3,7 @@ package orm
 import (
 	"fmt"
 	"go.uber.org/zap"
+	"moul.io/zapgorm2"
 	"os"
 	"strconv"
 	"strings"
@@ -10,7 +11,6 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"moul.io/zapgorm2"
 )
 
 const (
@@ -62,13 +62,13 @@ func NewMysql(dns string, logger *zap.Logger) (*gorm.DB, error) {
 	} else {
 		dns = dns + "?" + condition
 	}
-	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{
-		Logger: zapgorm2.New(logger),
-	})
+	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-
+	if logger != nil {
+		db.Logger = zapgorm2.New(logger)
+	}
 	d, _ := db.DB()
 	d.SetConnMaxLifetime(300 * time.Second)
 	d.SetMaxIdleConns(getIntEnv(EnvMaxIdleConns, 100))

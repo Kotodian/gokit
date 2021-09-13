@@ -91,7 +91,7 @@ func TestUpdateWithOptimistic(t *testing.T) {
 	os.Setenv("DB_HOST", "192.168.0.4")
 	os.Setenv("DB_PORT", "3306")
 
-	InitMysqlWithEnvAndDB("jx-csms")
+	InitMysqlWithEnvAndDB("jx-csms", nil)
 	SetDB(mysqlDB)
 	updates := make(map[string]interface{})
 	updates["firmware_version"] = "1.4.3"
@@ -109,4 +109,25 @@ func TestUpdateWithOptimistic(t *testing.T) {
 		return
 	}
 
+}
+
+func TestFind(t *testing.T) {
+	os.Setenv("DB_USER", "root")
+	os.Setenv("DB_PASSWD", "jqcsms@uat123")
+	os.Setenv("DB_HOST", "192.168.0.4")
+	os.Setenv("DB_PORT", "3306")
+
+	InitMysqlWithEnvAndDB("jx-csms", nil)
+	SetDB(mysqlDB)
+
+	equipmentInfo := make([]*EquipmentInfo, 0)
+	err := Find(EquipmentInfo{}.TableName(), map[string]interface{}{
+		"access_pod": "jx-ac-ocpp-cluster-1",
+	}, []string{"*"}, &equipmentInfo)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	t.Log(equipmentInfo[0])
 }

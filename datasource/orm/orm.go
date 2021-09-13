@@ -2,10 +2,10 @@ package orm
 
 import (
 	"errors"
-	"time"
-
 	"github.com/Kotodian/gokit/datasource"
+	"github.com/didi/gendry/builder"
 	"gorm.io/gorm"
+	"time"
 )
 
 var (
@@ -127,4 +127,12 @@ func Count(tableName string, cond string, where ...interface{}) (count int64, er
 		return 0, err
 	}
 	return count, nil
+}
+
+func Find(tableName string, condition map[string]interface{}, fields []string, dest interface{}) error {
+	cond, vals, err := builder.BuildSelect(tableName, condition, fields)
+	if err != nil {
+		return err
+	}
+	return db.Raw(cond, vals).Scan(dest).Error
 }

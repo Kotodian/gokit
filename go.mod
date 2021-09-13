@@ -9,6 +9,7 @@ require (
 	github.com/beanstalkd/go-beanstalk v0.1.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/cep21/circuit/v3 v3.2.0 // indirect
+	github.com/didi/gendry v1.7.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/edwardhey/beanstalk v0.0.0-20180821021108-0249555409a1
 	github.com/edwardhey/circuit v3.0.0+incompatible
