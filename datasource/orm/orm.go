@@ -136,3 +136,7 @@ func Find(tableName string, condition map[string]interface{}, fields []string, d
 	}
 	return db.Raw(cond, vals).Scan(dest).Error
 }
+
+func FirstOrCreate(object Object, condition interface{}) error {
+	return db.FirstOrCreate(object, condition).Error
+}
