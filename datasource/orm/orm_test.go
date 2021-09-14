@@ -2,6 +2,7 @@ package orm
 
 import (
 	"github.com/Kotodian/gokit/datasource"
+	"github.com/Kotodian/gokit/id"
 	"github.com/Kotodian/protocol/golang/coregw"
 	"gorm.io/gorm"
 	"os"
@@ -31,7 +32,6 @@ type EquipmentInfo struct {
 	EvseNumber           uint                `gorm:"column:evse_number" json:"evse_number"`                            // 设备数量
 	State                int                 `gorm:"column:state;type:tinyint" json:"state"`                           // 状态
 	Blocked              bool                `gorm:"column:blocked" json:"blocked"`                                    // 是否屏蔽
-	AlarmNums            uint                `gorm:"column:alarm_nums" json:"alarm_nums"`                              //告警数量
 	KindVehicleType      *coregw.VehicleType `gorm:"column:vehicle_type" json:"vehicle_type"`                          // 使用车型
 	AccessPod            string              `gorm:"column:access_pod" json:"access_pod"`                              // 连接的pod
 }
@@ -47,6 +47,7 @@ func (e *EquipmentInfo) Key() string {
 
 // 钩子函数
 func (e *EquipmentInfo) AfterCreate(db *gorm.DB) error {
+	e.Iccid = "1"
 	return nil
 }
 
@@ -83,6 +84,25 @@ func (m *GormModel) SetVersion(version int) {
 
 func (m *GormModel) Exists() bool {
 	return m.Id != 0
+}
+
+func TestFirstOrCreate(t *testing.T) {
+	os.Setenv("DB_USER", "root")
+	os.Setenv("DB_PASSWD", "jqcsms@uat123")
+	os.Setenv("DB_HOST", "192.168.0.4")
+	os.Setenv("DB_PORT", "3306")
+
+	InitMysqlWithEnvAndDB("jx-csms", nil)
+	SetDB(mysqlDB)
+	var obj = new(EquipmentInfo)
+	obj.Id = id.Next()
+	obj.SerialNumber = "T164173521"
+	obj.AccessPod = "jx-ac-ocpp-cluster-2"
+	err := FirstOrCreate(obj, EquipmentInfo{SerialNumber: "T164173521"})
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(obj.Iccid)
 }
 
 func TestUpdateWithOptimistic(t *testing.T) {
