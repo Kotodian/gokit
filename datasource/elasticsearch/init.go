@@ -134,7 +134,11 @@ func UpdateByQuery(ctx context.Context, index string, params, query map[string]i
 }
 
 func DocExist(ctx context.Context, index string, id string) (bool, error) {
-	return client.Exists().Index(index).Id(id).Do(ctx)
+	get, err := client.Get().Index(index).Id(id).Do(ctx)
+	if err != nil {
+		return false, err
+	}
+	return get.Found, nil
 }
 
 const scriptPrefix = "ctx._source."
