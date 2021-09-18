@@ -70,6 +70,17 @@ func Get(obj Object, cond string, where ...interface{}) (err error) {
 	return err
 }
 
+func GetByMoreCond(obj Object, condVal map[string]interface{}) (err error) {
+	for k, v := range condVal {
+		db = db.Where(k, v)
+	}
+	err = db.First(obj).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+	return err
+}
+
 func Delete(obj Object, deleteFunc ...DeleteFunc) error {
 	if len(deleteFunc) > 0 {
 		return deleteFunc[0](obj)

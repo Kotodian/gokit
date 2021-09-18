@@ -151,3 +151,25 @@ func TestFind(t *testing.T) {
 
 	t.Log(equipmentInfo[0])
 }
+
+func TestGetByMoreCond(t *testing.T) {
+	os.Setenv("DB_USER", "root")
+	os.Setenv("DB_PASSWD", "jqcsms@uat123")
+	os.Setenv("DB_HOST", "192.168.0.4")
+	os.Setenv("DB_PORT", "3306")
+
+	InitMysqlWithEnvAndDB("jx-csms", nil)
+	SetDB(mysqlDB)
+
+	equipmentInfo := new(EquipmentInfo)
+	err := GetByMoreCond(equipmentInfo, map[string]interface{}{
+		"access_pod = ?":  "jx-ac-ocpp-cluster-1",
+		"evse_number = ?": 1,
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	t.Log(equipmentInfo)
+}
