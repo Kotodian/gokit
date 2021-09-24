@@ -132,7 +132,7 @@ func Updates(tableName string, updates map[string]interface{}, cond string, wher
 }
 
 func UpdateWithMoreCond(tableName string, updates, cond map[string]interface{}) error {
-	db.Table(tableName)
+	db = db.Table(tableName)
 	for k, v := range cond {
 		db.Where(k, v)
 	}

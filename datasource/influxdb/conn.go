@@ -2,11 +2,11 @@ package influxdb
 
 import (
 	"context"
+	"github.com/Kotodian/gokit/boot"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"os"
 	"time"
 
-	"github.com/Kotodian/gokit/boot"
 	influxdb "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/silenceper/pool"
 )
@@ -23,7 +23,8 @@ func bootInit() (err error) {
 	//factory 创建连接的方法
 	factory := func() (interface{}, error) {
 		client := influxdb.NewClient("http://influxdb:8086", os.Getenv("INFLUXDB_AUTH_TOKEN"))
-		_, err := client.Health(context.Background())
+		//client := influxdb.NewClient("http://10.43.0.15:8086", os.Getenv("INFLUXDB_AUTH_TOKEN"))
+		_, err = client.Health(context.Background())
 		if err != nil {
 			return nil, err
 		}
