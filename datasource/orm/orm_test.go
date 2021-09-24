@@ -173,3 +173,22 @@ func TestGetByMoreCond(t *testing.T) {
 
 	t.Log(equipmentInfo)
 }
+
+func TestUpdates(t *testing.T) {
+	os.Setenv("DB_USER", "root")
+	os.Setenv("DB_PASSWD", "jqcsms@uat123")
+	os.Setenv("DB_HOST", "192.168.0.4")
+	os.Setenv("DB_PORT", "3306")
+
+	InitMysqlWithEnvAndDB("jx-csms", nil)
+	SetDB(mysqlDB)
+	updates := make(map[string]interface{})
+	updates["firmware_version"] = "1.4.3"
+	updates["remote_address"] = "localhost:8080"
+
+	err := Updates(EquipmentInfo{}.TableName(), updates, "equipment_sn = ? and id = ?", "T1641735210", 200485661130821)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}

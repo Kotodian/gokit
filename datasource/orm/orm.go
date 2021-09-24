@@ -128,15 +128,7 @@ func Create(obj Object) error {
 }
 
 func Updates(tableName string, updates map[string]interface{}, cond string, where ...interface{}) error {
-	return db.Table(tableName).Where(cond, where).Updates(updates).Error
-}
-
-func UpdateWithMoreCond(tableName string, updates, cond map[string]interface{}) error {
-	db = db.Table(tableName)
-	for k, v := range cond {
-		db.Where(k, v)
-	}
-	return db.Updates(updates).Error
+	return db.Table(tableName).Where(cond, where...).Updates(updates).Error
 }
 
 func Count(tableName string, cond string, where ...interface{}) (count int64, err error) {
