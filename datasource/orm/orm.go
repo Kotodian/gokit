@@ -63,7 +63,7 @@ func GetByID(obj Object, id datasource.UUID) (err error) {
 }
 
 func Get(obj Object, cond string, where ...interface{}) (err error) {
-	err = db.Where(cond, where).First(obj).Error
+	err = db.Where(cond, where...).First(obj).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		err = nil
 	}
@@ -129,6 +129,9 @@ func Create(obj Object) error {
 
 func Updates(tableName string, updates map[string]interface{}, cond string, where ...interface{}) error {
 	return db.Table(tableName).Where(cond, where...).Updates(updates).Error
+}
+func UpdatesModel(obj Object, updates map[string]interface{}, cond string, where ...interface{}) error {
+	return db.Model(obj).Where(cond, where...).Updates(updates).Error
 }
 
 func Count(tableName string, cond string, where ...interface{}) (count int64, err error) {
