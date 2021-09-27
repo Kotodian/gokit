@@ -154,3 +154,7 @@ func Find(tableName string, condition map[string]interface{}, fields []string, d
 func FirstOrCreate(object Object, condition interface{}) error {
 	return db.FirstOrCreate(object, condition).Error
 }
+
+func FindInBatches(dest interface{}, limit int, fc func(tx *gorm.DB, batch int) error) error {
+	return db.FindInBatches(dest, limit, fc).Error
+}
