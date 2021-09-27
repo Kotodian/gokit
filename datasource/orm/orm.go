@@ -136,7 +136,7 @@ func UpdatesModel(obj Object, updates map[string]interface{}, cond string, where
 
 func Count(tableName string, cond string, where ...interface{}) (count int64, err error) {
 	count = 0
-	err = db.Table(tableName).Where(cond, where).Count(&count).Error
+	err = db.Table(tableName).Where(cond, where...).Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -155,6 +155,6 @@ func FirstOrCreate(object Object, condition interface{}) error {
 	return db.FirstOrCreate(object, condition).Error
 }
 
-func FindInBatches(dest interface{}, limit int, fc func(tx *gorm.DB, batch int) error) error {
-	return db.FindInBatches(dest, limit, fc).Error
+func FindInBatches(dest interface{}, limit int, fc func(tx *gorm.DB, batch int) error, where string, cond ...interface{}) error {
+	return db.Where(where, cond...).FindInBatches(dest, limit, fc).Error
 }
