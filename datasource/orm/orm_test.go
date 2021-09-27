@@ -192,3 +192,23 @@ func TestUpdates(t *testing.T) {
 		return
 	}
 }
+
+func TestGet(t *testing.T) {
+
+	os.Setenv("DB_USER", "root")
+	os.Setenv("DB_PASSWD", "jqcsms@uat123")
+	os.Setenv("DB_HOST", "192.168.0.4")
+	os.Setenv("DB_PORT", "3306")
+
+	InitMysqlWithEnvAndDB("jx-csms", nil)
+	SetDB(mysqlDB)
+	equipmentInfo := new(EquipmentInfo)
+
+	err := Get(equipmentInfo, "equipment_sn = ?", "T1641735211")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	t.Log(equipmentInfo)
+}

@@ -3,6 +3,7 @@ package orm
 import (
 	"fmt"
 	"go.uber.org/zap"
+	"gorm.io/gorm/logger"
 	"moul.io/zapgorm2"
 	"os"
 	"strconv"
@@ -55,7 +56,7 @@ func GetMysql() *gorm.DB {
 	return mysqlDB
 }
 
-func NewMysql(dns string, logger *zap.Logger) (*gorm.DB, error) {
+func NewMysql(dns string, zapLog *zap.Logger) (*gorm.DB, error) {
 	condition := "timeout=60s&parseTime=true&charset=utf8mb4,utf8&loc=Local"
 	if strings.Contains(dns, "?") {
 		dns = dns + "&" + condition
@@ -66,8 +67,10 @@ func NewMysql(dns string, logger *zap.Logger) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if logger != nil {
-		db.Logger = zapgorm2.New(logger)
+	if zapLog != nil {
+		db.Logger = zapgorm2.New(zapLog)
+	} else {
+		db.Logger = logger.Default.LogMode(logger.Info)
 	}
 	d, _ := db.DB()
 	d.SetConnMaxLifetime(300 * time.Second)
