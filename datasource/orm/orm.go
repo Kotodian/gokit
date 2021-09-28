@@ -58,23 +58,23 @@ type Object interface {
 	AfterFind(db *gorm.DB) error
 }
 
-func GetByID(obj Object, id datasource.UUID) (err error) {
-	return Get(obj, "id = ?", id)
+func GetByID(conn *gorm.DB, obj Object, id datasource.UUID) (err error) {
+	return Get(conn, obj, "id = ?", id)
 }
 
-func Get(obj Object, cond string, where ...interface{}) (err error) {
-	err = db.Where(cond, where...).First(obj).Error
+func Get(conn *gorm.DB, obj Object, cond string, where ...interface{}) (err error) {
+	err = conn.Where(cond, where...).First(obj).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		err = nil
 	}
 	return err
 }
 
-func GetByMoreCond(obj Object, condVal map[string]interface{}) (err error) {
+func GetByMoreCond(conn *gorm.DB, obj Object, condVal map[string]interface{}) (err error) {
 	for k, v := range condVal {
-		db = db.Where(k, v)
+		conn = conn.Where(k, v)
 	}
-	err = db.First(obj).Error
+	err = conn.First(obj).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		err = nil
 	}
@@ -89,52 +89,56 @@ func Delete(obj Object, deleteFunc ...DeleteFunc) error {
 	}
 }
 
-func UpdateColumn(obj Object, f map[string]interface{}) error {
-	return db.Model(obj).Updates(f).Error
+func UpdateColumn(conn *gorm.DB, obj Object, f map[string]interface{}) error {
+	return conn.Model(obj).Updates(f).Error
 }
 
-func UpdateWithOptimistic(obj Object, f map[string]interface{}) error {
+func UpdateWithOptimistic(conn *gorm.DB, obj Object, f map[string]interface{}) error {
 	if f == nil {
 		return nil
 	}
-	return updateWithOptimistic(obj, f, 3, 0)
+	return updateWithOptimistic(conn, obj, f, 3, 0)
 }
 
-func updateWithOptimistic(obj Object, f map[string]interface{}, retryCount, currentRetryCount int) error {
-	if currentRetryCount > retryCount {
-		return ErrRetryMax
-	}
-	currentVersion := obj.GetVersion()
-	obj.SetVersion(currentVersion + 1)
-	f["version"] = currentVersion + 1
-	column := db.Model(obj).Where("version", currentVersion).Updates(f)
-	affected := column.RowsAffected
-	if affected == 0 {
-		time.Sleep(100 * time.Millisecond)
-		id := obj.ID()
-		db.First(obj, id)
-		currentRetryCount++
-		err := updateWithOptimistic(obj, f, retryCount, currentRetryCount)
-		if err != nil {
-			return err
+func updateWithOptimistic(conn *gorm.DB, obj Object, f map[string]interface{}, retryCount, currentRetryCount int) error {
+	for currentRetryCount < retryCount {
+		currentVersion := obj.GetVersion()
+		obj.SetVersion(currentVersion + 1)
+		f["version"] = currentVersion + 1
+		column := conn.Model(obj).Where("version", currentVersion).Updates(f)
+		if column.Error != nil {
+			return column.Error
+		}
+		if column.RowsAffected == 0 {
+			time.Sleep(100 * time.Millisecond)
+			id := obj.ID()
+			err := conn.First(obj, id).Error
+			if err != nil {
+				if err != gorm.ErrRecordNotFound {
+					return err
+				}
+			}
+			currentRetryCount++
+		} else {
+			return nil
 		}
 	}
-	return column.Error
+	return nil
 }
 
-func Create(obj Object) error {
-	err := db.Create(obj).Error
+func Create(conn *gorm.DB, obj Object) error {
+	err := conn.Create(obj).Error
 	return err
 }
 
-func Updates(tableName string, updates map[string]interface{}, cond string, where ...interface{}) error {
-	return db.Table(tableName).Where(cond, where...).Updates(updates).Error
+func Updates(conn *gorm.DB, tableName string, updates map[string]interface{}, cond string, where ...interface{}) error {
+	return conn.Table(tableName).Where(cond, where...).Updates(updates).Error
 }
-func UpdatesModel(obj Object, updates map[string]interface{}, cond string, where ...interface{}) error {
-	return db.Model(obj).Where(cond, where...).Updates(updates).Error
+func UpdatesModel(conn *gorm.DB, obj Object, updates map[string]interface{}, cond string, where ...interface{}) error {
+	return conn.Model(obj).Where(cond, where...).Updates(updates).Error
 }
 
-func Count(tableName string, cond string, where ...interface{}) (count int64, err error) {
+func Count(conn *gorm.DB, tableName string, cond string, where ...interface{}) (count int64, err error) {
 	count = 0
 	err = db.Table(tableName).Where(cond, where...).Count(&count).Error
 	if err != nil {
@@ -143,18 +147,18 @@ func Count(tableName string, cond string, where ...interface{}) (count int64, er
 	return count, nil
 }
 
-func Find(tableName string, condition map[string]interface{}, fields []string, dest interface{}) error {
+func Find(conn *gorm.DB, tableName string, condition map[string]interface{}, fields []string, dest interface{}) error {
 	cond, vals, err := builder.BuildSelect(tableName, condition, fields)
 	if err != nil {
 		return err
 	}
-	return db.Raw(cond, vals).Scan(dest).Error
+	return conn.Raw(cond, vals).Scan(dest).Error
 }
 
-func FirstOrCreate(object Object, condition interface{}) error {
-	return db.FirstOrCreate(object, condition).Error
+func FirstOrCreate(conn *gorm.DB, object Object, condition interface{}) error {
+	return conn.FirstOrCreate(object, condition).Error
 }
 
-func FindInBatches(dest interface{}, limit int, fc func(tx *gorm.DB, batch int) error, where string, cond ...interface{}) error {
-	return db.Where(where, cond...).FindInBatches(dest, limit, fc).Error
+func FindInBatches(conn *gorm.DB, dest interface{}, limit int, fc func(tx *gorm.DB, batch int) error, where string, cond ...interface{}) error {
+	return conn.Where(where, cond...).FindInBatches(dest, limit, fc).Error
 }
