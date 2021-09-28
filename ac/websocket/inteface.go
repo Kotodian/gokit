@@ -28,4 +28,5 @@ type ClientInterface interface {
 	Unlock()
 	Coregw() string
 	SetCoregw(coregw string)
+	IsClose() bool
 }

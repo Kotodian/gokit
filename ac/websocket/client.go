@@ -52,6 +52,7 @@ type Client struct {
 	log                     *zap.Logger
 	keepalive               int64
 	coregw                  string
+	isClose                 bool
 }
 
 func (c *Client) Send(msg []byte) (err error) {
@@ -74,6 +75,7 @@ func (c *Client) Close(err error) error {
 		close(c.mqttRegCh)
 		close(c.mqttMsgCh)
 		c.clientOfflineNotifyFunc(err)
+		c.isClose = true
 	})
 	return nil
 }
@@ -474,4 +476,8 @@ func (c *Client) Coregw() string {
 
 func (c *Client) SetCoregw(coregw string) {
 	c.coregw = coregw
+}
+
+func (c *Client) IsClose() bool {
+	return c.isClose
 }
