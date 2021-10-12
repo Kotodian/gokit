@@ -327,14 +327,14 @@ func (c *Client) ReadPump() {
 
 			var sendTopic string
 			var sendQos byte
-
-			if !trData.Sync {
+			if trData.IsTelemetry {
+				sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + c.chargeStation.SN()
+			} else if !trData.Sync {
 				sendTopic = "coregw/" + c.hub.Hostname + "/command/" + c.chargeStation.SN()
-				sendQos = 2
 			} else {
 				sendTopic = c.Coregw() + "/sync/" + c.chargeStation.SN()
-				sendQos = 2
 			}
+			sendQos = 2
 
 			c.hub.PubMqttMsg <- MqttMessage{
 				Topic:    sendTopic,
