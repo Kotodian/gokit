@@ -328,11 +328,11 @@ func (c *Client) ReadPump() {
 			var sendTopic string
 			var sendQos byte
 
-			if !trData.IsTelemetry {
+			if !trData.Sync {
 				sendTopic = "coregw/" + c.hub.Hostname + "/command/" + c.chargeStation.SN()
 				sendQos = 2
 			} else {
-				sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + c.chargeStation.SN()
+				sendTopic = c.Coregw() + "/sync/" + c.chargeStation.SN()
 				sendQos = 2
 			}
 

@@ -18,6 +18,7 @@ type TRData struct {
 	APDU        *pCharger.APDU         //平台的报文
 	ActionName  string                 //下发给设备的Action名称
 	IsError     bool                   //是否错误
+	Sync        bool
 }
 
 type ITranslate interface {
