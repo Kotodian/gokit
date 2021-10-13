@@ -13,7 +13,7 @@ import (
 var MQURL = "amqp://" + os.Getenv("RABBITMQ_USER") + ":" + os.Getenv("RABBITMQ_PASS") + "@" + os.Getenv("RABBITMQ_POOL") + "/"
 var cp pool.Pool
 
-func init() {
+func Init() {
 	// go func() {
 	var err error
 	cp, err = pool.NewChannelPool(&pool.Config{

@@ -2,7 +2,6 @@ package influxdb
 
 import (
 	"context"
-	"github.com/Kotodian/gokit/boot"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"os"
 	"time"
@@ -14,11 +13,7 @@ import (
 var _pool pool.Pool
 var org string
 
-func init() {
-	boot.RegisterInit("influxdb connection pool", bootInit)
-}
-
-func bootInit() (err error) {
+func Init() (err error) {
 	org = os.Getenv("INFLUXDB_ORG")
 	//factory 创建连接的方法
 	factory := func() (interface{}, error) {

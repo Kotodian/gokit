@@ -17,7 +17,7 @@ var mapping = `
 	}
 `
 
-func init() {
+func Init() {
 	var err error
 	client, err = elastic.NewClient(
 		elastic.SetSniff(false),

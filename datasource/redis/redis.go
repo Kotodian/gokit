@@ -3,12 +3,12 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"github.com/FZambia/sentinel"
+	"github.com/gomodule/redigo/redis"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/FZambia/sentinel"
-	"github.com/gomodule/redigo/redis"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 
 var pool *redis.Pool
 
-func init() {
+func Init() {
 	addrs := strings.Split(os.Getenv(EnvRedisPool), ",")
 	auth := os.Getenv(EnvReidsAuth)
 	if len(addrs) == 0 {
