@@ -152,7 +152,7 @@ func Find(conn *gorm.DB, tableName string, condition map[string]interface{}, fie
 	if err != nil {
 		return err
 	}
-	return conn.Raw(cond, vals).Scan(dest).Error
+	return conn.Raw(cond, vals...).Scan(dest).Error
 }
 
 func FirstOrCreate(conn *gorm.DB, object Object, condition interface{}) error {
