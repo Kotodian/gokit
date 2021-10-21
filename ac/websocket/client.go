@@ -56,6 +56,11 @@ type Client struct {
 }
 
 func (c *Client) Send(msg []byte) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+		}
+	}()
 	c.send <- msg
 	return
 }
