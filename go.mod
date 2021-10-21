@@ -26,6 +26,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.4.0
 	github.com/jameskeane/bcrypt v0.0.0-20120420032655-c3cd44c1e20f
 	github.com/json-iterator/go v1.1.11
+	github.com/makasim/amqpextra v0.16.4
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/olivere/elastic/v7 v7.0.27
@@ -34,7 +35,7 @@ require (
 	github.com/silenceper/pool v1.0.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.8.1
-	github.com/streadway/amqp v1.0.0
+	github.com/streadway/amqp v1.0.1-0.20200716223359-e6b33f460591
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/tidwall/gjson v1.8.1
 	github.com/uber/jaeger-client-go v2.29.1+incompatible
@@ -42,7 +43,7 @@ require (
 	github.com/yangwenmai/ratelimit v0.0.0-20180104140304-44221c2292e1
 	github.com/yitter/idgenerator-go v1.2.1
 	go.mongodb.org/mongo-driver v1.7.1
-	go.uber.org/atomic v1.9.0
+	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
