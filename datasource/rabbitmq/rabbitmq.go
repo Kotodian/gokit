@@ -23,7 +23,7 @@ func Init() {
 }
 
 func Publish(ctx context.Context,
-	exchange string, key string,
+	key string,
 	headers map[string]interface{}, body []byte) error {
 	p, err := dialer.Publisher()
 	if err != nil {
@@ -31,10 +31,8 @@ func Publish(ctx context.Context,
 	}
 	defer p.Close()
 	return p.Publish(publisher.Message{
-		Context:   ctx,
-		Exchange:  exchange,
-		Key:       key,
-		Immediate: true,
+		Context: ctx,
+		Key:     key,
 		Publishing: amqp.Publishing{
 			Headers:     headers,
 			ContentType: "application/json",
