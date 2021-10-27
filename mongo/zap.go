@@ -100,7 +100,7 @@ func NewZapLogger(version string, collection ...string) *zap.Logger {
 		writeSyncerList = append(writeSyncerList, zapcore.AddSync(hook))
 		coreList = append(coreList, zapcore.NewCore(zapcore.NewJSONEncoder(NewEncoderConfig()), zapcore.NewMultiWriteSyncer(writeSyncerList...), debugLevel))
 		core := zapcore.NewTee(coreList...)
-		logger := zap.New(core, development)
+		logger := zap.New(core, development, zap.AddCaller())
 		return logger
 	}
 	logger, _ := zap.NewDevelopment()
