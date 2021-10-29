@@ -30,6 +30,7 @@ func Init() {
 	}
 	if len(addrs) == 1 {
 		redisMode = alone.New(
+			alone.Addr(addrs[0]),
 			alone.PoolOpts(
 				redigo.MaxActive(0),       // 最大连接数，默认0无限制
 				redigo.MaxIdle(0),         // 最多保持空闲连接数，默认2*runtime.GOMAXPROCS(0)
