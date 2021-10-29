@@ -24,7 +24,7 @@ import (
 const (
 	// Time allowed to write a message to the peer.
 	writeWait = 10 * time.Second
-	readWait  = 190 * time.Second
+	readWait  = 185 * time.Second
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 4096
@@ -380,7 +380,11 @@ func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
 // application ensures that there is at most one writer to a connection by
 // executing all writes from this goroutine.
 func (c *Client) WritePump() {
+	//ticker := time.NewTicker(10 * time.Second)
 	var err error
+	if err != nil {
+		defer c.Close(err)
+	}
 	for {
 		select {
 		case message, ok := <-c.send:
@@ -411,14 +415,6 @@ func (c *Client) WritePump() {
 			if err = w.Close(); err != nil {
 				return
 			}
-		//case <-ticker.C:
-		//	if c.conn == nil {
-		//		return
-		//	}
-		//	_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-		//	if err = c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-		//		return
-		//	}
 		case <-c.sendPing:
 			if c.conn == nil {
 				return

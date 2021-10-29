@@ -3,8 +3,10 @@ package redis
 import (
 	"errors"
 	"fmt"
-	"github.com/FZambia/sentinel"
 	"github.com/gomodule/redigo/redis"
+	"github.com/letsfire/redigo/v2"
+	"github.com/letsfire/redigo/v2/mode/alone"
+	"github.com/letsfire/redigo/v2/mode/sentinel"
 	"os"
 	"strconv"
 	"strings"
@@ -18,7 +20,7 @@ const (
 	EnvReidsAuth      = "REDIS_AUTH"
 )
 
-var pool *redis.Pool
+var redisMode redigo.ModeInterface
 
 func Init() {
 	addrs := strings.Split(os.Getenv(EnvRedisPool), ",")
@@ -27,79 +29,50 @@ func Init() {
 		return
 	}
 	if len(addrs) == 1 {
-		pool = &redis.Pool{
-			MaxActive:   getIntEnv(EnvMaxActiveConns, 10000),
-			MaxIdle:     getIntEnv(EnvMaxIdleConns, 10),
-			IdleTimeout: 300 * time.Second,
-			Dial: func() (redis.Conn, error) {
-				conn, err := redis.Dial("tcp", addrs[0],
-					//redis.DialReadTimeout(time.Minute),
-					redis.DialConnectTimeout(time.Second),
-					redis.DialWriteTimeout(3*time.Second),
-				)
-				if err != nil {
-					return nil, err
-				}
-				if len(auth) > 0 {
-					_, err = conn.Do("auth", auth)
-					if err != nil {
-						return nil, err
-					}
-				}
-				return conn, nil
-			},
-			Wait: true,
-			TestOnBorrow: func(c redis.Conn, t time.Time) error {
-				if time.Since(t) < time.Minute {
-					return nil
-				}
-				_, err := c.Do("PING")
-				return err
-			},
-		}
-	} else {
-		sntnl := &sentinel.Sentinel{
-			Addrs:      addrs,
-			MasterName: "mymaster",
-			Dial: func(addr string) (redis.Conn, error) {
-				timeout := 500 * time.Millisecond
-				c, err := redis.DialTimeout("tcp", addr, timeout, timeout, timeout)
-				if err != nil {
-					return nil, err
-				}
-				return c, nil
-			},
-		}
-		pool = &redis.Pool{
-			MaxIdle:     1000,
-			IdleTimeout: 240 * time.Second,
-			Dial: func() (redis.Conn, error) {
-				addr, err := sntnl.MasterAddr()
-				if err != nil {
-					return nil, err
-				}
-				c, err := redis.Dial("tcp", addr)
-				if err != nil {
-					return nil, err
-				}
-				if len(auth) > 0 {
-					_, err = c.Do("auth", auth)
-					if err != nil {
-						return nil, err
-					}
-				}
-				return c, nil
-			},
-			Wait: true,
-			TestOnBorrow: func(c redis.Conn, t time.Time) error {
-				if time.Since(t) < time.Minute {
-					return nil
-				}
-				_, err := c.Do("PING")
-				return err
-			},
-		}
+		redisMode = alone.New(
+			alone.PoolOpts(
+				redigo.MaxActive(0),       // 最大连接数，默认0无限制
+				redigo.MaxIdle(0),         // 最多保持空闲连接数，默认2*runtime.GOMAXPROCS(0)
+				redigo.Wait(false),        // 连接耗尽时是否等待，默认false
+				redigo.IdleTimeout(0),     // 空闲连接超时时间，默认0不超时
+				redigo.MaxConnLifetime(0), // 连接的生命周期，默认0不失效
+				redigo.TestOnBorrow(nil),  // 空间连接取出后检测是否健康，默认nil
+			),
+			alone.DialOpts(
+				redis.DialReadTimeout(time.Second),    // 读取超时，默认time.Second
+				redis.DialWriteTimeout(time.Second),   // 写入超时，默认time.Second
+				redis.DialConnectTimeout(time.Second), // 连接超时，默认500*time.Millisecond
+				redis.DialPassword(auth),              // 鉴权密码，默认空
+				redis.DialDatabase(0),                 // 数据库号，默认0
+				redis.DialKeepAlive(time.Minute*5),    // 默认5*time.Minute
+				redis.DialNetDial(nil),                // 自定义dial，默认nil
+				redis.DialUseTLS(false),               // 是否用TLS，默认false
+				redis.DialTLSSkipVerify(false),        // 服务器证书校验，默认false
+				redis.DialTLSConfig(nil),              // 默认nil，详见tls.Config
+			))
 	}
+	redisMode = sentinel.New(
+		sentinel.Addrs(addrs),
+		sentinel.PoolOpts(
+			redigo.MaxActive(0),       // 最大连接数，默认0无限制
+			redigo.MaxIdle(0),         // 最多保持空闲连接数，默认2*runtime.GOMAXPROCS(0)
+			redigo.Wait(false),        // 连接耗尽时是否等待，默认false
+			redigo.IdleTimeout(0),     // 空闲连接超时时间，默认0不超时
+			redigo.MaxConnLifetime(0), // 连接的生命周期，默认0不失效
+			redigo.TestOnBorrow(nil),  // 空间连接取出后检测是否健康，默认nil
+		),
+		sentinel.DialOpts(
+			redis.DialReadTimeout(time.Second),    // 读取超时，默认time.Second
+			redis.DialWriteTimeout(time.Second),   // 写入超时，默认time.Second
+			redis.DialConnectTimeout(time.Second), // 连接超时，默认500*time.Millisecond
+			redis.DialPassword(auth),              // 鉴权密码，默认空
+			redis.DialDatabase(0),                 // 数据库号，默认0
+			redis.DialKeepAlive(time.Minute*5),    // 默认5*time.Minute
+			redis.DialNetDial(nil),                // 自定义dial，默认nil
+			redis.DialUseTLS(false),               // 是否用TLS，默认false
+			redis.DialTLSSkipVerify(false),        // 服务器证书校验，默认false
+			redis.DialTLSConfig(nil),              // 默认nil，详见tls.Config
+		))
 }
 
 func getIntEnv(key string, def int) int {
@@ -114,11 +87,7 @@ func getIntEnv(key string, def int) int {
 
 // GetRedis 从redis连接池中获取一个连接
 func GetRedis() redis.Conn {
-	return pool.Get()
-}
-
-func GetPool() *redis.Pool {
-	return pool
+	return redisMode.GetConn()
 }
 
 // Do 执行一个redis命令

@@ -26,6 +26,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.4.0
 	github.com/jameskeane/bcrypt v0.0.0-20120420032655-c3cd44c1e20f
 	github.com/json-iterator/go v1.1.11
+	github.com/letsfire/redigo/v2 v2.0.3
 	github.com/makasim/amqpextra v0.16.4
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
