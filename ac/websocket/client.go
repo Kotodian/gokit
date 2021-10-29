@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/Kotodian/gokit/datasource/redis"
 	"go.uber.org/zap"
 	"io"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -66,6 +69,9 @@ func (c *Client) Send(msg []byte) (err error) {
 func (c *Client) Close(err error) error {
 	fmt.Println("关闭连接 1", c.chargeStation.CoreID(), c.chargeStation.SN())
 	c.once.Do(func() {
+		if err == nil {
+			err = errors.New("平台关闭")
+		}
 		c.log.Error(err.Error())
 		c.hub.Clients.Delete(c.chargeStation.SN())
 		c.hub.RegClients.Delete(c.chargeStation.SN())
@@ -77,6 +83,7 @@ func (c *Client) Close(err error) error {
 		close(c.close)
 		close(c.mqttRegCh)
 		close(c.mqttMsgCh)
+
 		c.clientOfflineNotifyFunc(err)
 		c.isClose = true
 	})
@@ -258,20 +265,19 @@ func (c *Client) ReadPump() {
 		return
 	}
 	c.conn.SetPingHandler(func(appData string) error {
-		//_ = c.conn.SetReadDeadline(time.Now().Add(readWait))
-		//err = c.conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeWait))
-		//if err == websocket.ErrCloseSent {
-		//	return nil
-		//} else if e, ok := err.(net.Error); ok && e.Temporary() {
-		//	return nil
-		//}
-		//redisConn := redis.GetRedis()
-		//defer redisConn.Close()
-		//_, err = redisConn.Do("expire", fmt.Sprintf("ac:%s:%s:%s:%s", "online", c.hub.Protocol, c.chargeStation.SN(), c.hub.Hostname), 190)
-		//if err != nil {
-		//	c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
-		//}
-		//return err
+		_ = c.conn.SetReadDeadline(time.Now().Add(readWait))
+		err = c.conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeWait))
+		if err == websocket.ErrCloseSent {
+			return nil
+		} else if e, ok := err.(net.Error); ok && e.Temporary() {
+			return nil
+		}
+		redisConn := redis.GetRedis()
+		defer redisConn.Close()
+		_, err = redisConn.Do("expire", fmt.Sprintf("ac:%s:%s:%s:%s", "online", c.hub.Protocol, c.chargeStation.SN(), c.hub.Hostname), 190)
+		if err != nil {
+			c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
+		}
 		return nil
 	})
 	for {
