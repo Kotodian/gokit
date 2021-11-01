@@ -105,12 +105,7 @@ func (h *Hub) Run() {
 	g.Go(func(ctx context.Context) (err error) {
 		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"register"+topicEnd, 2, func(mqc mqttClient.Client, m mqttClient.Message) {
 			topic := m.Topic()
-
-			fmt.Println("go reg mqtt msg", fmt.Sprintf("%+v", m))
-
 			_, sn := getSnFromTopic(m.Topic())
-
-			fmt.Println("go reg mqtt sn", sn)
 
 			var _client ClientInterface
 			if c, ok := h.RegClients.Load(sn); !ok {
@@ -212,8 +207,6 @@ func (h *Hub) Run() {
 	g.Go(func(ctx context.Context) error {
 		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"kick"+topicEnd, 2, func(mqc mqttClient.Client, message mqttClient.Message) {
 
-			fmt.Println("go mqtt msg", fmt.Sprintf("%+v", message))
-
 			//根据topic获取sn
 			var sn string
 
@@ -227,7 +220,6 @@ func (h *Hub) Run() {
 			} else {
 				_client = c.(ClientInterface)
 				_client.Close(nil)
-				fmt.Println("go mqtt msg client", fmt.Sprintf("%+v", _client))
 				h.Clients.Delete(sn)
 			}
 		})
