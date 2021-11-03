@@ -23,8 +23,7 @@ func Init() {
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(true),
 		elastic.SetHealthcheckTimeout(5*time.Second),
-		//elastic.SetURL("http://elasticsearch-master:9200"),
-		elastic.SetURL("http://10.43.0.30:9200"),
+		elastic.SetURL("http://elasticsearch-master:9200"),
 		elastic.SetRetrier(elastic.NewBackoffRetrier(elastic.NewSimpleBackoff(200))),
 	)
 	if err != nil {
