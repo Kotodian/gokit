@@ -218,7 +218,10 @@ func extendWorkerIdFlag(workerId int32) {
 		}
 	}()
 
-	client.Do("expire", _WorkerIdValueKeyPrefix+strconv.Itoa(int(workerId)), time.Duration(_WorkerIdLifeTimeSeconds)*time.Second)
+	_, err := client.Do("expire", _WorkerIdValueKeyPrefix+strconv.Itoa(int(workerId)), int64(_WorkerIdLifeTimeSeconds))
+	if err != nil {
+		return
+	}
 }
 
 func canReset(_client rdlib.Conn) bool {
