@@ -203,7 +203,7 @@ func setWorkerIdIndex(_client rdlib.Conn, val int) error {
 
 func setWorkerIdFlag(_client rdlib.Conn, workerId int32) error {
 	hostname, _ := os.Hostname()
-	_, err := _client.Do("set", _WorkerIdValueKeyPrefix+strconv.Itoa(int(workerId)), hostname, "EX", "15")
+	_, err := _client.Do("set", _WorkerIdValueKeyPrefix+strconv.Itoa(int(workerId)), hostname, "EX", strconv.Itoa(_WorkerIdLifeTimeSeconds))
 	return err
 }
 
