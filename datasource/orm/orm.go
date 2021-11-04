@@ -140,7 +140,7 @@ func UpdatesModel(conn *gorm.DB, obj Object, updates map[string]interface{}, con
 
 func Count(conn *gorm.DB, tableName string, cond string, where ...interface{}) (count int64, err error) {
 	count = 0
-	err = db.Table(tableName).Where(cond, where...).Count(&count).Error
+	err = conn.Table(tableName).Where(cond, where...).Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
