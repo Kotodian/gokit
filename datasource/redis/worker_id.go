@@ -21,18 +21,6 @@ var _MaxWorkerId int32 = 0           // 最大WorkerId值，超过此值从0开�
 
 const _WorkerIdIndexKey string = "IdGen:WorkerId:Index"        // redis 中的key
 const _WorkerIdValueKeyPrefix string = "IdGen:WorkerId:Value:" // redis 中的key
-const _WorkerIdFlag = "Y"                                      // IdGen:WorkerId:Value:xx 的值（将来可用 _token 替代）
-
-func Validate(workerId int32) int32 {
-	for _, value := range _workerIdList {
-		if value == workerId {
-			return 1
-		}
-	}
-
-	return 0
-
-}
 
 func UnRegister() {
 	_workerIdLock.Lock()
@@ -249,7 +237,7 @@ func endReset(_client rdlib.Conn) error {
 }
 
 func isAvailable(_client rdlib.Conn, workerId int32) bool {
-	r, err := rdlib.String(_client.Do("get", _WorkerIdValueKeyPrefix+strconv.Itoa(int(workerId))))
+	_, err := rdlib.String(_client.Do("get", _WorkerIdValueKeyPrefix+strconv.Itoa(int(workerId))))
 	if err != nil {
 		if err == rdlib.ErrNil {
 			return true
@@ -257,5 +245,5 @@ func isAvailable(_client rdlib.Conn, workerId int32) bool {
 		return false
 	}
 
-	return r != _WorkerIdFlag
+	return true
 }
