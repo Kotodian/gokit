@@ -29,4 +29,6 @@ type ClientInterface interface {
 	Coregw() string
 	SetCoregw(coregw string)
 	IsClose() bool
+	EncryptKey() []byte
+	SetEncryptKey(string)
 }

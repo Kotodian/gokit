@@ -51,6 +51,8 @@ type Hub struct {
 
 	//RegClients 需要执行注册的客户端
 	RegClients sync.Map
+	// Encrypt 加密报文
+	Encrypt lib.Encrypt
 }
 
 func NewHub(protocol string, protocolVersion, username string, password string) *Hub {
@@ -81,6 +83,10 @@ func NewHub(protocol string, protocolVersion, username string, password string) 
 
 func (h *Hub) SetTR(tr lib.ITranslate) {
 	h.TR = tr
+}
+
+func (h *Hub) SetEncrypt(encrypt lib.Encrypt) {
+	h.Encrypt = encrypt
 }
 
 func (h *Hub) SendMsgToDevice(evse string, msg []byte) error {

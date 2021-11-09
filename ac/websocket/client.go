@@ -54,6 +54,7 @@ type Client struct {
 	keepalive               int64
 	coregw                  string
 	isClose                 bool
+	encryptKey              []byte
 }
 
 func (c *Client) Send(msg []byte) (err error) {
@@ -62,6 +63,12 @@ func (c *Client) Send(msg []byte) (err error) {
 			err = e.(error)
 		}
 	}()
+	if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
+		msg, err = c.hub.Encrypt.Encode(msg, c.encryptKey)
+		if err != nil {
+			return err
+		}
+	}
 	c.send <- msg
 	return
 }
@@ -92,7 +99,7 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) ClientInterface {
+func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger, encryptKey string) ClientInterface {
 	return &Client{
 		log:           log,
 		chargeStation: chargeStation,
@@ -105,6 +112,7 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket
 		mqttRegCh:     make(chan MqttMessage, 5),
 		close:         make(chan struct{}),
 		keepalive:     int64(keepalive),
+		encryptKey:    []byte(encryptKey),
 	}
 }
 
@@ -298,6 +306,13 @@ func (c *Client) ReadPump() {
 			break
 		}
 
+		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
+			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
+			if err != nil {
+				break
+			}
+		}
+
 		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
 
 		go func(ctx context.Context, msg []byte) {
@@ -483,6 +498,14 @@ func (c *Client) SetCoregw(coregw string) {
 	c.coregw = coregw
 }
 
+func (c *Client) SetEncryptKey(encryptKey string) {
+	c.encryptKey = []byte(encryptKey)
+}
+
 func (c *Client) IsClose() bool {
 	return c.isClose
+}
+
+func (c *Client) EncryptKey() []byte {
+	return c.encryptKey
 }
