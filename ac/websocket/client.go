@@ -99,7 +99,7 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger, encryptKey string) ClientInterface {
+func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) ClientInterface {
 	return &Client{
 		log:           log,
 		chargeStation: chargeStation,
@@ -112,7 +112,6 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket
 		mqttRegCh:     make(chan MqttMessage, 5),
 		close:         make(chan struct{}),
 		keepalive:     int64(keepalive),
-		encryptKey:    []byte(encryptKey),
 	}
 }
 
