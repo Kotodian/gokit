@@ -7,7 +7,7 @@ import (
 )
 
 type KickRequest struct {
-	SN     string `json:"sn"`
+	CoreID string `json:"core_id"`
 	Host   string `json:"host"`
 	Reason string `json:"reason"`
 }
