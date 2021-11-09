@@ -7,9 +7,9 @@ import (
 
 func TestAccessVerify(t *testing.T) {
 	verify, err := AccessVerify(&AccessVerifyRequest{
-		DeviceSerialNumber: "T1641735210",
+		DeviceSerialNumber: "T17210000AC",
 		RemoteAddress:      "127.0.0.1",
-		RequestPort:        "8844",
+		RequestPort:        "31887",
 	})
 	if err != nil {
 		t.Error(err)

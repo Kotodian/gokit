@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/datasource/redis"
 	"go.uber.org/zap"
 	"io"
@@ -74,16 +75,14 @@ func (c *Client) Send(msg []byte) (err error) {
 }
 
 func (c *Client) Close(err error) error {
-	fmt.Println("关闭连接 1", c.chargeStation.CoreID(), c.chargeStation.SN())
 	c.once.Do(func() {
 		if err == nil {
 			err = errors.New("平台关闭")
 		}
 		c.log.Error(err.Error())
-		c.hub.Clients.Delete(c.chargeStation.SN())
-		c.hub.RegClients.Delete(c.chargeStation.SN())
-		fmt.Println("关闭连接 2", c.chargeStation.CoreID(), c.chargeStation.SN())
-		//c.Hub.MqttClient.GetMQTT().Unsubscribe(c.subTopics...)
+		c.hub.Clients.Delete(c.chargeStation.CoreID())
+		c.hub.RegClients.Delete(c.chargeStation.CoreID())
+		c.log.Sugar().Info("关闭连接", c.chargeStation.CoreID(), c.chargeStation.SN())
 		_ = c.conn.Close()
 		c.conn = nil
 		close(c.send)
@@ -117,13 +116,13 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket
 
 //SubRegMQTT 监听MQTT的注册报文回复信息
 func (c *Client) SubRegMQTT() {
-	c.hub.RegClients.Store(c.chargeStation.SN(), c)
+	c.hub.RegClients.Store(c.chargeStation.CoreID(), c)
 	//if c.Evse.CoreID() == 0 {
 	for {
-		fmt.Println("------------> loop reg msg start", c.chargeStation.SN())
+		c.log.Sugar().Info("------------> register msg start", c.chargeStation.SN())
 		select {
 		case <-c.close:
-			fmt.Println("------------> loop reg msg end", c.chargeStation.SN())
+			c.log.Sugar().Info("------------> register msg end", c.chargeStation.SN())
 			return
 		case m := <-c.mqttRegCh:
 			func() {
@@ -148,7 +147,7 @@ func (c *Client) SubRegMQTT() {
 				var msg interface{}
 				//var f lib.FromAPDUFunc
 				if msg, err = c.hub.TR.FromAPDU(ctx, &apdu); err != nil {
-					err = fmt.Errorf("FromAPDU reg error, err:%s topic:%s", err.Error(), topic)
+					err = fmt.Errorf("FromAPDU register error, err:%s topic:%s", err.Error(), topic)
 					return
 				} else if msg == nil {
 					return
@@ -164,7 +163,7 @@ func (c *Client) SubRegMQTT() {
 				var bMsg []byte
 				if bMsg, err = json.Marshal(msg); err != nil {
 					return
-				} else if err = c.hub.SendMsgToDevice(c.chargeStation.SN(), bMsg); err != nil {
+				} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), bMsg); err != nil {
 					return
 				}
 			}()
@@ -175,7 +174,7 @@ func (c *Client) SubRegMQTT() {
 
 //SubMQTT 监听MQTT非注册的一般信息
 func (c *Client) SubMQTT() {
-	c.hub.Clients.Store(c.chargeStation.SN(), c)
+	c.hub.Clients.Store(c.chargeStation.CoreID(), c)
 	wp := workpool.New(1, 5).Start()
 	for {
 		select {
@@ -245,7 +244,7 @@ func (c *Client) SubMQTT() {
 					var bMsg []byte
 					if bMsg, err = json.Marshal(msg); err != nil {
 						return
-					} else if err = c.hub.SendMsgToDevice(c.chargeStation.SN(), bMsg); err != nil {
+					} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), bMsg); err != nil {
 						return
 					}
 					//}()
@@ -351,11 +350,11 @@ func (c *Client) ReadPump() {
 			var sendTopic string
 			var sendQos byte
 			if trData.IsTelemetry {
-				sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + c.chargeStation.SN()
+				sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + datasource.UUID(c.chargeStation.CoreID()).String()
 			} else if !trData.Sync {
-				sendTopic = "coregw/" + c.hub.Hostname + "/command/" + c.chargeStation.SN()
+				sendTopic = "coregw/" + c.hub.Hostname + "/command/" + datasource.UUID(c.chargeStation.CoreID()).String()
 			} else {
-				sendTopic = c.Coregw() + "/sync/" + c.chargeStation.SN()
+				sendTopic = c.Coregw() + "/sync/" + datasource.UUID(c.chargeStation.CoreID()).String()
 			}
 			sendQos = 2
 

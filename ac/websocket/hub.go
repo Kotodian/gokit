@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"fmt"
+	"github.com/Kotodian/gokit/datasource"
 	"os"
 	"strings"
 	"sync"
@@ -89,7 +90,7 @@ func (h *Hub) SetEncrypt(encrypt lib.Encrypt) {
 	h.Encrypt = encrypt
 }
 
-func (h *Hub) SendMsgToDevice(evse string, msg []byte) error {
+func (h *Hub) SendMsgToDevice(evse interface{}, msg []byte) error {
 	if c, ok := h.Clients.Load(evse); ok {
 		return c.(ClientInterface).Send(msg)
 	}
@@ -111,10 +112,10 @@ func (h *Hub) Run() {
 	g.Go(func(ctx context.Context) (err error) {
 		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"register"+topicEnd, 2, func(mqc mqttClient.Client, m mqttClient.Message) {
 			topic := m.Topic()
-			_, sn := getSnFromTopic(m.Topic())
+			_, coreID := getCoreIDFromTopic(m.Topic())
 
 			var _client ClientInterface
-			if c, ok := h.RegClients.Load(sn); !ok {
+			if c, ok := h.RegClients.Load(coreID); !ok {
 				return
 			} else {
 				_client = c.(ClientInterface)
@@ -155,9 +156,9 @@ func (h *Hub) Run() {
 
 			//fmt.Println("go mqtt msg", fmt.Sprintf("%+v", m))
 
-			coregw, sn := getSnFromTopic(topic)
+			coregw, coreID := getCoreIDFromTopic(topic)
 
-			c, ok := h.Clients.Load(sn)
+			c, ok := h.Clients.Load(coreID)
 
 			var _client ClientInterface
 			if !ok {
@@ -214,11 +215,11 @@ func (h *Hub) Run() {
 		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"kick"+topicEnd, 2, func(mqc mqttClient.Client, message mqttClient.Message) {
 
 			//根据topic获取sn
-			var sn string
+			var coreID uint64
 
-			_, sn = getSnFromTopic(message.Topic())
+			_, coreID = getCoreIDFromTopic(message.Topic())
 
-			c, ok := h.Clients.Load(sn)
+			c, ok := h.Clients.Load(coreID)
 
 			var _client ClientInterface
 			if !ok {
@@ -226,7 +227,7 @@ func (h *Hub) Run() {
 			} else {
 				_client = c.(ClientInterface)
 				_client.Close(nil)
-				h.Clients.Delete(sn)
+				h.Clients.Delete(coreID)
 			}
 		})
 		token.WaitTimeout(10 * time.Second)
@@ -238,12 +239,13 @@ func (h *Hub) Run() {
 	_ = g.Wait()
 }
 
-func getSnFromTopic(topic string) (coregw string, sn string) {
+func getCoreIDFromTopic(topic string) (coregw string, coreID uint64) {
 	//根据topic获取sn
 	topics := strings.Split(topic, "/")
 	length := len(topics)
 	lastIndex, secondLastIndex := length-1, length-2
-	sn = topics[lastIndex]
+	temp, _ := datasource.ParseUUID(topics[lastIndex])
+	coreID = temp.Uint64()
 	if topics[secondLastIndex] != "command" && topics[secondLastIndex] != "telemetry" {
 		coregw = topics[secondLastIndex]
 	}
