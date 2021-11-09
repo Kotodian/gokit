@@ -98,7 +98,7 @@ func (h *Hub) SendMsgToDevice(evse interface{}, msg []byte) error {
 }
 
 // CloseClient 断开连接
-func (h *Hub) CloseClient(evse string) {
+func (h *Hub) CloseClient(evse interface{}) {
 	h.Clients.Delete(evse)
 }
 
