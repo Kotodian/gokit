@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/datasource/redis"
+	"github.com/Kotodian/protocol/golang/keys"
 	"go.uber.org/zap"
 	"io"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -56,6 +58,7 @@ type Client struct {
 	coregw                  string
 	isClose                 bool
 	encryptKey              []byte
+	id                      string
 }
 
 func (c *Client) Send(msg []byte) (err error) {
@@ -280,7 +283,7 @@ func (c *Client) ReadPump() {
 		}
 		redisConn := redis.GetRedis()
 		defer redisConn.Close()
-		_, err = redisConn.Do("expire", fmt.Sprintf("ac:online:%d", c.chargeStation.CoreID()), 190)
+		_, err = redisConn.Do("expire", keys.Equipment(strconv.FormatUint(c.chargeStation.CoreID(), 10)), 190)
 		if err != nil {
 			c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
 		}

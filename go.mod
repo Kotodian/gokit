@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
-	github.com/Kotodian/protocol v1.1.1
+	github.com/Kotodian/protocol v1.6.6
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/cep21/circuit/v3 v3.2.0 // indirect
 	github.com/deepmap/oapi-codegen v1.8.2 // indirect
