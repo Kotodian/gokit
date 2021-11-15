@@ -85,8 +85,8 @@ func (c *Client) Close(err error) error {
 		c.log.Error(err.Error())
 		c.hub.Clients.Delete(c.chargeStation.CoreID())
 		c.hub.RegClients.Delete(c.chargeStation.CoreID())
-		c.log.Sugar().Info("关闭连接", c.chargeStation.CoreID(), c.chargeStation.SN())
 		_ = c.conn.Close()
+		c.log.Sugar().Info(c.chargeStation.SN(), "关闭连接")
 		c.conn = nil
 		close(c.send)
 		close(c.close)
