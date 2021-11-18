@@ -3,6 +3,7 @@ package redis
 import (
 	"errors"
 	"fmt"
+	"github.com/Kotodian/gokit/retry"
 	"github.com/gomodule/redigo/redis"
 	"github.com/letsfire/redigo/v2"
 	"github.com/letsfire/redigo/v2/mode/alone"
@@ -168,4 +169,18 @@ func Float64Map(result interface{}, err error) (map[string]float64, error) {
 		m[string(key)] = value
 	}
 	return m, nil
+}
+
+type SetFunc func(key string, val interface{}, keepalive int64)
+
+func WrapSetFunc(redisConn redis.Conn, key string, val interface{}, keepalive int64, set SetFunc) retry.Action {
+	return func(attempt uint) error {
+		var err error
+		if keepalive == 0 {
+			_, err = redisConn.Do("set", key, val)
+		} else {
+			_, err = redisConn.Do("set", key, val, "ex", keepalive)
+		}
+		return err
+	}
 }

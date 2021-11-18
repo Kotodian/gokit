@@ -3,6 +3,7 @@ package orm
 import (
 	"errors"
 	"github.com/Kotodian/gokit/datasource"
+	"github.com/Kotodian/gokit/retry"
 	"github.com/didi/gendry/builder"
 	"gorm.io/gorm"
 	"time"
@@ -23,8 +24,8 @@ func SetDB(_db *gorm.DB) {
 	db = _db
 }
 
-type DeleteFunc func(object Object) error
-type CreateFunc func(object Object) error
+type DeleteFunc func(conn *gorm.DB, object Object) error
+type CreateFunc func(conn *gorm.DB, object Object) error
 
 func RealDelete(object Object) error {
 	return db.Delete(object).Error
@@ -68,25 +69,6 @@ func Get(conn *gorm.DB, obj Object, cond string, where ...interface{}) (err erro
 		err = nil
 	}
 	return err
-}
-
-func GetByMoreCond(conn *gorm.DB, obj Object, condVal map[string]interface{}) (err error) {
-	for k, v := range condVal {
-		conn = conn.Where(k, v)
-	}
-	err = conn.First(obj).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		err = nil
-	}
-	return err
-}
-
-func Delete(obj Object, deleteFunc ...DeleteFunc) error {
-	if len(deleteFunc) > 0 {
-		return deleteFunc[0](obj)
-	} else {
-		return FakeDelete(obj)
-	}
 }
 
 func UpdateColumn(conn *gorm.DB, obj Object, f map[string]interface{}) error {
@@ -161,4 +143,10 @@ func FirstOrCreate(conn *gorm.DB, object Object, condition interface{}) error {
 
 func FindInBatches(conn *gorm.DB, dest interface{}, limit int, fc func(tx *gorm.DB, batch int) error, where string, cond ...interface{}) error {
 	return conn.Where(where, cond...).FindInBatches(dest, limit, fc).Error
+}
+
+func WrapCreateFunc(conn *gorm.DB, object Object, createFunc CreateFunc) retry.Action {
+	return func(attempt uint) error {
+		return createFunc(conn, object)
+	}
 }
