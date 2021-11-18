@@ -45,7 +45,7 @@ func NewMQTTClient(mqttOpts *mqtt.ClientOptions) *MQTTClient {
 	}
 }
 
-func NewMQTTOptions(clientID string, username string, password string, onConn mqtt.OnConnectHandler, onLostConn mqtt.ConnectionLostHandler, onMsg mqtt.MessageHandler) *mqtt.ClientOptions {
+func NewMQTTOptions(clientID string, username string, password string, onConn mqtt.OnConnectHandler, onLostConn mqtt.ConnectionLostHandler, onMsg mqtt.MessageHandler, clean bool) *mqtt.ClientOptions {
 	mqttOpts := mqtt.NewClientOptions()
 	mqttOpts.AddBroker(os.Getenv(EnvEmqxPool))
 	mqttOpts.SetClientID(clientID)
@@ -53,7 +53,7 @@ func NewMQTTOptions(clientID string, username string, password string, onConn mq
 	mqttOpts.SetPassword(password)
 	mqttOpts.SetKeepAlive(time.Second * 30)
 	mqttOpts.SetPingTimeout(time.Second * 10)
-	mqttOpts.SetCleanSession(false)
+	mqttOpts.SetCleanSession(clean)
 	mqttOpts.SetConnectionLostHandler(onLostConn)
 	mqttOpts.SetOnConnectHandler(onConn)
 	mqttOpts.SetDefaultPublishHandler(onMsg)
