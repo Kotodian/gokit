@@ -145,8 +145,8 @@ func FindInBatches(conn *gorm.DB, dest interface{}, limit int, fc func(tx *gorm.
 	return conn.Where(where, cond...).FindInBatches(dest, limit, fc).Error
 }
 
-func WrapCreateFunc(conn *gorm.DB, object Object, createFunc CreateFunc) retry.Action {
+func WrapCreateFunc(conn *gorm.DB, object Object) retry.Action {
 	return func(attempt uint) error {
-		return createFunc(conn, object)
+		return Create(conn, object)
 	}
 }

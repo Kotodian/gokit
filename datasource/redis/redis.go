@@ -173,7 +173,7 @@ func Float64Map(result interface{}, err error) (map[string]float64, error) {
 
 type SetFunc func(key string, val interface{}, keepalive int64)
 
-func WrapSetFunc(redisConn redis.Conn, key string, val interface{}, keepalive int64, set SetFunc) retry.Action {
+func WrapSetFunc(redisConn redis.Conn, key string, val interface{}, keepalive int64) retry.Action {
 	return func(attempt uint) error {
 		var err error
 		if keepalive == 0 {
