@@ -36,6 +36,59 @@ type EquipmentInfo struct {
 	AccessPod            string              `gorm:"column:access_pod" json:"access_pod"`                              // 连接的pod
 }
 
+type Test struct {
+	Id   int    `gorm:"column:id;not null;primary_key;"`
+	Name string `gorm:"column:name"`
+}
+
+func (t *Test) Exists() bool {
+	return t.Id != 0
+}
+
+func (t *Test) ID() datasource.UUID {
+	return datasource.UUID(t.Id)
+}
+
+func (t *Test) Key() string {
+	return ""
+}
+
+func (t *Test) TableName() string {
+	return "test"
+}
+
+func (t *Test) CreatedAt() int64 {
+	return 0
+}
+
+func (t *Test) UpdatedAt() int64 {
+	return 0
+}
+
+func (t *Test) DeletedAt() int64 {
+	return 0
+}
+
+func (t *Test) GetVersion() int {
+	return 0
+}
+
+func (t *Test) SetVersion(version int) {
+	return
+}
+
+func (t *Test) AfterCreate(db *gorm.DB) error {
+	return nil
+}
+
+func (t *Test) AfterUpdate(db *gorm.DB) error {
+	return nil
+}
+
+func (t *Test) AfterFind(db *gorm.DB) error {
+	return nil
+}
+
 func (e EquipmentInfo) TableName() string {
 	return "base_equipment_extra"
 }
@@ -98,7 +151,7 @@ func TestFirstOrCreate(t *testing.T) {
 	obj.Id = id.Next()
 	obj.SerialNumber = "T164173521"
 	obj.AccessPod = "jx-ac-ocpp-cluster-2"
-	err := FirstOrCreate(obj, EquipmentInfo{SerialNumber: "T164173521"})
+	err := FirstOrCreate(GetDB(), obj, EquipmentInfo{SerialNumber: "T164173521"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -118,12 +171,12 @@ func TestUpdateWithOptimistic(t *testing.T) {
 	updates["access_pod"] = "jx-ocpp-cluster-1"
 	updates["remote_address"] = "localhost:8080"
 	var obj = new(EquipmentInfo)
-	err := GetByID(obj, datasource.UUID(195114960216133))
+	err := GetByID(GetDB(), obj, datasource.UUID(195114960216133))
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	err = UpdateWithOptimistic(obj, updates)
+	err = UpdateWithOptimistic(GetDB(), obj, updates)
 	if err != nil {
 		t.Error(err)
 		return
@@ -141,7 +194,7 @@ func TestFind(t *testing.T) {
 	SetDB(mysqlDB)
 
 	equipmentInfo := make([]*EquipmentInfo, 0)
-	err := Find(EquipmentInfo{}.TableName(), map[string]interface{}{
+	err := Find(GetDB(), EquipmentInfo{}.TableName(), map[string]interface{}{
 		"access_pod": "jx-ac-ocpp-cluster-1",
 	}, []string{"*"}, &equipmentInfo)
 	if err != nil {
@@ -150,28 +203,6 @@ func TestFind(t *testing.T) {
 	}
 
 	t.Log(equipmentInfo[0])
-}
-
-func TestGetByMoreCond(t *testing.T) {
-	os.Setenv("DB_USER", "root")
-	os.Setenv("DB_PASSWD", "jqcsms@uat123")
-	os.Setenv("DB_HOST", "192.168.0.4")
-	os.Setenv("DB_PORT", "3306")
-
-	InitMysqlWithEnvAndDB("jx-csms", nil)
-	SetDB(mysqlDB)
-
-	equipmentInfo := new(EquipmentInfo)
-	err := GetByMoreCond(equipmentInfo, map[string]interface{}{
-		"access_pod = ?":  "jx-ac-ocpp-cluster-1",
-		"evse_number = ?": 1,
-	})
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	t.Log(equipmentInfo)
 }
 
 func TestUpdates(t *testing.T) {
@@ -186,7 +217,7 @@ func TestUpdates(t *testing.T) {
 	updates["firmware_version"] = "1.4.3"
 	updates["remote_address"] = "localhost:8080"
 
-	err := Updates(EquipmentInfo{}.TableName(), updates, "equipment_sn = ? and id = ?", "T1641735210", 200485661130821)
+	err := Updates(GetDB(), EquipmentInfo{}.TableName(), updates, "equipment_sn = ? and id = ?", "T1641735210", 200485661130821)
 	if err != nil {
 		t.Error(err)
 		return
@@ -204,11 +235,26 @@ func TestGet(t *testing.T) {
 	SetDB(mysqlDB)
 	equipmentInfo := new(EquipmentInfo)
 
-	err := Get(equipmentInfo, "equipment_sn = ?", "T1641735211")
+	err := Get(GetDB(), equipmentInfo, "equipment_sn = ?", "T1641735211")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	t.Log(equipmentInfo)
+}
+
+func TestRetryCreate(t *testing.T) {
+	os.Setenv("DB_USER", "root")
+	os.Setenv("DB_PASSWD", "jqcsms@uat123")
+	os.Setenv("DB_HOST", "192.168.0.4")
+	os.Setenv("DB_PORT", "3306")
+
+	InitMysqlWithEnvAndDB("jx-csms", nil)
+	SetDB(mysqlDB)
+
+	err := RetryCreate(GetDB(), &Test{Id: 3, Name: "lqk"})
+	if err != nil {
+		t.Error(err)
+	}
 }

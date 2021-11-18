@@ -153,5 +153,5 @@ func wrapCreateFunc(conn *gorm.DB, object Object) retry.Action {
 }
 
 func RetryCreate(conn *gorm.DB, object Object) error {
-	return retry.Retry(wrapCreateFunc(conn, object), retry.DefaultIgnore, strategy.Limit(3))
+	return retry.Retry(wrapCreateFunc(conn, object), strategy.Limit(3))
 }

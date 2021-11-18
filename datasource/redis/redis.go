@@ -187,5 +187,5 @@ func wrapSetFunc(redisConn redis.Conn, key string, val interface{}, keepalive in
 }
 
 func RetrySet(redisConn redis.Conn, key string, val interface{}, keepalive int64) error {
-	return retry.Retry(wrapSetFunc(redisConn, key, val, keepalive), retry.DefaultIgnore, strategy.Limit(3))
+	return retry.Retry(wrapSetFunc(redisConn, key, val, keepalive), strategy.Limit(3))
 }
