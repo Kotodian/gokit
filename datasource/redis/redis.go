@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Kotodian/gokit/retry"
+	"github.com/Kotodian/gokit/retry/strategy"
 	"github.com/gomodule/redigo/redis"
 	"github.com/letsfire/redigo/v2"
 	"github.com/letsfire/redigo/v2/mode/alone"
@@ -173,7 +174,7 @@ func Float64Map(result interface{}, err error) (map[string]float64, error) {
 
 type SetFunc func(key string, val interface{}, keepalive int64)
 
-func WrapSetFunc(redisConn redis.Conn, key string, val interface{}, keepalive int64) retry.Action {
+func wrapSetFunc(redisConn redis.Conn, key string, val interface{}, keepalive int64) retry.Action {
 	return func(attempt uint) error {
 		var err error
 		if keepalive == 0 {
@@ -183,4 +184,8 @@ func WrapSetFunc(redisConn redis.Conn, key string, val interface{}, keepalive in
 		}
 		return err
 	}
+}
+
+func RetrySet(redisConn redis.Conn, key string, val interface{}, keepalive int64) error {
+	return retry.Retry(wrapSetFunc(redisConn, key, val, keepalive), retry.DefaultIgnore, strategy.Limit(3))
 }

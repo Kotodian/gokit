@@ -6,6 +6,10 @@ type Action func(attempt uint) error
 
 type Ignore func(err error) bool
 
+func DefaultIgnore(err error) bool {
+	return false
+}
+
 func Retry(action Action, ignore Ignore, strategies ...strategy.Strategy) error {
 	var err error
 

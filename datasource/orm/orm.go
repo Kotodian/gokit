@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/retry"
+	"github.com/Kotodian/gokit/retry/strategy"
 	"github.com/didi/gendry/builder"
 	"gorm.io/gorm"
 	"time"
@@ -145,8 +146,12 @@ func FindInBatches(conn *gorm.DB, dest interface{}, limit int, fc func(tx *gorm.
 	return conn.Where(where, cond...).FindInBatches(dest, limit, fc).Error
 }
 
-func WrapCreateFunc(conn *gorm.DB, object Object) retry.Action {
+func wrapCreateFunc(conn *gorm.DB, object Object) retry.Action {
 	return func(attempt uint) error {
 		return Create(conn, object)
 	}
+}
+
+func RetryCreate(conn *gorm.DB, object Object) error {
+	return retry.Retry(wrapCreateFunc(conn, object), retry.DefaultIgnore, strategy.Limit(3))
 }
