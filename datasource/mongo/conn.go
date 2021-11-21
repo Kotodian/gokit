@@ -5,7 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
-	"time"
 )
 
 var (
@@ -16,6 +15,7 @@ var (
 	host         string
 	port         string
 )
+var db *mongo.Database
 
 func InitEnv() {
 	authDatabase = os.Getenv("MONGO_AUTH_DB")
@@ -26,16 +26,23 @@ func InitEnv() {
 	port = os.Getenv("MONGO_PORT")
 }
 
+func Init() error {
+	var err error
+	db, err = connect()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func connect() (*mongo.Database, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	o := options.Client().SetAuth(options.Credential{
 		Username:   username,
 		Password:   password,
 		AuthSource: authDatabase,
 	}).ApplyURI("mongodb://" + host + ":" + port)
 	o.SetMaxPoolSize(10)
-	client, err := mongo.Connect(ctx, o)
+	client, err := mongo.Connect(context.Background(), o)
 	if err != nil {
 		return nil, err
 	}

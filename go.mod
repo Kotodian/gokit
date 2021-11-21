@@ -7,7 +7,6 @@ require (
 	github.com/Kotodian/protocol v1.6.6
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/cep21/circuit/v3 v3.2.0 // indirect
-	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/didi/gendry v1.7.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/edwardhey/circuit v3.0.0+incompatible
@@ -22,7 +21,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.2
-	github.com/influxdata/influxdb-client-go/v2 v2.4.0
+	github.com/influxdata/influxdb-client-go/v2 v2.5.1
 	github.com/influxdata/line-protocol v0.0.0-20210311194329-9aa0e372d097 // indirect
 	github.com/jameskeane/bcrypt v0.0.0-20120420032655-c3cd44c1e20f
 	github.com/json-iterator/go v1.1.11
