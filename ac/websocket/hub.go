@@ -65,7 +65,7 @@ func NewHub(protocol string, protocolVersion, username string, password string) 
 		logrus.Errorf("disconnect mqtt error, err:%s", err.Error())
 	}, func(c mqttClient.Client, m mqttClient.Message) {
 		logrus.Warnf("got mqtt unhandled msg:%v", m)
-	}))
+	}, false))
 
 	//connect
 	if err := mqClient.Connect(); err != nil {
