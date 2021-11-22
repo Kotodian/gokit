@@ -28,35 +28,32 @@ func SetDB(_db *gorm.DB) {
 type DeleteFunc func(conn *gorm.DB, object Object) error
 type CreateFunc func(conn *gorm.DB, object Object) error
 
-func RealDelete(object Object) error {
-	return db.Delete(object).Error
-}
-
-func FakeDelete(object Object) error {
-	return db.Table(object.TableName()).Where("id = ?", object.ID()).UpdateColumn("deleted_at", time.Now().Unix()).Error
-}
-
 type Object interface {
 	// Exists 判断是否存在
 	Exists() bool
 	// ID 数据库中的唯一值
 	ID() datasource.UUID
-	// 缓存的键
+	// Key 缓存的键
 	Key() string
 	// TableName 数据库中的表名
 	TableName() string
-	// 创建时间
-	CreatedAt() int64
-	// 更新时间
-	UpdatedAt() int64
-	// 删除时间
-	DeletedAt() int64
+	// CreatedAt 创建时间
+	CreatedAt() time.Time
+	// UpdatedAt 更新时间
+	UpdatedAt() time.Time
+	// CreatedBy 创建者
+	CreatedBy() datasource.UUID
+	// UpdatedBy 更新者
+	UpdatedBy() datasource.UUID
+	// GetVersion 获取版本
 	GetVersion() int
+	// SetVersion 设置版本
 	SetVersion(version int)
-
-	// 钩子函数
+	// AfterCreate 钩子函数
 	AfterCreate(db *gorm.DB) error
+	// AfterUpdate 钩子函数
 	AfterUpdate(db *gorm.DB) error
+	// AfterFind 钩子函数
 	AfterFind(db *gorm.DB) error
 }
 
@@ -65,7 +62,7 @@ func GetByID(conn *gorm.DB, obj Object, id datasource.UUID) (err error) {
 }
 
 func Get(conn *gorm.DB, obj Object, cond string, where ...interface{}) (err error) {
-	err = conn.Where(cond, where...).First(obj).Error
+	err = conn.Where(cond, where...).Take(obj).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		err = nil
 	}
