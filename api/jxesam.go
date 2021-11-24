@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type AccessVerifyRequest struct {
@@ -51,6 +52,7 @@ func AccessVerify(request *AccessVerifyRequest) (*Equipment, error) {
 		return nil, err
 	}
 	client := http.DefaultClient
+	client.Timeout = 10 * time.Second
 	r := bytes.NewReader(body)
 	url := defaultURL + device + verify + defaultVersion + "/accessVerify"
 	resp, err := client.Post(url, defaultContentType, r)

@@ -107,6 +107,10 @@ func (u UUID) Uint64() uint64 {
 	return uint64(u)
 }
 
+func (u UUID) Timestamp() int64 {
+	return 1582136402000 + int64(u>>12)
+}
+
 //
 //func (u UUID) MarshalJSON() ([]byte, error) {
 //	return json.Marshal(u.String())

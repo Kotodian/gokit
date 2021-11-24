@@ -36,9 +36,41 @@ type EquipmentInfo struct {
 	AccessPod            string              `gorm:"column:access_pod" json:"access_pod"`                              // 连接的pod
 }
 
+func (e EquipmentInfo) CreatedAt() time.Time {
+	panic("implement me")
+}
+
+func (e EquipmentInfo) UpdatedAt() time.Time {
+	panic("implement me")
+}
+
+func (e EquipmentInfo) CreatedBy() datasource.UUID {
+	panic("implement me")
+}
+
+func (e EquipmentInfo) UpdatedBy() datasource.UUID {
+	panic("implement me")
+}
+
 type Test struct {
 	Id   int    `gorm:"column:id;not null;primary_key;"`
 	Name string `gorm:"column:name"`
+}
+
+func (t *Test) CreatedAt() time.Time {
+	panic("implement me")
+}
+
+func (t *Test) UpdatedAt() time.Time {
+	panic("implement me")
+}
+
+func (t *Test) CreatedBy() datasource.UUID {
+	panic("implement me")
+}
+
+func (t *Test) UpdatedBy() datasource.UUID {
+	panic("implement me")
 }
 
 func (t *Test) Exists() bool {
@@ -55,14 +87,6 @@ func (t *Test) Key() string {
 
 func (t *Test) TableName() string {
 	return "test"
-}
-
-func (t *Test) CreatedAt() int64 {
-	return 0
-}
-
-func (t *Test) UpdatedAt() int64 {
-	return 0
 }
 
 func (t *Test) DeletedAt() int64 {
