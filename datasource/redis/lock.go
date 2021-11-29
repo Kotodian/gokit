@@ -2,58 +2,54 @@ package redis
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"time"
-
 	errgroup "github.com/Kotodian/gokit/sync/errgroup.v2"
 	rdlib "github.com/gomodule/redigo/redis"
+	"time"
 )
 
-func NewLock(key string) Lock {
-	return Lock{key: key}
-}
-
-type Lock struct {
-	key string
-	ver int64
-}
-
-func (l *Lock) Lock(timeout int) (locked bool, err error) {
-	if locked, l.ver, err = TryLock(l.key, timeout); err != nil {
-		return
-	}
-	return
-}
-
-func (l *Lock) BlockLock(timeout int) (err error) {
-	var locked bool
-	if locked, l.ver, err = TryLock(l.key, timeout, true); err != nil {
-		return
-	} else if !locked {
-		err = errors.New("获取订单状态锁失败")
-		return
-	}
-	return
-}
-
-func (l Lock) Unlock() error {
-	return Unlock(l.key, l.ver)
-}
+//func NewLock(key string) Lock {
+//	return Lock{key: key}
+//}
+//
+//type Lock struct {
+//	key string
+//	ver int64
+//}
+//
+//func (l *Lock) Lock(timeout int) (locked bool, err error) {
+//	if locked, l.ver, err = TryLock(l.key, timeout); err != nil {
+//		return
+//	}
+//	return
+//}
+//
+//func (l *Lock) BlockLock(timeout int) (err error) {
+//	var locked bool
+//	if locked, l.ver, err = TryLock(l.key, timeout, true); err != nil {
+//		return
+//	} else if !locked {
+//		err = errors.New("获取订单状态锁失败")
+//		return
+//	}
+//	return
+//}
+//
+//func (l Lock) Unlock() error {
+//	return Unlock(l.key, l.ver)
+//}
 
 // TryLock
 // key 键名
 // timeout 获取锁多长时间超时，单位秒
 // block 是否堵塞等待，默认为false：获取不了锁就返回错误, true：则会堵塞等待，直到获取到锁或超时
 //参考 https://huoding.com/2015/09/14/463
-func TryLock(key string, timeout int, block ...bool) (locked bool, val int64, err error) {
+func TryLock(conn rdlib.Conn, key string, timeout int, block ...bool) (locked bool, val int64, err error) {
 	var ret string
 	var b bool
 	if len(block) > 0 {
 		b = block[0]
 	}
-	conn := GetRedis()
-	defer conn.Close()
 	if b {
 		g := errgroup.WithTimeout(context.TODO(), time.Duration(timeout)*time.Second)
 		g.Go(func(ctx context.Context) error {

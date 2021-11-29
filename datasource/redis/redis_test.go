@@ -20,7 +20,7 @@ type GormModel struct {
 }
 type Equipment struct {
 	GormModel           `json:",inline"` // 基础元素
-	EquipmentInfo       *EquipmentInfo   `gorm:"-" json:",inline"`
+	EquipmentInfo       *EquipmentInfo   `gorm:"-"`
 	SerialNumber        string           `gorm:"column:sn;type:varchar(20)" json:"sn"`                              // sn号
 	Product             string           `gorm:"column:product;type:varchar(18)" json:"product"`                    // 产品型号
 	OperatorId          datasource.UUID  `gorm:"column:operator_id;not null" json:"operator_id"`                    // 运营商
@@ -65,18 +65,17 @@ func TestInit(t *testing.T) {
 	Init()
 	redisConn := GetRedis()
 	defer redisConn.Close()
-	//equipment := new(Equipment)
-	var equipment *Equipment
-	bytes, err := redis.Bytes(redisConn.Do("get", keys.Equipment("586069658769530")))
+	equipment := new(Equipment)
+	//var equipment *Equipment
+
+	bytes, err := redis.Bytes(redisConn.Do("get", keys.Equipment("586069658769111")))
 	if err != nil {
-		t.Error(err)
-		return
+		panic(err)
 	}
 	err = json.Unmarshal(bytes, equipment)
 	if err != nil {
-		t.Error(err)
-		return
+		panic(err)
 	}
 
-	t.Log(*equipment)
+	t.Log(equipment.EquipmentInfo)
 }
