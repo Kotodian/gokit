@@ -100,10 +100,7 @@ func TryLock(conn rdlib.Conn, key string, timeout int, block ...bool) (locked bo
 }
 
 // Unlock 解锁
-func Unlock(key string, val int64) error {
-	rd := GetRedis()
-	defer rd.Close()
-
+func Unlock(rd rdlib.Conn, key string, val int64) error {
 	v, err := rdlib.Int64(rd.Do("get", key))
 	if err != nil {
 		return err
