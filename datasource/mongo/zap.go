@@ -53,7 +53,7 @@ func (m *MongoLogHook) insertLogToMongo(data []byte) (err error) {
 	//转为map类型
 	dataMap := object.(map[string]interface{})
 	host, _ := os.Hostname()
-	dataMap["id"] = id.Next()
+	dataMap["_id"] = id.Next()
 	dataMap["host"] = host
 	dataMap["date"] = time.Now().Format("2006-01-02")
 	dataMap["time"] = time.Now().Format("15:04:05")
