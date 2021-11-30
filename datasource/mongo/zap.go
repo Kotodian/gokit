@@ -58,6 +58,7 @@ func (m *MongoLogHook) insertLogToMongo(data []byte) (err error) {
 	dataMap["date"] = time.Now().Format("2006-01-02")
 	dataMap["time"] = time.Now().Format("15:04:05")
 	dataMap["version"] = m.version
+	delete(dataMap, "date_time")
 	_, err = collection.InsertOne(ctx, dataMap)
 	if err != nil {
 		return
