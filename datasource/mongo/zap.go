@@ -44,7 +44,7 @@ func (m *MongoLogHook) insertLogToMongo(data []byte) (err error) {
 	}
 	defer db.Client().Disconnect(context.Background())
 
-	collection := db.Collection(m.collection)
+	collection := db.Collection(m.collection + "-" + time.Now().Format("0601"))
 	var object interface{}
 	if err = jsoniter.Unmarshal(data, &object); err != nil {
 		return
