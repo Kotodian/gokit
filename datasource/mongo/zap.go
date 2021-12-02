@@ -43,8 +43,9 @@ func (m *MongoLogHook) insertLogToMongo(data []byte) (err error) {
 		return err
 	}
 	defer db.Client().Disconnect(context.Background())
+	now := time.Now()
 
-	collection := db.Collection(m.collection + "-" + time.Now().Format("0601"))
+	collection := db.Collection(m.collection + "-" + now.Format("0601"))
 	var object interface{}
 	if err = jsoniter.Unmarshal(data, &object); err != nil {
 		return
@@ -55,8 +56,8 @@ func (m *MongoLogHook) insertLogToMongo(data []byte) (err error) {
 	host, _ := os.Hostname()
 	dataMap["_id"] = id.Next()
 	dataMap["host"] = host
-	dataMap["date"] = time.Now().Format("2006-01-02")
-	dataMap["time"] = time.Now().Format("15:04:05")
+	dataMap["date"] = now.Format("2006-01-02")
+	dataMap["time"] = now.Format("15:04:05")
 	dataMap["version"] = m.version
 	delete(dataMap, "date_time")
 	_, err = collection.InsertOne(ctx, dataMap)
@@ -74,7 +75,7 @@ func NewEncoderConfig() zapcore.EncoderConfig {
 		NameKey:        "name",
 		CallerKey:      "caller",
 		MessageKey:     "message",
-		StacktraceKey:  "stacktrace",
+		StacktraceKey:  "stack",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.CapitalLevelEncoder,
 		EncodeTime:     TimeEncoder,
@@ -87,13 +88,12 @@ func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
 }
 
-func NewZapLogger(version string, collection ...string) *zap.Logger {
-	development := zap.Development()
+func NewZapLogger(minLevel zapcore.Level, version string, collection ...string) *zap.Logger {
 	writeSyncerList := make([]zapcore.WriteSyncer, 0)
 	coreList := make([]zapcore.Core, 0)
 	if len(collection) > 0 {
-		debugLevel := zap.LevelEnablerFunc(func(level zapcore.Level) bool {
-			return level >= zapcore.DebugLevel
+		levelFunc := zap.LevelEnablerFunc(func(level zapcore.Level) bool {
+			return level >= minLevel
 		})
 		hook, err := NewMongoLogHook(collection[0], version)
 		if err != nil {
@@ -101,9 +101,14 @@ func NewZapLogger(version string, collection ...string) *zap.Logger {
 		}
 		writeSyncerList = append(writeSyncerList, zapcore.AddSync(os.Stdout))
 		writeSyncerList = append(writeSyncerList, zapcore.AddSync(hook))
-		coreList = append(coreList, zapcore.NewCore(zapcore.NewJSONEncoder(NewEncoderConfig()), zapcore.NewMultiWriteSyncer(writeSyncerList...), debugLevel))
+		coreList = append(coreList, zapcore.NewCore(zapcore.NewJSONEncoder(NewEncoderConfig()), zapcore.NewMultiWriteSyncer(writeSyncerList...), levelFunc))
 		core := zapcore.NewTee(coreList...)
-		logger := zap.New(core, development, zap.AddCaller())
+		var logger *zap.Logger
+		if minLevel == zapcore.DebugLevel {
+			logger = zap.New(core, zap.Development(), zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel))
+		} else {
+			logger = zap.New(core)
+		}
 		return logger
 	}
 	logger, _ := zap.NewDevelopment()
