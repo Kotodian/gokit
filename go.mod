@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.0 // indirect
-	github.com/Kotodian/protocol v1.8.12
+	github.com/Kotodian/protocol v1.6.6
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/didi/gendry v1.7.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5

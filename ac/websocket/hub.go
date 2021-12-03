@@ -215,7 +215,7 @@ func (h *Hub) Run() {
 		token := h.MqttClient.GetMQTT().Subscribe(topicPrefix+"kick"+topicEnd, 2, func(mqc mqttClient.Client, message mqttClient.Message) {
 
 			//根据topic获取sn
-			var coreID int64
+			var coreID uint64
 
 			_, coreID = getCoreIDFromTopic(message.Topic())
 
@@ -239,13 +239,13 @@ func (h *Hub) Run() {
 	_ = g.Wait()
 }
 
-func getCoreIDFromTopic(topic string) (coregw string, coreID int64) {
+func getCoreIDFromTopic(topic string) (coregw string, coreID uint64) {
 	//根据topic获取sn
 	topics := strings.Split(topic, "/")
 	length := len(topics)
 	lastIndex, secondLastIndex := length-1, length-2
 	temp, _ := datasource.ParseUUID(topics[lastIndex])
-	coreID = temp.Int64()
+	coreID = temp.Uint64()
 	if topics[secondLastIndex] != "command" && topics[secondLastIndex] != "telemetry" {
 		coregw = topics[secondLastIndex]
 	}

@@ -75,7 +75,7 @@ func NewEncoderConfig() zapcore.EncoderConfig {
 		NameKey:        "name",
 		CallerKey:      "caller",
 		MessageKey:     "message",
-		StacktraceKey:  "stack",
+		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
 		EncodeLevel:    zapcore.CapitalLevelEncoder,
 		EncodeTime:     TimeEncoder,
