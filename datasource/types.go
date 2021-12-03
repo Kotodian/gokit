@@ -89,7 +89,7 @@ func (c KindPassword) IsMatch(s string) (bool, error) {
 // 	return int32(float64(c) * 1000)
 // }
 
-type UUID uint64
+type UUID int64
 
 func ParseUUID(in string) (UUID, error) {
 	id, err := strconv.ParseUint(in, 10, 64)
@@ -100,11 +100,11 @@ func ParseUUID(in string) (UUID, error) {
 }
 
 func (u UUID) String() string {
-	return strconv.FormatUint(uint64(u), 10)
+	return strconv.FormatInt(int64(u), 10)
 }
 
-func (u UUID) Uint64() uint64 {
-	return uint64(u)
+func (u UUID) Int64() int64 {
+	return int64(u)
 }
 
 func (u UUID) Timestamp() int64 {
