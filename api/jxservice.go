@@ -9,15 +9,15 @@ import (
 	"time"
 )
 
-type pushIntervalRequest struct {
+type PushIntervalRequest struct {
 	EquipmentID datasource.UUID `json:"equipmentId"`
 }
 
-type pushIntervalResponse struct {
+type PushIntervalResponse struct {
 	OrderPushInterval int `json:"orderPushInterval"`
 }
 
-func PushInterval(req *pushIntervalRequest) (*pushIntervalResponse, error) {
+func PushInterval(req *PushIntervalRequest) (*PushIntervalResponse, error) {
 	reqBytes, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func PushInterval(req *pushIntervalRequest) (*pushIntervalResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	response := &pushIntervalResponse{}
+	response := &PushIntervalResponse{}
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return nil, err
