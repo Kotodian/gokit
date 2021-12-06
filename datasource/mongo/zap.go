@@ -25,7 +25,7 @@ func NewMongoLogHook(collection, version string) (*MongoLogHook, error) {
 		return nil, err
 	}
 	defer db.Client().Disconnect(context.Background())
-	_ = db.CreateCollection(context.Background(), collection)
+	//_ = db.CreateCollection(context.Background(), collection)
 	return hook, nil
 }
 
