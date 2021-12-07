@@ -25,7 +25,7 @@ func PushInterval(req *PushIntervalRequest) (*PushIntervalResponse, error) {
 	client := http.DefaultClient
 	client.Timeout = 10 * time.Second
 	reader := bytes.NewReader(reqBytes)
-	resp, err := client.Post("http://jx-services:8080/equip/getEquipCallerPushOrderInterval", defaultContentType, reader)
+	resp, err := client.Post("http://jx-services:8080/equip/v1/getEquipCallerPushOrderInterval", defaultContentType, reader)
 	if err != nil {
 		return nil, err
 	}
