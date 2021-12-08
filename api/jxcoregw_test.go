@@ -5,7 +5,7 @@ import "testing"
 func TestKick(t *testing.T) {
 	req := &KickRequest{
 		Reason: "why",
-		SN:     "T1641735210",
+		CoreID: "T1641735210",
 	}
 	err := Kick(req)
 	if err != nil {

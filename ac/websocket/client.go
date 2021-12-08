@@ -28,7 +28,7 @@ import (
 const (
 	// Time allowed to write a message to the peer.
 	writeWait = 10 * time.Second
-	readWait  = 185 * time.Second
+	readWait  = 120 * time.Second
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 4096
