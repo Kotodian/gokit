@@ -189,3 +189,14 @@ func wrapSetFunc(redisConn redis.Conn, key string, val interface{}, keepalive in
 func RetrySet(redisConn redis.Conn, key string, val interface{}, keepalive int64) error {
 	return retry.Retry(wrapSetFunc(redisConn, key, val, keepalive), strategy.Limit(3))
 }
+
+func wrapHSetFunc(redisConn redis.Conn, key string, field string, val interface{}) retry.Action {
+	return func(attempt uint) error {
+		_, err := redisConn.Do("hset", key, field, val)
+		return err
+	}
+}
+
+func RetryHSet(redisConn redis.Conn, key string, field string, val interface{}) error {
+	return retry.Retry(wrapHSetFunc(redisConn, key, field, val))
+}

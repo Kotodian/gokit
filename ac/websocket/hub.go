@@ -227,7 +227,6 @@ func (h *Hub) Run() {
 			} else {
 				_client = c.(ClientInterface)
 				_client.Close(nil)
-				h.Clients.Delete(coreID)
 			}
 		})
 		token.WaitTimeout(10 * time.Second)
