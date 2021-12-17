@@ -38,9 +38,9 @@ type Object interface {
 	// TableName 数据库中的表名
 	TableName() string
 	// CreatedAt 创建时间
-	CreatedAt() time.Time
+	CreatedAt() int64
 	// UpdatedAt 更新时间
-	UpdatedAt() time.Time
+	UpdatedAt() int64
 	// CreatedBy 创建者
 	CreatedBy() datasource.UUID
 	// UpdatedBy 更新者
