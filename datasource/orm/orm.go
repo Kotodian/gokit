@@ -38,9 +38,9 @@ type Object interface {
 	// TableName 数据库中的表名
 	TableName() string
 	// CreatedAt 创建时间
-	CreatedAt() int64
+	CreatedAt() time.Time
 	// UpdatedAt 更新时间
-	UpdatedAt() int64
+	UpdatedAt() time.Time
 	// CreatedBy 创建者
 	CreatedBy() datasource.UUID
 	// UpdatedBy 更新者
@@ -53,6 +53,8 @@ type Object interface {
 	AfterCreate(db *gorm.DB) error
 	// AfterUpdate 钩子函数
 	AfterUpdate(db *gorm.DB) error
+	// UpdateHook 自定义钩子函数
+	UpdateHook()
 	// AfterFind 钩子函数
 	AfterFind(db *gorm.DB) error
 }
@@ -70,14 +72,24 @@ func Get(conn *gorm.DB, obj Object, cond string, where ...interface{}) (err erro
 }
 
 func UpdateColumn(conn *gorm.DB, obj Object, f map[string]interface{}) error {
-	return conn.Model(obj).Updates(f).Error
+	err := conn.Model(obj).Updates(f).Error
+	if err != nil {
+		return err
+	}
+	obj.UpdateHook()
+	return nil
 }
 
 func UpdateWithOptimistic(conn *gorm.DB, obj Object, f map[string]interface{}) error {
 	if f == nil {
 		return nil
 	}
-	return updateWithOptimistic(conn, obj, f, 3, 0)
+	err := updateWithOptimistic(conn, obj, f, 3, 0)
+	if err != nil {
+		return err
+	}
+	obj.UpdateHook()
+	return nil
 }
 
 func updateWithOptimistic(conn *gorm.DB, obj Object, f map[string]interface{}, retryCount, currentRetryCount int) error {

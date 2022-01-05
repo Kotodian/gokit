@@ -79,3 +79,21 @@ func TestInit(t *testing.T) {
 
 	t.Log(equipment.EquipmentInfo)
 }
+
+func TestDo(t *testing.T) {
+	os.Setenv("REDIS_POOL", "10.43.0.20:6379")
+	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
+	Init()
+	redisConn := GetRedis()
+	defer redisConn.Close()
+
+	do, err := redisConn.Do("hget", "order:meterage:238024419472261", "charging_effect")
+	if err != nil {
+		t.Log(err)
+	}
+	if do == nil {
+		t.Log("nil")
+	} else {
+		t.Log(do)
+	}
+}
