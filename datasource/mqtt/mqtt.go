@@ -57,7 +57,8 @@ func NewMQTTOptions(clientID string, username string, password string, onConn mq
 	mqttOpts.SetConnectionLostHandler(onLostConn)
 	mqttOpts.SetOnConnectHandler(onConn)
 	mqttOpts.SetDefaultPublishHandler(onMsg)
-	mqttOpts.SetMaxReconnectInterval(time.Second * 3)
+	mqttOpts.SetConnectRetry(true)
+	mqttOpts.SetConnectRetryInterval(2 * time.Second)
 	return mqttOpts
 }
 
