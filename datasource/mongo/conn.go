@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
+	"time"
 )
 
 var (
@@ -42,6 +43,8 @@ func connect() (*mongo.Database, error) {
 		AuthSource: authDatabase,
 	}).ApplyURI("mongodb://" + host + ":" + port)
 	o.SetMaxPoolSize(10)
+	o.SetConnectTimeout(5 * time.Second)
+	o.SetRetryWrites(true)
 	client, err := mongo.Connect(context.Background(), o)
 	if err != nil {
 		return nil, err
