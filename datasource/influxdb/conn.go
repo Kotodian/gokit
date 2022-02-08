@@ -12,12 +12,14 @@ import (
 
 var _pool pool.Pool
 var org string
+var token string
 
 func Init() (err error) {
 	org = os.Getenv("INFLUXDB_ORG")
+	token = os.Getenv("INFLUXDB_AUTH_TOKEN")
 	//factory 创建连接的方法
 	factory := func() (interface{}, error) {
-		client := influxdb.NewClient("http://influxdb:8086", os.Getenv("INFLUXDB_AUTH_TOKEN"))
+		client := influxdb.NewClient("http://influxdb:8086", token)
 		//client := influxdb.NewClient("http://10.43.0.15:8086", os.Getenv("INFLUXDB_AUTH_TOKEN"))
 		_, err = client.Health(context.Background())
 		if err != nil {
@@ -58,14 +60,11 @@ func CloseClient(v interface{}) error {
 }
 
 func WriteAPIBlocking(bucket, measurement string, tags map[string]string, fields map[string]interface{}, ts time.Time) error {
-	client, err := GetClient()
-	if err != nil {
-		return err
-	}
+	client := influxdb.NewClient("http://influxdb:8086", token)
 	defer client.Close()
 	writeAPI := client.WriteAPIBlocking(org, bucket)
 	p := influxdb.NewPoint(measurement, tags, fields, ts)
-	err = writeAPI.WritePoint(context.Background(), p)
+	err := writeAPI.WritePoint(context.Background(), p)
 	return err
 }
 
@@ -81,4 +80,15 @@ func Query(query string) (*api.QueryTableResult, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func WriteAPI(bucket, measurement string, tags map[string]string, fields map[string]interface{}, ts time.Time) {
+	client := influxdb.NewClient("http://influxdb:8086", token)
+
+	writeAPI := client.WriteAPI(org, bucket)
+	p := influxdb.NewPoint(measurement, tags, fields, ts)
+	writeAPI.WritePoint(p)
+
+	writeAPI.Flush()
+	client.Close()
 }
