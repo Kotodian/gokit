@@ -7,4 +7,5 @@ import (
 func TestNext(t *testing.T) {
 	next := Next()
 	t.Log(next.String())
+	t.Log(next.Timestamp())
 }
