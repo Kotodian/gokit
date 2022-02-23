@@ -1,6 +1,9 @@
 package rabbitmq
 
 import (
+	"context"
+	"github.com/Kotodian/gokit/id"
+	jsoniter "github.com/json-iterator/go"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
@@ -8,19 +11,48 @@ import (
 )
 
 type rabbitmqHook struct {
-	queue   string
-	service string
+	hostName string
+	queue    string
+	service  string
+	version  string
 }
 
-func NewRabbitmqHook(queue string, service string) *rabbitmqHook {
+func NewRabbitmqHook(queue string, service string, version string) *rabbitmqHook {
+	hostName, _ := os.Hostname()
 	return &rabbitmqHook{
-		queue:   queue,
-		service: service,
+		queue:    queue,
+		service:  service,
+		hostName: hostName,
+		version:  version,
 	}
 }
 
 func (r *rabbitmqHook) Write(p []byte) (n int, err error) {
+	if err = r.push(p); err != nil {
+		return 0, err
+	}
 	return 0, nil
+}
+
+func (r *rabbitmqHook) push(data []byte) (err error) {
+	ctx := context.Background()
+	now := time.Now()
+	var object interface{}
+	if err = jsoniter.Unmarshal(data, &object); err != nil {
+		return err
+	}
+
+	dataMap := object.(map[string]interface{})
+	dataMap["_id"] = id.Next()
+	dataMap["host"] = r.hostName
+	dataMap["date"] = now.Format("2006-01-02")
+	dataMap["time"] = now.Format("15:04:05")
+	dataMap["version"] = r.version
+	delete(dataMap, "date_time")
+	if data, err = jsoniter.Marshal(dataMap); err != nil {
+		return
+	}
+	return Publish(ctx, r.queue, nil, data)
 }
 
 func NewEncoderConfig() zapcore.EncoderConfig {
@@ -51,7 +83,7 @@ func NewZapLogger(minLevel zapcore.Level, version, queue, service string) *zap.L
 	levelFunc := zap.LevelEnablerFunc(func(level zapcore.Level) bool {
 		return level >= minLevel
 	})
-	hook := NewRabbitmqHook(queue, service)
+	hook := NewRabbitmqHook(queue, service, version)
 	writeSyncerList = append(writeSyncerList, zapcore.AddSync(os.Stdout))
 	writeSyncerList = append(writeSyncerList, zapcore.AddSync(hook))
 	coreList = append(coreList, zapcore.NewCore(zapcore.NewJSONEncoder(NewEncoderConfig()), zapcore.NewMultiWriteSyncer(writeSyncerList...), levelFunc))
