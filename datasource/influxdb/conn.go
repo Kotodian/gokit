@@ -14,6 +14,7 @@ var _pool pool.Pool
 var org string
 var token string
 
+// Init Deprecated
 func Init() (err error) {
 	org = os.Getenv("INFLUXDB_ORG")
 	token = os.Getenv("INFLUXDB_AUTH_TOKEN")
@@ -47,6 +48,7 @@ func Init() (err error) {
 	return
 }
 
+// GetClient Deprecated
 func GetClient() (influxdb.Client, error) {
 	c, err := _pool.Get()
 	if err != nil {
