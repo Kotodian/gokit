@@ -52,7 +52,8 @@ func (r *rabbitmqHook) push(data []byte) (err error) {
 	if data, err = jsoniter.Marshal(dataMap); err != nil {
 		return
 	}
-	return Publish(ctx, r.queue, nil, data)
+	_ = Publish(ctx, r.queue, nil, data)
+	return nil
 }
 
 func NewEncoderConfig() zapcore.EncoderConfig {
