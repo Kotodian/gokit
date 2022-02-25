@@ -49,9 +49,6 @@ func (r *rabbitmqHook) push(data []byte) (err error) {
 	dataMap["time"] = now.Format("15:04:05")
 	dataMap["version"] = r.version
 	delete(dataMap, "date_time")
-	if data, err = jsoniter.Marshal(dataMap); err != nil {
-		return
-	}
 	_ = Publish(ctx, r.queue, nil, data)
 	return nil
 }
