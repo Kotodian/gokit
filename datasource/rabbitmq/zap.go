@@ -47,7 +47,7 @@ func (r *rabbitmqHook) push(data []byte) (err error) {
 	dataMap["host"] = r.hostName
 	dataMap["date"] = now.Format("2006-01-02")
 	dataMap["time"] = now.Format("15:04:05")
-	dataMap["version"] = r.version
+	dataMap["edition"] = r.version
 	delete(dataMap, "date_time")
 	_ = Publish(ctx, r.queue, nil, dataMap)
 	return nil
