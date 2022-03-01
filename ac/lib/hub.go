@@ -1,4 +1,4 @@
-package websocket
+package lib
 
 import (
 	"context"
@@ -9,20 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Kotodian/gokit/ac/lib"
 	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/gokit/sync/errgroup.v2"
 	"github.com/Kotodian/gokit/workpool"
 	mqttClient "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sirupsen/logrus"
 )
-
-type MqttMessage struct {
-	Qos      byte
-	Retained bool
-	Topic    string
-	Payload  []byte
-}
 
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
@@ -36,10 +28,10 @@ type Hub struct {
 	MqttClient *mqtt.MQTTClient
 
 	// PubMqttMsg 发送到MQTT的信息通道
-	PubMqttMsg chan MqttMessage
+	PubMqttMsg chan mqtt.MqttMessage
 
 	// TR 协议翻译器
-	TR lib.ITranslate //协议翻译器
+	TR ITranslate //协议翻译器
 
 	// ResponseFn 返回函数
 	ResponseFn func(ctx context.Context, payload interface{}) ([]byte, error)
@@ -53,7 +45,7 @@ type Hub struct {
 	//RegClients 需要执行注册的客户端
 	RegClients sync.Map
 	// Encrypt 加密报文
-	Encrypt lib.Encrypt
+	Encrypt Encrypt
 }
 
 func NewHub(protocol string, protocolVersion, username string, password string) *Hub {
@@ -75,18 +67,18 @@ func NewHub(protocol string, protocolVersion, username string, password string) 
 	hub := &Hub{
 		Hostname:        hostname,
 		MqttClient:      mqClient,
-		PubMqttMsg:      make(chan MqttMessage, 1000),
+		PubMqttMsg:      make(chan mqtt.MqttMessage, 1000),
 		Protocol:        protocol,
 		ProtocolVersion: protocolVersion,
 	}
 	return hub
 }
 
-func (h *Hub) SetTR(tr lib.ITranslate) {
+func (h *Hub) SetTR(tr ITranslate) {
 	h.TR = tr
 }
 
-func (h *Hub) SetEncrypt(encrypt lib.Encrypt) {
+func (h *Hub) SetEncrypt(encrypt Encrypt) {
 	h.Encrypt = encrypt
 }
 
@@ -123,7 +115,7 @@ func (h *Hub) Run() {
 
 			fmt.Println("go reg mqtt client", fmt.Sprintf("%+v", _client))
 
-			_client.PublishReg(MqttMessage{
+			_client.PublishReg(mqtt.MqttMessage{
 				Topic:    topic,
 				Payload:  m.Payload(),
 				Qos:      m.Qos(),
@@ -171,7 +163,7 @@ func (h *Hub) Run() {
 			}
 			//fmt.Println("go mqtt msg client", fmt.Sprintf("%+v", _client))
 
-			_client.Publish(MqttMessage{
+			_client.Publish(mqtt.MqttMessage{
 				Topic:    topic,
 				Payload:  m.Payload(),
 				Qos:      m.Qos(),

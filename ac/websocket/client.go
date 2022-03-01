@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Kotodian/gokit/datasource"
+	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/gokit/datasource/redis"
 	"github.com/Kotodian/protocol/golang/keys"
 	"go.uber.org/zap"
@@ -42,16 +43,16 @@ var (
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
 	chargeStation           interfaces.ChargeStation
-	hub                     *Hub            //中间件
+	hub                     *lib.Hub        //中间件
 	conn                    *websocket.Conn //socket连接
 	send                    chan []byte     //发送消息的管道
 	sendPing                chan struct{}
-	close                   chan struct{}    //退出的通知
-	once                    sync.Once        //主要处理关闭通道
-	lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
-	clientOfflineNotifyFunc func(err error)  // 网络断开同步到core的函数
-	mqttRegCh               chan MqttMessage //注册信息
-	mqttMsgCh               chan MqttMessage //返回或下发的信息
+	close                   chan struct{}         //退出的通知
+	once                    sync.Once             //主要处理关闭通道
+	lock                    sync.RWMutex          //加锁，一次只能同步一个报文，减少并发
+	clientOfflineNotifyFunc func(err error)       // 网络断开同步到core的函数
+	mqttRegCh               chan mqtt.MqttMessage //注册信息
+	mqttMsgCh               chan mqtt.MqttMessage //返回或下发的信息
 	remoteAddress           string
 	log                     *zap.Logger
 	keepalive               int64
@@ -101,7 +102,7 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) ClientInterface {
+func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) lib.ClientInterface {
 	return &Client{
 		log:           log,
 		chargeStation: chargeStation,
@@ -110,8 +111,8 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *Hub, conn *websocket
 		remoteAddress: remoteAddress,
 		send:          make(chan []byte, 5),
 		sendPing:      make(chan struct{}, 1),
-		mqttMsgCh:     make(chan MqttMessage, 5),
-		mqttRegCh:     make(chan MqttMessage, 5),
+		mqttMsgCh:     make(chan mqtt.MqttMessage, 5),
+		mqttRegCh:     make(chan mqtt.MqttMessage, 5),
 		close:         make(chan struct{}),
 		keepalive:     int64(keepalive),
 	}
@@ -219,7 +220,7 @@ func (c *Client) SubMQTT() {
 									})
 								}
 								apduEncoded, _ := proto.Marshal(&apdu)
-								pubMqttMsg := MqttMessage{
+								pubMqttMsg := mqtt.MqttMessage{
 									Topic:    strings.Replace(trData.Topic, c.hub.Hostname, "coregw", 1),
 									Qos:      2,
 									Retained: false,
@@ -362,7 +363,7 @@ func (c *Client) ReadPump() {
 			}
 			sendQos = 2
 
-			c.hub.PubMqttMsg <- MqttMessage{
+			c.hub.PubMqttMsg <- mqtt.MqttMessage{
 				Topic:    sendTopic,
 				Qos:      sendQos,
 				Retained: false,
@@ -448,11 +449,11 @@ func (c *Client) WritePump() {
 	}
 }
 
-func (c *Client) PublishReg(m MqttMessage) {
+func (c *Client) PublishReg(m mqtt.MqttMessage) {
 	c.mqttRegCh <- m
 }
 
-func (c *Client) Publish(m MqttMessage) {
+func (c *Client) Publish(m mqtt.MqttMessage) {
 	c.mqttMsgCh <- m
 }
 
@@ -464,7 +465,7 @@ func (c *Client) Logger() *zap.Logger {
 	return c.log
 }
 
-func (c *Client) Hub() *Hub {
+func (c *Client) Hub() *lib.Hub {
 	return c.hub
 }
 

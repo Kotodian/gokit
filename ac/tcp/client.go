@@ -1,47 +1,83 @@
-package websocket
+package tcp
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Kotodian/gokit/ac/lib"
 	"github.com/Kotodian/gokit/datasource"
+	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/gokit/workpool"
 	"github.com/Kotodian/protocol/golang/hardware/charger"
 	"github.com/Kotodian/protocol/interfaces"
 	"github.com/golang/protobuf/proto"
-	"github.com/gorilla/websocket"
+	"github.com/panjf2000/gnet/v2"
 	"go.uber.org/zap"
-	"net"
 	"strings"
 	"sync"
 	"time"
 )
 
-type TCPClient struct {
-	chargeStation           interfaces.ChargeStation
-	hub                     *Hub        //中间件
-	conn                    net.Conn    //socket连接
-	send                    chan []byte //发送消息的管道
-	sendPing                chan struct{}
-	close                   chan struct{}    //退出的通知
-	once                    sync.Once        //主要处理关闭通道
-	lock                    sync.RWMutex     //加锁，一次只能同步一个报文，减少并发
-	clientOfflineNotifyFunc func(err error)  // 网络断开同步到core的函数
-	mqttRegCh               chan MqttMessage //注册信息
-	mqttMsgCh               chan MqttMessage //返回或下发的信息
-	remoteAddress           string
-	log                     *zap.Logger
-	keepalive               int64
-	coregw                  string
-	isClose                 bool
-	encryptKey              []byte
-	id                      string
+const (
+	writeWait = 10 * time.Second
+	readWait  = 125 * time.Second
+)
+
+type Client struct {
+	// 桩实体
+	chargeStation interfaces.ChargeStation
+	// 存储桩的容器
+	hub *lib.Hub
+	// 发送消息的管道
+	send chan []byte
+	// 退出的通知 以后可以做一些其他的监听订阅
+	close chan struct{}
+	// 加锁,一次处理一个请求
+	lock sync.RWMutex
+	// 关闭时通知
+	clientOfflineNotifyFunc func(err error)
+	// 注册信息管道
+	mqttRegCh chan mqtt.MqttMessage
+	// 返回或者下发的消息
+	mqttMsgCh chan mqtt.MqttMessage
+	// 客户端地址
+	remoteAddress string
+	// 日志组件
+	log *zap.Logger
+	// 维持连接的超时时间
+	keepalive int64
+	// 记录coregw发送的请求host,以便回复给请求的coregw
+	coregw string
+	// 加密key
+	encryptKey []byte
+	// 平台端id
+	id string
+	// 连接
+	conn gnet.Conn
+
+	isClose bool
+
+	once sync.Once
 }
 
-func (c *TCPClient) Send(msg []byte) (err error) {
+func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn gnet.Conn, keepalive int64, remoteAddress string, log *zap.Logger) *Client {
+	client := &Client{
+		log:           log,
+		chargeStation: chargeStation,
+		hub:           hub,
+		conn:          conn,
+		remoteAddress: remoteAddress,
+		send:          make(chan []byte, 5),
+		mqttMsgCh:     make(chan mqtt.MqttMessage, 5),
+		mqttRegCh:     make(chan mqtt.MqttMessage, 5),
+		close:         make(chan struct{}),
+		keepalive:     keepalive,
+		isClose:       false,
+	}
+	return client
+}
+
+func (c *Client) Send(msg []byte) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -57,15 +93,38 @@ func (c *TCPClient) Send(msg []byte) (err error) {
 	return
 }
 
-func (c *TCPClient) SubRegMQTT() {
+func (c *Client) Close(err error) error {
+	c.once.Do(func() {
+		if err == nil {
+			err = errors.New("平台关闭")
+		}
+		c.log.Error(err.Error())
+		c.hub.Clients.Delete(c.chargeStation.CoreID())
+		c.hub.RegClients.Delete(c.chargeStation.CoreID())
+		_ = c.conn.Close(nil)
+		c.log.Sugar().Info(c.chargeStation.SN(), "关闭连接")
+		c.conn = nil
+		close(c.send)
+		close(c.close)
+		close(c.mqttRegCh)
+		close(c.mqttMsgCh)
+
+		c.clientOfflineNotifyFunc(err)
+		c.isClose = true
+	})
+
+	return nil
+}
+
+func (c *Client) SubRegMQTT() {
 	c.hub.RegClients.Store(c.chargeStation.CoreID(), c)
-	//if c.Evse.CoreID() == 0 {
+	// todo 存入到hub
 	for {
-		c.log.Sugar().Info("------------> register msg start", c.chargeStation.SN())
 		select {
 		case <-c.close:
-			c.log.Sugar().Info("------------> register msg end", c.chargeStation.SN())
+			c.log.Sugar().Info("register msg end", c.chargeStation.SN())
 			return
+		// todo 翻译
 		case m := <-c.mqttRegCh:
 			func() {
 				var apdu charger.APDU
@@ -79,42 +138,55 @@ func (c *TCPClient) SubRegMQTT() {
 				if err = proto.Unmarshal(m.Payload, &apdu); err != nil {
 					return
 				}
-
 				trData := &lib.TRData{
 					APDU: &apdu,
 				}
+
+				// 将客户端信息以及消息放入到上下文中
 				ctx := context.WithValue(context.TODO(), "client", c)
 				ctx = context.WithValue(ctx, "trData", trData)
 
 				var msg interface{}
-				//var f lib.FromAPDUFunc
+
+				// 处理并翻译成桩端需要的结果
 				if msg, err = c.hub.TR.FromAPDU(ctx, &apdu); err != nil {
-					err = fmt.Errorf("FromAPDU register error, err:%s topic:%s", err.Error(), topic)
+					err = fmt.Errorf("FromAPDU register error, err: %s topic: %s", err.Error(), topic)
 					return
 				} else if msg == nil {
 					return
 				}
 
-				//b, err := f(ctx)
-				//if err != nil {
-				//	log.Errorf("translate register conf error, err:%v topic:%s", err.Error(), topic)
-				//	return
 				if trData.Ignore {
 					return
 				}
-				var bMsg []byte
-				if bMsg, err = json.Marshal(msg); err != nil {
-					return
-				} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), bMsg); err != nil {
-					return
-				}
+				c.Reply(ctx, msg)
 			}()
-			//logrus.Infof("reg resp:%s, sn:%s", string(bMsg), c.Evse.SN())
 		}
 	}
 }
 
-func (c *TCPClient) SubMQTT() {
+func (c *Client) Reply(ctx context.Context, payload interface{}) {
+	resp, err := c.hub.ResponseFn(ctx, payload)
+	if err != nil {
+		return
+	}
+	//resp := protocol.NewCallResult(ctx, payload)
+	//b, _ := json.Marshal(resp)
+	_ = c.Send(resp)
+	//if _client := ctx.Value("client"); _client != nil {
+	//	client := _client.(*Client)
+	//	client.send <- b
+	//}
+}
+
+func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
+	b := c.hub.ResponseErrFn(ctx, err, desc...)
+	if b != nil {
+		_ = c.Send(b)
+	}
+}
+
+func (c *Client) SubMQTT() {
 	c.hub.Clients.Store(c.chargeStation.CoreID(), c)
 	wp := workpool.New(1, 5).Start()
 	for {
@@ -157,7 +229,7 @@ func (c *TCPClient) SubMQTT() {
 									})
 								}
 								apduEncoded, _ := proto.Marshal(&apdu)
-								pubMqttMsg := MqttMessage{
+								pubMqttMsg := mqtt.MqttMessage{
 									Topic:    strings.Replace(trData.Topic, c.hub.Hostname, "coregw", 1),
 									Qos:      2,
 									Retained: false,
@@ -182,12 +254,7 @@ func (c *TCPClient) SubMQTT() {
 					//else if apdu.NoNeedReply {
 					//	return
 					//}
-					var bMsg []byte
-					if bMsg, err = json.Marshal(msg); err != nil {
-						return
-					} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), bMsg); err != nil {
-						return
-					}
+					c.Reply(ctx, msg)
 					//}()
 					return
 				}, Args: []interface{}{apdu},
@@ -196,18 +263,16 @@ func (c *TCPClient) SubMQTT() {
 	}
 }
 
-func (c *TCPClient) ReadPump() {
+func (c *Client) ReadPump() {
 	var err error
 	defer func() {
-		_ = c.Close(err)
+		// todo 关闭连接
 	}()
-
 	err = c.conn.SetReadDeadline(time.Now().Add(readWait))
 	if err != nil {
 		return
 	}
 	for {
-		ctx := context.WithValue(context.TODO(), "client", c)
 		if c.conn == nil {
 			return
 		}
@@ -218,20 +283,15 @@ func (c *TCPClient) ReadPump() {
 		var msg []byte
 		_, err = c.conn.Read(msg)
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
-				c.log.Sugar().Errorf("error: %v", err)
-			}
 			break
 		}
-
 		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
 			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
 			if err != nil {
 				break
 			}
 		}
-
-		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+		ctx := context.WithValue(context.TODO(), "client", c)
 
 		go func(ctx context.Context, msg []byte) {
 			trData := &lib.TRData{}
@@ -274,11 +334,11 @@ func (c *TCPClient) ReadPump() {
 			} else if !trData.Sync {
 				sendTopic = "coregw/" + c.hub.Hostname + "/command/" + datasource.UUID(c.chargeStation.CoreID()).String()
 			} else {
-				sendTopic = c.Coregw() + "/sync/" + datasource.UUID(c.chargeStation.CoreID()).String()
+				sendTopic = c.coregw + "/sync/" + datasource.UUID(c.chargeStation.CoreID()).String()
 			}
 			sendQos = 2
 
-			c.hub.PubMqttMsg <- MqttMessage{
+			c.hub.PubMqttMsg <- mqtt.MqttMessage{
 				Topic:    sendTopic,
 				Qos:      sendQos,
 				Retained: false,
@@ -288,10 +348,10 @@ func (c *TCPClient) ReadPump() {
 	}
 }
 
-func (c *TCPClient) WritePump() {
+func (c *Client) WritePump() {
 	var err error
 	if err != nil {
-		defer c.Close(err)
+		// todo 关闭连接
 	}
 	for {
 		select {
@@ -301,117 +361,75 @@ func (c *TCPClient) WritePump() {
 			}
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// The hub closed the channel.
+				err = errors.New("send on closed channel")
 				return
 			}
-			_, _ = c.conn.Write(message)
-		case <-c.sendPing:
-			if c.conn == nil {
+			_, err = c.conn.Write(message)
+			if err != nil {
 				return
 			}
 		}
 	}
 }
-
-func (c *TCPClient) Reply(ctx context.Context, payload interface{}) {
-	resp, err := c.hub.ResponseFn(ctx, payload)
-	if err != nil {
-		return
-	}
-	//resp := protocol.NewCallResult(ctx, payload)
-	//b, _ := json.Marshal(resp)
-	_ = c.Send(resp)
+func (c *Client) Hub() *lib.Hub {
+	return c.hub
 }
-
-func (c *TCPClient) ReplyError(ctx context.Context, err error, desc ...string) {
-	b := c.hub.ResponseErrFn(ctx, err, desc...)
-	if b != nil {
-		_ = c.Send(b)
-	}
-}
-
-func (c *TCPClient) Publish(m MqttMessage) {
-	c.mqttMsgCh <- m
-}
-
-func (c *TCPClient) PublishReg(m MqttMessage) {
+func (c *Client) PublishReg(m mqtt.MqttMessage) {
 	c.mqttRegCh <- m
 }
 
-func (c *TCPClient) Close(err error) error {
-	c.once.Do(func() {
-		if err == nil {
-			err = errors.New("平台关闭")
-		}
-		c.log.Error(err.Error())
-		c.hub.Clients.Delete(c.chargeStation.CoreID())
-		c.hub.RegClients.Delete(c.chargeStation.CoreID())
-		_ = c.conn.Close()
-		c.log.Sugar().Info(c.chargeStation.SN(), "关闭连接")
-		c.conn = nil
-		close(c.send)
-		close(c.close)
-		close(c.mqttRegCh)
-		close(c.mqttMsgCh)
-
-		c.clientOfflineNotifyFunc(err)
-		c.isClose = true
-	})
-	return nil
+func (c *Client) Publish(m mqtt.MqttMessage) {
+	c.mqttMsgCh <- m
 }
 
-func (c *TCPClient) ChargeStation() interfaces.ChargeStation {
-	return c.chargeStation
-}
-
-func (c *TCPClient) Hub() *Hub {
-	return c.hub
-}
-
-func (c *TCPClient) KeepAlive() int64 {
+func (c *Client) KeepAlive() int64 {
 	return c.keepalive
 }
 
-func (c *TCPClient) Logger() *zap.Logger {
+func (c *Client) Logger() *zap.Logger {
 	return c.log
 }
 
-func (c *TCPClient) RemoteAddress() string {
+func (c *Client) RemoteAddress() string {
 	return c.remoteAddress
 }
 
-func (c *TCPClient) SetClientOfflineFunc(f func(err error)) {
-	c.clientOfflineNotifyFunc = f
+func (c *Client) ChargeStation() interfaces.ChargeStation {
+	return c.chargeStation
 }
 
-func (c *TCPClient) ClientOfflineFunc() func(err error) {
+func (c *Client) SetClientOfflineFunc(clientOfflineFunc func(err error)) {
+	c.clientOfflineNotifyFunc = clientOfflineFunc
+}
+
+func (c *Client) ClientOfflineFunc() func(err error) {
 	return c.clientOfflineNotifyFunc
 }
 
-func (c *TCPClient) Lock() {
+func (c *Client) Lock() {
 	c.lock.Lock()
 }
 
-func (c *TCPClient) Unlock() {
+func (c *Client) Unlock() {
 	c.lock.Unlock()
 }
 
-func (c *TCPClient) Coregw() string {
+func (c *Client) Coregw() string {
 	return c.coregw
 }
 
-func (c *TCPClient) SetCoregw(coregw string) {
+func (c *Client) SetCoregw(coregw string) {
 	c.coregw = coregw
 }
 
-func (c *TCPClient) IsClose() bool {
+func (c *Client) SetEncryptKey(encryptKey string) {
+	c.encryptKey = []byte(encryptKey)
+}
+
+func (c *Client) IsClose() bool {
 	return c.isClose
 }
 
-func (c *TCPClient) EncryptKey() []byte {
+func (c *Client) EncryptKey() []byte {
 	return c.encryptKey
-}
-
-func (c *TCPClient) SetEncryptKey(s string) {
-	c.encryptKey = []byte(s)
 }

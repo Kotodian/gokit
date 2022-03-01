@@ -14,6 +14,12 @@ const (
 	EnvEmqxPass = "EMQX_PASS"
 )
 
+type MqttMessage struct {
+	Qos      byte
+	Retained bool
+	Topic    string
+	Payload  []byte
+}
 type MQTTClient struct {
 	mqtt mqtt.Client
 }
