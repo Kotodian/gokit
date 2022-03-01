@@ -39,7 +39,6 @@ func Init() {
 				redigo.Wait(false),        // 连接耗尽时是否等待，默认false
 				redigo.IdleTimeout(0),     // 空闲连接超时时间，默认0不超时
 				redigo.MaxConnLifetime(0), // 连接的生命周期，默认0不失效
-				redigo.TestOnBorrow(nil),  // 空间连接取出后检测是否健康，默认nil
 			),
 			alone.DialOpts(
 				redis.DialReadTimeout(10*time.Second),    // 读取超时，默认time.Second
@@ -63,7 +62,6 @@ func Init() {
 				redigo.Wait(false),        // 连接耗尽时是否等待，默认false
 				redigo.IdleTimeout(0),     // 空闲连接超时时间，默认0不超时
 				redigo.MaxConnLifetime(0), // 连接的生命周期，默认0不失效
-				redigo.TestOnBorrow(nil),  // 空间连接取出后检测是否健康，默认nil
 			),
 			sentinel.DialOpts(
 				redis.DialReadTimeout(10*time.Second),    // 读取超时，默认time.Second
