@@ -11,8 +11,8 @@ import (
 	"github.com/Kotodian/protocol/golang/hardware/charger"
 	"github.com/Kotodian/protocol/interfaces"
 	"github.com/golang/protobuf/proto"
-	"github.com/panjf2000/gnet/v2"
 	"go.uber.org/zap"
+	"net"
 	"strings"
 	"sync"
 	"time"
@@ -53,14 +53,14 @@ type Client struct {
 	// 平台端id
 	id string
 	// 连接
-	conn gnet.Conn
+	conn *net.TCPConn
 
 	isClose bool
 
 	once sync.Once
 }
 
-func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn gnet.Conn, keepalive int64, remoteAddress string, log *zap.Logger) *Client {
+func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) *Client {
 	client := &Client{
 		log:           log,
 		chargeStation: chargeStation,
@@ -101,7 +101,7 @@ func (c *Client) Close(err error) error {
 		c.log.Error(err.Error())
 		c.hub.Clients.Delete(c.chargeStation.CoreID())
 		c.hub.RegClients.Delete(c.chargeStation.CoreID())
-		_ = c.conn.Close(nil)
+		_ = c.conn.Close()
 		c.log.Sugar().Info(c.chargeStation.SN(), "关闭连接")
 		c.conn = nil
 		close(c.send)
