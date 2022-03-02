@@ -157,7 +157,7 @@ func (c *Client) SubRegMQTT() {
 				if trData.Ignore {
 					return
 				}
-				c.Reply(ctx, msg)
+				c.sendCommand(ctx, msg)
 			}()
 		}
 	}
@@ -175,6 +175,14 @@ func (c *Client) Reply(ctx context.Context, payload interface{}) {
 	//	client := _client.(*Client)
 	//	client.send <- b
 	//}
+}
+
+func (c *Client) sendCommand(ctx context.Context, payload interface{}) {
+	command, err := c.hub.CommandFn(ctx, payload)
+	if err != nil {
+		return
+	}
+	_ = c.Send(command)
 }
 
 func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
@@ -237,23 +245,15 @@ func (c *Client) SubMQTT() {
 							}
 						}
 					}()
-
 					if msg, err = c.hub.TR.FromAPDU(ctx, &apdu); err != nil {
 						return
 					} else if msg == nil {
 						return
 					}
-
 					if trData.Ignore {
 						return
 					}
-
-					//平台下发的命令都要回复，不存在不回复的情况
-					//else if apdu.NoNeedReply {
-					//	return
-					//}
-					c.Reply(ctx, msg)
-					//}()
+					c.sendCommand(ctx, msg)
 					return
 				}, Args: []interface{}{apdu},
 			})

@@ -33,6 +33,8 @@ type Hub struct {
 	// TR 协议翻译器
 	TR ITranslate //协议翻译器
 
+	// CommandFn 发送函数
+	CommandFn func(ctx context.Context, payload interface{}) ([]byte, error)
 	// ResponseFn 返回函数
 	ResponseFn func(ctx context.Context, payload interface{}) ([]byte, error)
 
