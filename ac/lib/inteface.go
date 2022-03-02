@@ -19,6 +19,7 @@ type ClientInterface interface {
 	PublishReg(m mqtt.MqttMessage)
 	Close(err error) error
 	ChargeStation() interfaces.ChargeStation
+	SetChargeStation(interfaces.ChargeStation)
 	Hub() *Hub
 	KeepAlive() int64
 	Logger() *zap.Logger

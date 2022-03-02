@@ -481,6 +481,10 @@ func (c *Client) ChargeStation() interfaces.ChargeStation {
 	return c.chargeStation
 }
 
+func (c *Client) SetChargeStation(chargeStation interfaces.ChargeStation) {
+	c.chargeStation = chargeStation
+}
+
 func (c *Client) SetClientOfflineFunc(clientOfflineFunc func(err error)) {
 	c.clientOfflineNotifyFunc = clientOfflineFunc
 }

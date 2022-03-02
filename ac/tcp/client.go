@@ -60,10 +60,9 @@ type Client struct {
 	once sync.Once
 }
 
-func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) *Client {
+func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) *Client {
 	client := &Client{
 		log:           log,
-		chargeStation: chargeStation,
 		hub:           hub,
 		conn:          conn,
 		remoteAddress: remoteAddress,
@@ -338,12 +337,13 @@ func (c *Client) ReadPump() {
 				sendTopic = c.coregw + "/sync/" + datasource.UUID(c.chargeStation.CoreID()).String()
 			}
 			sendQos = 2
-
-			c.hub.PubMqttMsg <- mqtt.MqttMessage{
-				Topic:    sendTopic,
-				Qos:      sendQos,
-				Retained: false,
-				Payload:  toCoreMSG,
+			if c.chargeStation != nil {
+				c.hub.PubMqttMsg <- mqtt.MqttMessage{
+					Topic:    sendTopic,
+					Qos:      sendQos,
+					Retained: false,
+					Payload:  toCoreMSG,
+				}
 			}
 		}(ctx, msg)
 	}
