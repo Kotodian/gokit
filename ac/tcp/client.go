@@ -118,13 +118,11 @@ func (c *Client) Close(err error) error {
 
 func (c *Client) SubRegMQTT() {
 	c.hub.RegClients.Store(c.chargeStation.CoreID(), c)
-	// todo 存入到hub
 	for {
 		select {
 		case <-c.close:
 			c.log.Sugar().Info("register msg end", c.chargeStation.SN())
 			return
-		// todo 翻译
 		case m := <-c.mqttRegCh:
 			func() {
 				var apdu charger.APDU
