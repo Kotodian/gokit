@@ -156,7 +156,11 @@ func (c *Client) SubRegMQTT() {
 				if trData.Ignore {
 					return
 				}
-				c.sendCommand(ctx, msg)
+				if apdu.IsRequest() {
+					c.sendCommand(ctx, msg)
+				} else {
+					c.Reply(ctx, msg)
+				}
 			}()
 		}
 	}
@@ -252,7 +256,11 @@ func (c *Client) SubMQTT() {
 					if trData.Ignore {
 						return
 					}
-					c.sendCommand(ctx, msg)
+					if apdu.IsRequest() {
+						c.sendCommand(ctx, msg)
+					} else {
+						c.Reply(ctx, msg)
+					}
 					return
 				}, Args: []interface{}{apdu},
 			})
