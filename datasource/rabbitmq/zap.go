@@ -81,9 +81,11 @@ func NewZapLogger(minLevel zapcore.Level, version, queue, service string) *zap.L
 	levelFunc := zap.LevelEnablerFunc(func(level zapcore.Level) bool {
 		return level >= minLevel
 	})
-	hook := NewRabbitmqHook(queue, service, version)
 	writeSyncerList = append(writeSyncerList, zapcore.AddSync(os.Stdout))
-	writeSyncerList = append(writeSyncerList, zapcore.AddSync(hook))
+	if queue != "" {
+		hook := NewRabbitmqHook(queue, service, version)
+		writeSyncerList = append(writeSyncerList, zapcore.AddSync(hook))
+	}
 	coreList = append(coreList, zapcore.NewCore(zapcore.NewJSONEncoder(NewEncoderConfig()), zapcore.NewMultiWriteSyncer(writeSyncerList...), levelFunc))
 	core := zapcore.NewTee(coreList...)
 	var logger *zap.Logger
