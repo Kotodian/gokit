@@ -265,6 +265,9 @@ func (c *Client) ReadPump() {
 	var err error
 	defer func() {
 		// todo 关闭连接
+		if err != nil {
+			_ = c.Close(err)
+		}
 	}()
 	err = c.conn.SetReadDeadline(time.Now().Add(readWait))
 	if err != nil {
@@ -348,11 +351,15 @@ func (c *Client) ReadPump() {
 
 func (c *Client) WritePump() {
 	var err error
-	if err != nil {
-		// todo 关闭连接
-	}
+	defer func() {
+		if err != nil {
+			_ = c.Close(err)
+		}
+	}()
 	for {
 		select {
+		case <-c.close:
+			return
 		case message, ok := <-c.send:
 			if c.conn == nil {
 				return

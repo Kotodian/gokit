@@ -404,11 +404,15 @@ func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
 func (c *Client) WritePump() {
 	//ticker := time.NewTicker(10 * time.Second)
 	var err error
-	if err != nil {
-		defer c.Close(err)
-	}
+	defer func() {
+		if err != nil {
+			_ = c.Close(err)
+		}
+	}()
 	for {
 		select {
+		case <-c.close:
+			return
 		case message, ok := <-c.send:
 			if c.conn == nil {
 				return
