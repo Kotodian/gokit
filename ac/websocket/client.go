@@ -60,6 +60,7 @@ type Client struct {
 	isClose                 bool
 	encryptKey              []byte
 	id                      string
+	certificateSN           string
 }
 
 func (c *Client) Send(msg []byte) (err error) {
@@ -275,21 +276,7 @@ func (c *Client) ReadPump() {
 		return
 	}
 	c.conn.SetPingHandler(func(appData string) error {
-		c.log.Debug("ping message received", zap.String("sn", c.chargeStation.SN()))
-		_ = c.conn.SetReadDeadline(time.Now().Add(readWait))
-		err = c.conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(writeWait))
-		if err == websocket.ErrCloseSent {
-			return nil
-		} else if e, ok := err.(net.Error); ok && e.Temporary() {
-			return nil
-		}
-		redisConn := redis.GetRedis()
-		defer redisConn.Close()
-		_, err = redisConn.Do("expire", keys.Equipment(strconv.FormatUint(c.chargeStation.CoreID(), 10)), 190)
-		if err != nil {
-			c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
-		}
-		return nil
+		return c.PingHandler(appData)
 	})
 	for {
 		ctx := context.WithValue(context.TODO(), "client", c)
@@ -519,4 +506,30 @@ func (c *Client) IsClose() bool {
 
 func (c *Client) EncryptKey() []byte {
 	return c.encryptKey
+}
+
+func (c *Client) PingHandler(msg string) error {
+	c.log.Debug("ping message received", zap.String("sn", c.chargeStation.SN()))
+	_ = c.conn.SetReadDeadline(time.Now().Add(readWait))
+	err := c.conn.WriteControl(websocket.PongMessage, []byte(msg), time.Now().Add(writeWait))
+	if err == websocket.ErrCloseSent {
+		return nil
+	} else if e, ok := err.(net.Error); ok && e.Temporary() {
+		return nil
+	}
+	redisConn := redis.GetRedis()
+	defer redisConn.Close()
+	_, err = redisConn.Do("expire", keys.Equipment(strconv.FormatUint(c.chargeStation.CoreID(), 10)), 190)
+	if err != nil {
+		c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
+	}
+	return nil
+}
+
+func (c *Client) CertificateSN() string {
+	return c.certificateSN
+}
+
+func (c *Client) SetCertificateSN(sn string) {
+	c.certificateSN = sn
 }

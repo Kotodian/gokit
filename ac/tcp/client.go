@@ -7,12 +7,15 @@ import (
 	"github.com/Kotodian/gokit/ac/lib"
 	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/datasource/mqtt"
+	"github.com/Kotodian/gokit/datasource/redis"
 	"github.com/Kotodian/gokit/workpool"
 	"github.com/Kotodian/protocol/golang/hardware/charger"
+	"github.com/Kotodian/protocol/golang/keys"
 	"github.com/Kotodian/protocol/interfaces"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -53,11 +56,11 @@ type Client struct {
 	// 平台端id
 	id string
 	// 连接
-	conn *net.TCPConn
-
+	conn    *net.TCPConn
 	isClose bool
-
-	once sync.Once
+	once    sync.Once
+	// 证书sn
+	certificateSN string
 }
 
 func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) *Client {
@@ -445,4 +448,21 @@ func (c *Client) IsClose() bool {
 
 func (c *Client) EncryptKey() []byte {
 	return c.encryptKey
+}
+
+func (c *Client) PingHandler(msg string) {
+	redisConn := redis.GetRedis()
+	defer redisConn.Close()
+	_, err := redisConn.Do("expire", keys.Equipment(strconv.FormatUint(c.chargeStation.CoreID(), 10)), 190)
+	if err != nil {
+		c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
+	}
+}
+
+func (c *Client) CertificateSN() string {
+	return c.certificateSN
+}
+
+func (c *Client) SetCertificateSN(sn string) {
+	c.certificateSN = sn
 }
