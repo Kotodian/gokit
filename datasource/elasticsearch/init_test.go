@@ -7,7 +7,8 @@ import (
 )
 
 func TestIndexCreate(t *testing.T) {
-	err := IndexCreate(context.Background(), "equipment")
+	Init()
+	err := IndexCreate(context.Background(), "test2")
 	if err != nil {
 		t.Error(err)
 	}

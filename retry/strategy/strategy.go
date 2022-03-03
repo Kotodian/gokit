@@ -1,7 +1,7 @@
 package strategy
 
 import (
-	"github.com/Kotodian/gokit/retry/backoff"
+	backoff2 "github.com/Kotodian/gokit/retry/strategy/backoff"
 	"time"
 )
 
@@ -37,7 +37,7 @@ func Wait(durations ...time.Duration) Strategy {
 	}
 }
 
-func BackOff(algorithm backoff.Algorithm) Strategy {
+func BackOff(algorithm backoff2.Algorithm) Strategy {
 	return func(attempt uint) bool {
 		if attempt > 0 {
 			time.Sleep(algorithm(attempt))

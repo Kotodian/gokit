@@ -20,7 +20,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/olivere/elastic/v7 v7.0.27
-	github.com/panjf2000/gnet/v2 v2.0.0
 	github.com/silenceper/pool v1.0.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/streadway/amqp v1.0.1-0.20200716223359-e6b33f460591
@@ -28,6 +27,7 @@ require (
 	github.com/wumansgy/goEncrypt v0.0.0-20210730092718-e359121aa81e
 	github.com/yitter/idgenerator-go v1.2.1
 	go.mongodb.org/mongo-driver v1.7.1
+	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
