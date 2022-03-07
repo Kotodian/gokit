@@ -48,5 +48,5 @@ func CheckSum(data []byte) []byte {
 		crc16 ^= MbTable[n]
 	}
 	h, l := uint8(crc16>>8), uint8(crc16&0xff)
-	return []byte{h, l}
+	return []byte{l, h}
 }
