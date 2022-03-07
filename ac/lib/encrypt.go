@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/des"
 	"errors"
 	"github.com/wumansgy/goEncrypt"
 )
@@ -185,4 +186,32 @@ func AesDecrypt(crypted, key []byte) ([]byte, error) {
 	blockMode.CryptBlocks(origData, crypted)
 	origData = PKCS5UnPadding(origData)
 	return origData, nil
+}
+
+// 3des加密
+type triple struct {
+}
+
+func (t *triple) Encode(data []byte, key []byte) ([]byte, error) {
+	block, err := des.NewTripleDESCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	data = PKCS5Padding(data, block.BlockSize())
+	blockMode := cipher.NewCBCEncrypter(block, key[:8])
+	crypt := make([]byte, len(data))
+	blockMode.CryptBlocks(crypt, data)
+	return crypt, nil
+}
+
+func (t *triple) Decode(data []byte, key []byte) ([]byte, error) {
+	block, err := des.NewTripleDESCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	ctx := make([]byte, len(data))
+	blockMode := cipher.NewCBCEncrypter(block, key[:8])
+	blockMode.CryptBlocks(ctx, data)
+	ctx = PKCS5UnPadding(ctx)
+	return ctx, nil
 }
