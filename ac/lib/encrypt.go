@@ -192,6 +192,10 @@ func AesDecrypt(crypted, key []byte) ([]byte, error) {
 type triple struct {
 }
 
+func TripAES() Encrypt {
+	return &triple{}
+}
+
 func (t *triple) Encode(data []byte, key []byte) ([]byte, error) {
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
