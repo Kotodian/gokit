@@ -112,6 +112,7 @@ func (c *Client) Close(err error) error {
 		_ = c.conn.Close()
 		c.log.Sugar().Info(c.chargeStation.SN(), "关闭连接")
 		c.conn = nil
+		c.data = sync.Map{}
 		close(c.send)
 		close(c.close)
 		close(c.mqttRegCh)
