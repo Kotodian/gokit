@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -61,6 +62,10 @@ type Client struct {
 	once    sync.Once
 	// 证书sn
 	certificateSN string
+	//
+	messageNumber int32
+
+	data sync.Map
 }
 
 func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) *Client {
@@ -75,6 +80,7 @@ func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress s
 		close:         make(chan struct{}),
 		keepalive:     keepalive,
 		isClose:       false,
+		messageNumber: 0,
 	}
 	return client
 }
@@ -465,4 +471,23 @@ func (c *Client) CertificateSN() string {
 
 func (c *Client) SetCertificateSN(sn string) {
 	c.certificateSN = sn
+}
+
+func (c *Client) SetMessageNumber(i int32) {
+	atomic.StoreInt32(&c.messageNumber, i)
+}
+
+func (c *Client) GetMessageNumber() int32 {
+	return atomic.LoadInt32(&c.messageNumber)
+}
+
+func (c *Client) SetData(key, value interface{}) {
+	c.data.Store(key, value)
+}
+
+func (c *Client) GetData(key interface{}) interface{} {
+	if value, ok := c.data.Load(key); ok {
+		return value
+	}
+	return nil
 }

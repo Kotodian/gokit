@@ -63,6 +63,22 @@ type Client struct {
 	certificateSN           string
 }
 
+func (c *Client) MessageNumber() int32 {
+	return 0
+}
+
+func (c *Client) SetMessageNumber(i int32) {
+	return
+}
+
+func (c *Client) SetData(key, val interface{}) {
+	return
+}
+
+func (c *Client) GetData(key interface{}) interface{} {
+	return nil
+}
+
 func (c *Client) Send(msg []byte) (err error) {
 	defer func() {
 		if e := recover(); e != nil {

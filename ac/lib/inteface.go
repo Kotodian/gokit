@@ -64,4 +64,12 @@ type ClientInterface interface {
 	SetCertificateSN(sn string)
 	// CertificateSN 证书sn
 	CertificateSN() string
+
+	MessageNumber() int32
+
+	SetMessageNumber(int32)
+
+	SetData(key, val interface{})
+
+	GetData(key interface{}) interface{}
 }
