@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/Kotodian/gokit/retry"
@@ -197,4 +198,13 @@ func wrapHSetFunc(redisConn redis.Conn, key string, field string, val interface{
 
 func RetryHSet(redisConn redis.Conn, key string, field string, val interface{}) error {
 	return retry.Retry(wrapHSetFunc(redisConn, key, field, val))
+}
+
+func HGet(redisConn redis.Conn, key string, field string, val interface{}) error {
+	body, err := redis.Bytes(redisConn.Do("hget", key, field))
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body, val)
+	return err
 }

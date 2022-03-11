@@ -97,3 +97,24 @@ func TestDo(t *testing.T) {
 		t.Log(do)
 	}
 }
+
+type Model struct {
+	Code string `json:"code"`
+	ID   uint64 `json:"id"`
+	Name string `json:"name"`
+}
+
+func TestHGet(t *testing.T) {
+	os.Setenv("REDIS_POOL", "10.43.0.20:6379")
+	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
+	Init()
+	redisConn := GetRedis()
+	defer redisConn.Close()
+	m := &Model{}
+	err := HGet(redisConn, "equip:manufacturer:list", "JQXNY", m)
+	if err != nil {
+		t.Log(err)
+	} else {
+		t.Log(m.ID)
+	}
+}
