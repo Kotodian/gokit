@@ -23,6 +23,7 @@ require (
 	github.com/silenceper/pool v1.0.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/streadway/amqp v1.0.1-0.20200716223359-e6b33f460591
+	github.com/thinkgos/go-iecp5 v1.2.0 // indirect
 	github.com/tidwall/gjson v1.8.1
 	github.com/wumansgy/goEncrypt v0.0.0-20210730092718-e359121aa81e
 	github.com/yitter/idgenerator-go v1.2.1

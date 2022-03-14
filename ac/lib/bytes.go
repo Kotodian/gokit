@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func BytesToInt(bys []byte) int {
@@ -98,4 +99,31 @@ func Int16ToBytes(n int) []byte {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(n))
 	return b
+}
+
+func CP56Time2a(t time.Time) []byte {
+	// 全部转换成utc时间发送
+	t = t.UTC()
+	// 换算成毫秒
+	msec := t.Nanosecond()/int(time.Millisecond) + t.Second()*1000
+	return []byte{byte(msec), byte(msec >> 8), byte(t.Minute()), byte(t.Hour()),
+		byte(t.Weekday()<<5) | byte(t.Day()), byte(t.Month()), byte(t.Year() - 2000)}
+}
+
+func ParseCP56Time2a(b []byte) time.Time {
+	if len(b) < 7 || b[2]&0x80 == 0x80 {
+		return time.Time{}
+	}
+	x := int(binary.LittleEndian.Uint16(b))
+	msec := x % 1000
+	sec := x / 1000
+	min := int(b[2] & 0x3f)
+	hour := int(b[3] & 0x1f)
+	day := int(b[4] & 0x1f)
+	month := time.Month(b[5] & 0x0f)
+	year := 2000 + int(b[6]&0x7f)
+
+	nsec := msec * int(time.Millisecond)
+	date := time.Date(year, month, day, hour, min, sec, nsec, time.UTC)
+	return date.Local()
 }
