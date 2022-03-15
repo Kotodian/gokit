@@ -114,13 +114,22 @@ func ParseCP56Time2a(b []byte) time.Time {
 	if len(b) < 7 || b[2]&0x80 == 0x80 {
 		return time.Time{}
 	}
+	// 取出前两个字节代表毫秒
 	x := int(binary.LittleEndian.Uint16(b))
 	msec := x % 1000
+	// 毫秒除1000为秒
 	sec := x / 1000
+	// 截取后6位为分钟
+	// 0011 1111
 	min := int(b[2] & 0x3f)
+	// 截取后5位为小时
 	hour := int(b[3] & 0x1f)
+	// 截取后5位为天
 	day := int(b[4] & 0x1f)
+	// 截取后4位为天
 	month := time.Month(b[5] & 0x0f)
+	// 截取后7位+2000为年份
+	// 0111 1111
 	year := 2000 + int(b[6]&0x7f)
 
 	nsec := msec * int(time.Millisecond)
