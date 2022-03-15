@@ -483,7 +483,11 @@ func (c *Client) GetMessageNumber() int32 {
 }
 
 func (c *Client) SetData(key, value interface{}) {
-	c.data.Store(key, value)
+	if value == nil {
+		c.data.Delete(key)
+	} else {
+		c.data.Store(key, value)
+	}
 }
 
 func (c *Client) GetData(key interface{}) interface{} {
