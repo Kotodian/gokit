@@ -1,10 +1,11 @@
 package mongo
 
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"os"
 	"testing"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func TestLog(t *testing.T) {
@@ -23,7 +24,7 @@ func TestLog(t *testing.T) {
 	development := zap.Development()
 	writeSyncerList := make([]zapcore.WriteSyncer, 0)
 	coreList := make([]zapcore.Core, 0)
-	hook, err := NewMongoLogHook("test")
+	hook, err := NewMongoLogHook("test", "v1.0")
 	if err != nil {
 		t.Error(err)
 		return

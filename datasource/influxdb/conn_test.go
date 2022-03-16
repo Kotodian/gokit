@@ -9,13 +9,9 @@ import (
 func TestWriteAPIBlocking(t *testing.T) {
 	os.Setenv("INFLUXDB_ORG", "joyson")
 	os.Setenv("INFLUXDB_AUTH_TOKEN", "CwcKwmhdhDL5vPdiKLenll5aOgqT_aPmSSkGzo1nUB5BxdFTXaAkJQRPmfd3Yrf6zoQjmAJ6UQZ8wRXPDO5lfw==")
-	err := Init()
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	Init()
 	for i := 0; i < 100; i++ {
-		err = WriteAPIBlocking("test", "charging_info", map[string]string{
+		err := WriteAPIBlocking("test", "charging_info", map[string]string{
 			"sn":                      "T1641735211",
 			"connector_serial_number": "1",
 			"transaction_id":          "212123124312",
