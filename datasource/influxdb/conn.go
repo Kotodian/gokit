@@ -13,39 +13,13 @@ import (
 var _pool pool.Pool
 var org string
 var token string
+var url string
 
 // Init Deprecated
-func Init() (err error) {
+func Init() {
 	org = os.Getenv("INFLUXDB_ORG")
 	token = os.Getenv("INFLUXDB_AUTH_TOKEN")
-	//factory 创建连接的方法
-	factory := func() (interface{}, error) {
-		client := influxdb.NewClient("http://influxdb:8086", token)
-		//client := influxdb.NewClient("http://10.43.0.15:8086", os.Getenv("INFLUXDB_AUTH_TOKEN"))
-		_, err = client.Health(context.Background())
-		if err != nil {
-			return nil, err
-		}
-		return client, nil
-	}
-
-	//close 关闭连接的方法
-	_close := func(v interface{}) error {
-		//fmt.Println("close connection", v)
-		v.(influxdb.Client).Close()
-		return nil
-	}
-
-	_pool, err = pool.NewChannelPool(&pool.Config{
-		InitialCap: 10,
-		MaxIdle:    100,
-		MaxCap:     1000,
-		Factory:    factory,
-		Close:      _close,
-		//连接最大空闲时间，超过该时间的连接 将会关闭，可避免空闲时连接EOF，自动失效的问题
-		IdleTimeout: 30 * time.Second,
-	})
-	return
+	url = "http://" + os.Getenv("INFLUXDB_POOL")
 }
 
 // GetClient Deprecated
@@ -62,7 +36,7 @@ func CloseClient(v interface{}) error {
 }
 
 func WriteAPIBlocking(bucket, measurement string, tags map[string]string, fields map[string]interface{}, ts time.Time) error {
-	client := influxdb.NewClient("http://influxdb:8086", token)
+	client := influxdb.NewClient(url, token)
 	defer client.Close()
 	writeAPI := client.WriteAPIBlocking(org, bucket)
 	p := influxdb.NewPoint(measurement, tags, fields, ts)

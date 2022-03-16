@@ -8,16 +8,21 @@ import (
 	"github.com/makasim/amqpextra/publisher"
 	"github.com/streadway/amqp"
 	"os"
+	"strings"
 )
 
 var dialer *amqpextra.Dialer
 
 func Init() {
 	var err error
-	url := "amqp://" + os.Getenv("RABBITMQ_USER") + ":" +
-		os.Getenv("RABBITMQ_PASS") + "@" +
-		os.Getenv("RABBITMQ_POOL") + "/"
-	dialer, err = amqpextra.NewDialer(amqpextra.WithURL(url))
+	urls := make([]string, 0)
+	for _, v := range strings.Split(os.Getenv("RABBITMQ_POOL"), ",") {
+		urls = append(urls, "amqp://"+os.Getenv("RABBITMQ_USER")+":"+
+			os.Getenv("RABBITMQ_PASS")+"@"+
+			v+"/")
+	}
+
+	dialer, err = amqpextra.NewDialer(amqpextra.WithURL(urls...))
 	if err != nil {
 		panic(err)
 	}
