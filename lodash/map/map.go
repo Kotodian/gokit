@@ -1,6 +1,9 @@
-package lodash
+package maps
 
-import "golang.org/x/exp/constraints"
+import (
+	"golang.org/x/exp/constraints"
+	"github.com/Kotodian/gokit/lodash/slice"
+)
 
 type Entry[K comparable, V any] struct {
 	Key   K
@@ -62,20 +65,20 @@ func MapValues[K comparable, V any, R any](in map[K]V, iteratee func(V, K) R) ma
 
 func MaxKey[K constraints.Ordered, V any](in map[K]V) K {
 	keys := Keys(in)
-	maxKey := Max(keys)
+	maxKey := slice.Max(keys)
 	return maxKey
 }
 
 func MaxValue[K comparable, V constraints.Ordered](in map[K]V) V {
 	values := Values(in)
-	maxValue := Max(values)
+	maxValue := slice.Max(values)
 	return maxValue
 }
 
 func MinKey[K constraints.Ordered, V any](in map[K]V) K {
-	return Min(Keys(in))
+	return slice.Min(Keys(in))
 }
 
 func MinValue[K comparable, V constraints.Ordered](in map[K]V) V {
-	return Min(Values(in))
+	return slice.Min(Values(in))
 }
