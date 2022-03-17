@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Kotodian/gokit/lodash/types"
 )
 
 func BytesToInt(bys []byte) int {
@@ -229,4 +231,20 @@ func BCDToUint32(value []byte) uint32 {
 // If any byte of used array part is not BCD (e.g 0x1A), function returns zero.
 func BCDToUint64(value []byte) uint64 {
 	return bcdToUint(value, 8)
+}
+
+func BCDToUint[T types.Unsigned](value []byte, size int) T {
+	vlen := len(value)
+	if vlen > size {
+		value = value[vlen-size:]
+	}
+	res := T(0)
+	for i, b := range value {
+		hi, lo := b>>4, b&0x0f
+		if hi > 9 || lo > 9 {
+			return 0
+		}
+		res += T(uint64(hi*10+lo) * pow100(byte(vlen-i)-1))
+	}
+	return res
 }
