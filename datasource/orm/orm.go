@@ -72,6 +72,14 @@ func Get(conn *gorm.DB, obj Object, cond string, where ...interface{}) (err erro
 	return err
 }
 
+func SmallGet(conn *gorm.DB, src, dst Object, cond string, where ...interface{}) (err error) {
+	err = conn.Model(src).Where(cond, where...).Take(dst).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+	return err
+}
+
 func UpdateColumn(conn *gorm.DB, obj Object, f map[string]interface{}) error {
 	err := conn.Model(obj).Updates(f).Error
 	if err != nil {
