@@ -525,7 +525,7 @@ func (c *Client) EncryptKey() []byte {
 }
 
 func (c *Client) PingHandler(msg string) error {
-	c.log.Debug("ping message received", zap.String("sn", c.chargeStation.SN()))
+	// c.log.Debug("ping message received", zap.String("sn", c.chargeStation.SN()))
 	_ = c.conn.SetReadDeadline(time.Now().Add(readWait))
 	err := c.conn.WriteControl(websocket.PongMessage, []byte(msg), time.Now().Add(writeWait))
 	if err == websocket.ErrCloseSent {

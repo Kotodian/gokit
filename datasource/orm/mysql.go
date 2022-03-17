@@ -63,7 +63,9 @@ func NewMysql(dns string, zapLog *zap.Logger) (*gorm.DB, error) {
 	} else {
 		dns = dns + "?" + condition
 	}
-	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{
+		QueryFields: true,
+	})
 	if err != nil {
 		return nil, err
 	}
