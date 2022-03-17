@@ -248,3 +248,17 @@ func BCDToUint[T types.Unsigned](value []byte, size int) T {
 	}
 	return T(res)
 }
+
+func BCDFromUintG[T types.Unsigned](value T, size int) []byte {
+	buf := make([]byte, size)
+	if value > 0 {
+		remainder := value
+		for pos := size - 1; pos >= 0 && remainder > 0; pos-- {
+			tail := byte(remainder % 100)
+			hi, lo := tail/10, tail%10
+			buf[pos] = byte(hi<<4 + lo)
+			remainder = remainder / 100
+		}
+	}
+	return buf
+}
