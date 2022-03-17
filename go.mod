@@ -7,11 +7,11 @@ require (
 	github.com/didi/gendry v1.7.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/golang/protobuf v1.5.2
-	github.com/gomodule/redigo v1.8.8
+	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.5.0
 	github.com/influxdata/influxdb-client-go/v2 v2.8.0
 	github.com/json-iterator/go v1.1.12
-	github.com/letsfire/redigo/v2 v2.0.4
+	github.com/letsfire/redigo/v2 v2.0.3
 	github.com/makasim/amqpextra v0.16.4
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/silenceper/pool v1.0.0

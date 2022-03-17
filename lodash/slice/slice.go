@@ -203,3 +203,13 @@ func Compact[S ~[]E, E comparable](s S) S {
 	}
 	return s[:i]
 }
+
+
+// func Delete[T comparable](collection[]T, element T) []T {
+// 	index := IndexOf(collection, element)
+// 	length := len(collection)
+// 	if index == length - 1 {
+// 		return collection[:length-1]
+// 	}
+// 	newCollection := 
+// }

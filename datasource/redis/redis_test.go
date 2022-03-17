@@ -1,13 +1,11 @@
 package redis
 
 import (
-	"encoding/json"
-	"github.com/Kotodian/gokit/datasource"
-	"github.com/Kotodian/protocol/golang/keys"
-	"github.com/gomodule/redigo/redis"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/Kotodian/gokit/datasource"
 )
 
 type GormModel struct {
@@ -63,21 +61,11 @@ func TestInit(t *testing.T) {
 	os.Setenv("REDIS_POOL", "10.43.0.20:6379")
 	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
 	Init()
-	redisConn := GetRedis()
-	defer redisConn.Close()
-	equipment := new(Equipment)
-	//var equipment *Equipment
-
-	bytes, err := redis.Bytes(redisConn.Do("get", keys.Equipment("586069658769111")))
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal(bytes, equipment)
-	if err != nil {
-		panic(err)
-	}
-
-	t.Log(equipment.EquipmentInfo)
+ 	c := GetRedis()
+	c.Do("set", "foo", "bar")
+	
+	//_ = redisMode.GetConn()
+	//t.Log(conn)
 }
 
 func TestDo(t *testing.T) {
@@ -105,16 +93,15 @@ type Model struct {
 }
 
 func TestHGet(t *testing.T) {
-	os.Setenv("REDIS_POOL", "10.43.0.20:6379")
+	os.Setenv("REDIS_POOL", "redis-sentinel-0.redis-sentinel-headless.default:26379,redis-sentinel-1.redis-sentinel-headless.default:26379")
 	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
 	Init()
-	redisConn := GetRedis()
-	defer redisConn.Close()
-	m := &Model{}
-	err := HGet(redisConn, "equip:manufacturer:list", "JQXNY", m)
-	if err != nil {
-		t.Log(err)
-	} else {
-		t.Log(m.ID)
-	}
+	GetRedis()
+	// m := &Model{}
+	// err := HGet(redisConn, "equip:manufacturer:list", "JQXNY", m)
+	// if err != nil {
+	// 	t.Log(err)
+	// } else {
+	// 	t.Log(m.ID)
+	// }
 }
