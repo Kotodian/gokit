@@ -1,6 +1,8 @@
 package slice
 
-import "golang.org/x/exp/constraints"
+import (
+	"github.com/Kotodian/gokit/lodash/types"
+)
 
 // 1.18 泛型支持 添加一些可复用的操作
 
@@ -79,7 +81,7 @@ func Uniq[T comparable](collection []T) []T {
 	return result
 }
 
-func Max[T constraints.Ordered](collection []T) T {
+func Max[T types.Ordered](collection []T) T {
 	var max T
 	max = collection[0]
 
@@ -92,7 +94,7 @@ func Max[T constraints.Ordered](collection []T) T {
 	return max
 }
 
-func Min[T constraints.Ordered](collection []T) T {
+func Min[T types.Ordered](collection []T) T {
 	min := collection[0]
 
 	for i := 1; i < len(collection); i++ {
@@ -159,7 +161,7 @@ func EqualFunc[E1, E2 any](s1 []E1, s2 []E2, eq func(E1, E2) bool) bool {
 	return true
 }
 
-func Compare[E constraints.Ordered](s1, s2 []E) int {
+func Compare[E types.Ordered](s1, s2 []E) int {
 	s2len := len(s2)
 	for i, v1 := range s1 {
 		if i >= s2len {

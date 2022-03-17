@@ -1,8 +1,8 @@
 package maps
 
 import (
-	"golang.org/x/exp/constraints"
 	"github.com/Kotodian/gokit/lodash/slice"
+	"github.com/Kotodian/gokit/lodash/types"
 )
 
 type Entry[K comparable, V any] struct {
@@ -63,22 +63,22 @@ func MapValues[K comparable, V any, R any](in map[K]V, iteratee func(V, K) R) ma
 	return result
 }
 
-func MaxKey[K constraints.Ordered, V any](in map[K]V) K {
+func MaxKey[K types.Ordered, V any](in map[K]V) K {
 	keys := Keys(in)
 	maxKey := slice.Max(keys)
 	return maxKey
 }
 
-func MaxValue[K comparable, V constraints.Ordered](in map[K]V) V {
+func MaxValue[K comparable, V types.Ordered](in map[K]V) V {
 	values := Values(in)
 	maxValue := slice.Max(values)
 	return maxValue
 }
 
-func MinKey[K constraints.Ordered, V any](in map[K]V) K {
+func MinKey[K types.Ordered, V any](in map[K]V) K {
 	return slice.Min(Keys(in))
 }
 
-func MinValue[K comparable, V constraints.Ordered](in map[K]V) V {
+func MinValue[K comparable, V types.Ordered](in map[K]V) V {
 	return slice.Min(Values(in))
 }
