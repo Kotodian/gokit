@@ -238,13 +238,13 @@ func BCDToUint[T types.Unsigned](value []byte, size int) T {
 	if vlen > size {
 		value = value[vlen-size:]
 	}
-	res := T(0)
+	res := uint64(0)
 	for i, b := range value {
 		hi, lo := b>>4, b&0x0f
 		if hi > 9 || lo > 9 {
 			return 0
 		}
-		res += T(uint64(hi*10+lo) * pow100(byte(vlen-i)-1))
+		res += uint64(hi*10+lo) * pow100(byte(vlen-i)-1)
 	}
-	return res
+	return T(res)
 }
