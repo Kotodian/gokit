@@ -3,10 +3,9 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/Kotodian/gokit/datasource"
 	"io/ioutil"
-	"net/http"
-	"time"
+
+	"github.com/Kotodian/gokit/datasource"
 )
 
 type PushIntervalRequest struct {
@@ -22,8 +21,7 @@ func PushInterval(req *PushIntervalRequest) (*PushIntervalResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := http.DefaultClient
-	client.Timeout = 10 * time.Second
+	client := NewClient()
 	reader := bytes.NewReader(reqBytes)
 	resp, err := client.Post("http://jx-services:8080/equip/v1/getEquipmentCallerPushOrderInterval", defaultContentType, reader)
 	if err != nil {
