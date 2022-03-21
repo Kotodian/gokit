@@ -6,17 +6,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Kotodian/gokit/datasource"
-	"github.com/Kotodian/gokit/datasource/mqtt"
-	"github.com/Kotodian/gokit/datasource/redis"
-	"github.com/Kotodian/protocol/golang/keys"
-	"go.uber.org/zap"
 	"io"
 	"net"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Kotodian/gokit/datasource"
+	"github.com/Kotodian/gokit/datasource/mqtt"
+	"github.com/Kotodian/gokit/datasource/redis"
+	"github.com/Kotodian/protocol/golang/keys"
+	"go.uber.org/zap"
 
 	"github.com/Kotodian/gokit/ac/lib"
 	"github.com/Kotodian/gokit/workpool"
@@ -292,6 +293,7 @@ func (c *Client) ReadPump() {
 		return
 	}
 	c.conn.SetPingHandler(func(appData string) error {
+		fmt.Printf("[%s]ping message received from %s\n", time.Now().Format("2006-01-02 15:04:05"), c.chargeStation.SN())
 		return c.PingHandler(appData)
 	})
 	for {
