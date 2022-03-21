@@ -2,6 +2,7 @@ package orm
 
 import (
 	"errors"
+	"reflect"
 	"time"
 
 	"github.com/Kotodian/gokit/datasource"
@@ -9,6 +10,7 @@ import (
 	"github.com/Kotodian/gokit/retry/strategy"
 	"github.com/didi/gendry/builder"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 var (
@@ -161,7 +163,41 @@ func FirstOrCreate(conn *gorm.DB, object Object, condition interface{}) error {
 }
 
 func FindInBatches(conn *gorm.DB, dest interface{}, limit int, fc func(tx *gorm.DB, batch int) error, where string, cond ...interface{}) error {
-	return conn.Where(where, cond...).FindInBatches(dest, limit, fc).Error
+	var (
+		tx           = db.Session(&gorm.Session{})
+		queryDB      = tx
+		rowsAffected int64
+		batch        int
+	)
+
+	for {
+		result := queryDB.Limit(limit).Find(dest)
+		rowsAffected += result.RowsAffected
+		batch++
+
+		if result.Error == nil && result.RowsAffected != 0 {
+			tx.AddError(fc(result, batch))
+		} else if result.Error != nil {
+			tx.AddError(result.Error)
+		}
+
+		if tx.Error != nil || int(result.RowsAffected) < limit {
+			break
+		}
+
+		// Optimize for-break
+		resultsValue := reflect.Indirect(reflect.ValueOf(dest))
+		if result.Statement.Schema.PrioritizedPrimaryField == nil {
+			tx.AddError(gorm.ErrPrimaryKeyRequired)
+			break
+		}
+
+		primaryValue, _ := result.Statement.Schema.PrioritizedPrimaryField.ValueOf(tx.Statement.Context, resultsValue.Index(resultsValue.Len()-1))
+		queryDB = tx.Clauses(clause.Gt{Column: clause.Column{Table: clause.CurrentTable, Name: clause.PrimaryKey}, Value: primaryValue})
+	}
+
+	tx.RowsAffected = rowsAffected
+	return tx.Error
 }
 
 func wrapCreateFunc(conn *gorm.DB, object Object) retry.Action {

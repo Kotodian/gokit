@@ -151,3 +151,21 @@ func TestSmallGet(t *testing.T) {
 	}
 	t.Log(smallEquipment.SerialNumber)
 }
+
+func TestFindInBatch(t *testing.T)  {
+	os.Setenv("DB_HOST", "192.168.0.4")
+	os.Setenv("DB_USER", "root")
+	os.Setenv("DB_PASSWD", "jqcsms@uat123")
+	InitMysqlWithEnvAndDB("jx-csms", nil)
+	SetDB(mysqlDB)
+	equipments := make([]*SmallEquipment, 0)
+	err := FindInBatches(db.WithContext(context.Background()), &equipments, 100,func(tx *gorm.DB, batch int) error {
+		for _, v := range equipments {
+			t.Log(v.SerialNumber)
+		}
+		return nil
+	}, "operator_id = ?", 586069660491776)
+	if err != nil {
+		t.Error(err)
+	}
+}

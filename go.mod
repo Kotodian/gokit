@@ -25,7 +25,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 	gorm.io/driver/mysql v1.3.2
-	gorm.io/gorm v1.23.2
+	gorm.io/gorm v1.23.3
 	moul.io/zapgorm2 v1.1.3
 )
 
@@ -37,7 +37,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

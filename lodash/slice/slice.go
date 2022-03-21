@@ -215,4 +215,6 @@ func Delete[T comparable](collection []T, element T) []T {
 	return newCollection
 }
 
-
+func Chunk[T comparable](collection []T, n int) [][]T {
+	return nil
+}
