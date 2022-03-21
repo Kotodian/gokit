@@ -262,3 +262,11 @@ func BCDFromUintG[T types.Unsigned](value T, size int) []byte {
 	}
 	return buf
 }
+
+func BINToFloat[T types.Float](value []byte, bit int) T {
+	return 0.00
+}
+
+func FloatToBIN[T types.Float](value T, bit int) []byte {
+	return nil
+}
