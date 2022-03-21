@@ -164,14 +164,14 @@ func FirstOrCreate(conn *gorm.DB, object Object, condition interface{}) error {
 
 func FindInBatches(conn *gorm.DB, dest interface{}, limit int, fc func(tx *gorm.DB, batch int) error, where string, cond ...interface{}) error {
 	var (
-		tx           = db.Session(&gorm.Session{})
+		tx           = conn.Session(&gorm.Session{})
 		queryDB      = tx
 		rowsAffected int64
 		batch        int
 	)
 
 	for {
-		result := queryDB.Limit(limit).Find(dest)
+		result := queryDB.Model(dest).Limit(limit).Where(where, cond...).Find(dest)
 		rowsAffected += result.RowsAffected
 		batch++
 

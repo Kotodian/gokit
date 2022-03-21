@@ -77,7 +77,7 @@ func NewMysql(dns string, zapLog *zap.Logger) (*gorm.DB, error) {
 	d, _ := db.DB()
 	d.SetConnMaxLifetime(300 * time.Second)
 	d.SetMaxIdleConns(getIntEnv(EnvMaxIdleConns, 100))
-	d.SetMaxOpenConns(getIntEnv(EnvMaxOpenConns, 2000))
+	d.SetMaxOpenConns(getIntEnv(EnvMaxOpenConns, 200))
 
 	return db, nil
 }
