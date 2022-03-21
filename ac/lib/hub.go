@@ -53,13 +53,14 @@ type Hub struct {
 func NewHub(protocol string, protocolVersion, username string, password string) *Hub {
 	//监听MQTT信息
 	hostname, _ := os.Hostname()
-	mqClient := mqtt.NewMQTTClient(mqtt.NewMQTTOptions(hostname, username, password, func(c mqttClient.Client) {
+	options := mqtt.NewMQTTOptions(hostname, username, password, func(c mqttClient.Client) {
 		logrus.Info("mqtt connected")
 	}, func(c mqttClient.Client, err error) {
 		logrus.Errorf("disconnect mqtt error, err:%s", err.Error())
 	}, func(c mqttClient.Client, m mqttClient.Message) {
 		logrus.Warnf("got mqtt unhandled msg:%v", m)
-	}, false))
+	}, false)
+	mqClient := mqtt.NewMQTTClient(options)
 
 	//connect
 	if err := mqClient.Connect(); err != nil {

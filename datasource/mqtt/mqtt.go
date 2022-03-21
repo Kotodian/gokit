@@ -59,7 +59,7 @@ func NewMQTTOptions(clientID string, username string, password string, onConn mq
 	mqttOpts.SetPassword(password)
 	mqttOpts.SetKeepAlive(time.Second * 30)
 	mqttOpts.SetPingTimeout(time.Second * 10)
-	mqttOpts.SetCleanSession(clean)
+	mqttOpts.SetCleanSession(true)
 	mqttOpts.SetConnectionLostHandler(onLostConn)
 	mqttOpts.SetOnConnectHandler(onConn)
 	mqttOpts.SetDefaultPublishHandler(onMsg)
