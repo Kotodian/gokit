@@ -52,7 +52,7 @@ func Reduce[T any, R any](collection []T, accumulator func(R, T, int) R, initial
 	return initial
 }
 
-func ForEach[T any](collection []T, iteratee func(T, int)) {
+func ForEach[T any](collection []T, iteratee func(T, int))  {
 	for i, item := range collection {
 		iteratee(item, i)
 	}
