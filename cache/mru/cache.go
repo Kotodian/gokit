@@ -76,7 +76,9 @@ func (c *mruCache[K, V]) Keys() []K {
 }
 
 func (c *mruCache[K, V]) Delete(key K) {
-
+	if item, ok := c.items[key]; ok {
+		c.delete(item)
+	}
 }
 
 func (c *mruCache[K, V]) delete(e *list.Element) {
