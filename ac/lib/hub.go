@@ -3,11 +3,12 @@ package lib
 import (
 	"context"
 	"fmt"
-	"github.com/Kotodian/gokit/datasource"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Kotodian/gokit/datasource"
 
 	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/gokit/sync/errgroup.v2"
@@ -60,8 +61,9 @@ func NewHub(protocol string, protocolVersion, username string, password string) 
 	}, func(c mqttClient.Client, m mqttClient.Message) {
 		logrus.Warnf("got mqtt unhandled msg:%v", m)
 	}, false)
+	// 设置遗愿消息
+	options = options.SetWill("coregw/disconnect/"+hostname, "", 2, false)
 	mqClient := mqtt.NewMQTTClient(options)
-
 	//connect
 	if err := mqClient.Connect(); err != nil {
 		panic(fmt.Sprintf("connect to mqtt error, err:%s", err.Error()))
