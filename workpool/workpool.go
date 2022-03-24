@@ -16,6 +16,7 @@ const (
 
 type TaskFunc func(w *WorkPool, args ...interface{}) Flag
 
+
 type Task struct {
 	F    TaskFunc
 	Args []interface{}
