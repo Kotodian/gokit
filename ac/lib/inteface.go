@@ -2,6 +2,8 @@ package lib
 
 import (
 	"context"
+	"net"
+
 	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/protocol/interfaces"
 	"go.uber.org/zap"
@@ -72,4 +74,6 @@ type ClientInterface interface {
 	SetData(key, val interface{})
 
 	GetData(key interface{}) interface{}
+
+	Conn() net.Conn
 }

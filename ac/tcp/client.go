@@ -4,6 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"strconv"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/Kotodian/gokit/ac/lib"
 	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/datasource/mqtt"
@@ -14,12 +21,6 @@ import (
 	"github.com/Kotodian/protocol/interfaces"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
-	"net"
-	"strconv"
-	"strings"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 const (
@@ -495,4 +496,8 @@ func (c *Client) GetData(key interface{}) interface{} {
 		return value
 	}
 	return nil
+}
+
+func (c *Client) Conn() net.Conn {
+	return c.conn
 }

@@ -551,3 +551,7 @@ func (c *Client) CertificateSN() string {
 func (c *Client) SetCertificateSN(sn string) {
 	c.certificateSN = sn
 }
+
+func (c *Client) Conn() net.Conn  {
+	return c.conn.UnderlyingConn()	
+}
