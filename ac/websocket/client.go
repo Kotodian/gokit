@@ -30,7 +30,7 @@ import (
 const (
 	// Time allowed to write a message to the peer.
 	writeWait = 10 * time.Second
-	readWait  = 130 * time.Second
+	readWait  = 70 * time.Second
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 4096
@@ -293,6 +293,7 @@ func (c *Client) ReadPump() {
 		return
 	}
 	c.conn.SetPingHandler(func(appData string) error {
+		_ = c.conn.SetReadDeadline(time.Now().Add(readWait))
 		fmt.Printf("[%s]ping message received from %s\n", time.Now().Format("2006-01-02 15:04:05"), c.chargeStation.SN())
 		return c.PingHandler(appData)
 	})
@@ -552,6 +553,6 @@ func (c *Client) SetCertificateSN(sn string) {
 	c.certificateSN = sn
 }
 
-func (c *Client) Conn() net.Conn  {
-	return c.conn.UnderlyingConn()	
+func (c *Client) Conn() net.Conn {
+	return c.conn.UnderlyingConn()
 }
