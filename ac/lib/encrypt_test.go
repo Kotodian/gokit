@@ -8,7 +8,7 @@ import (
 func TestCBCEncrypt(t *testing.T) {
 	cbcEncrypt := NewAESEncrypt(CBC)
 
-	data, err := cbcEncrypt.Encode([]byte("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF66"), []byte("qwertyuiopasdfgh"))
+	data, err := cbcEncrypt.Encode([]byte("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF66"), []byte("1234567890ABCDEF"))
 	if err != nil {
 		t.Error(err)
 		return

@@ -218,3 +218,25 @@ func Delete[T comparable](collection []T, element T) []T {
 func Chunk[T comparable](collection []T, n int) [][]T {
 	return nil
 }
+
+func Drop[T any](collection []T, n int) []T {
+	if len(collection) <= n {
+		return make([]T, 0)
+	}
+	result := make([]T, len(collection)-n)
+	for i := n; i < len(collection); i++ {
+		result[i-n] = collection[i]
+	}
+	return nil
+}
+
+func DropRight[T any](collection []T, n int) []T {
+	if len(collection) <= n {
+		return make([]T, 0)
+	}
+	result := make([]T, len(collection)-n)
+	for i := len(collection)-1-n; i != 0; i-- {
+		result[i] = collection[i]
+	}
+	return nil
+}
