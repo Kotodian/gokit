@@ -160,6 +160,7 @@ func (h *Hub) Run() {
 
 			var _client ClientInterface
 			if !ok {
+				logrus.Warnf("chargingStation:%d offline", coreID)
 				return
 			} else {
 				_client = c.(ClientInterface)
@@ -221,6 +222,7 @@ func (h *Hub) Run() {
 
 			var _client ClientInterface
 			if !ok {
+				logrus.Warnf("kick client not found, topic:%s", message.Topic())
 				return
 			} else {
 				_client = c.(ClientInterface)
