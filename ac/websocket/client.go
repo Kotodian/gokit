@@ -30,7 +30,7 @@ import (
 const (
 	// Time allowed to write a message to the peer.
 	writeWait = 10 * time.Second
-	readWait  = 70 * time.Second
+	readWait  = 80 * time.Second
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 4096
@@ -101,7 +101,7 @@ func (c *Client) Close(err error) error {
 		if err == nil {
 			err = errors.New("平台关闭")
 		}
-		c.log.Error(err.Error())
+		c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
 		c.hub.Clients.Delete(c.chargeStation.CoreID())
 		c.hub.RegClients.Delete(c.chargeStation.CoreID())
 		_ = c.conn.Close()
