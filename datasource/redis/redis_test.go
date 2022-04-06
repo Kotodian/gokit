@@ -61,9 +61,9 @@ func TestInit(t *testing.T) {
 	os.Setenv("REDIS_POOL", "10.43.0.20:6379")
 	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
 	Init()
- 	c := GetRedis()
+	c := GetRedis()
 	c.Do("set", "foo", "bar")
-	
+
 	//_ = redisMode.GetConn()
 	//t.Log(conn)
 }
@@ -93,10 +93,13 @@ type Model struct {
 }
 
 func TestHGet(t *testing.T) {
-	os.Setenv("REDIS_POOL", "redis-sentinel-0.redis-sentinel-headless.default:26379,redis-sentinel-1.redis-sentinel-headless.default:26379")
+	os.Setenv("REDIS_POOL", "redis-sentinel-0.redis-sentinel-headless.default:26379,redis-sentinel-1.redis-sentinel-headless.default:26379,redis-sentinel-2.redis-sentinel-headless.default:26379")
 	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
 	Init()
-	GetRedis()
+	_, err := GetRedis().Do("set", "foo", "bar")
+	if err != nil {
+		t.Error(err)
+	}
 	// m := &Model{}
 	// err := HGet(redisConn, "equip:manufacturer:list", "JQXNY", m)
 	// if err != nil {

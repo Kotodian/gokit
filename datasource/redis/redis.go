@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -37,13 +38,13 @@ func Init() {
 			IdleTimeout: 300 * time.Second,
 			Dial: func() (redis.Conn, error) {
 				conn, err := redis.Dial("tcp", addrs[0],
-					//redis.DialReadTimeout(time.Minute),
 					redis.DialConnectTimeout(time.Second),
 					redis.DialWriteTimeout(3*time.Second),
 				)
 				if err != nil {
 					return nil, err
 				}
+				conn = redis.NewLoggingConn(conn, log.Default(), "redis")
 				if len(auth) > 0 {
 					_, err = conn.Do("auth", auth)
 					if err != nil {
@@ -63,6 +64,7 @@ func Init() {
 				if err != nil {
 					return nil, err
 				}
+				c = redis.NewLoggingConn(c, log.Default(), "redis")
 				return c, nil
 			},
 		}
@@ -84,9 +86,9 @@ func Init() {
 						return nil, err
 					}
 				}
+				c = redis.NewLoggingConn(c, log.Default(), "redis")
 				return c, nil
 			},
-			Wait: true,
 		}
 	}
 }
