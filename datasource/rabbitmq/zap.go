@@ -16,16 +16,21 @@ type rabbitmqHook struct {
 	queue    string
 	service  string
 	version  string
+	ignore func(map[string]interface{}) bool 
 }
 
-func NewRabbitmqHook(queue string, service string, version string) *rabbitmqHook {
+func NewRabbitmqHook(queue string, service string, version string, ignore func(map[string]interface{}) bool) *rabbitmqHook {
 	hostName, _ := os.Hostname()
-	return &rabbitmqHook{
+	hook := &rabbitmqHook{
 		queue:    queue,
 		service:  service,
 		hostName: hostName,
 		version:  version,
 	}
+	if ignore != nil {
+		hook.ignore = ignore
+	}
+	return hook 
 }
 
 func (r *rabbitmqHook) Write(p []byte) (n int, err error) {
@@ -44,6 +49,9 @@ func (r *rabbitmqHook) push(data []byte) (err error) {
 	}
 
 	dataMap := object.(map[string]interface{})
+	if r.ignore != nil && r.ignore(dataMap) {
+		return nil
+	}
 	dataMap["_id"] = id.Next()
 	dataMap["host"] = r.hostName
 	dataMap["date"] = now.Format("2006-01-02")
@@ -75,7 +83,7 @@ func TimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
 }
 
-func NewZapLogger(minLevel zapcore.Level, version, queue, service string) *zap.Logger {
+func NewZapLogger(minLevel zapcore.Level, version, queue, service string, ignore ...func(map[string]interface{}) bool) *zap.Logger {
 	writeSyncerList := make([]zapcore.WriteSyncer, 0)
 	coreList := make([]zapcore.Core, 0)
 
@@ -85,8 +93,13 @@ func NewZapLogger(minLevel zapcore.Level, version, queue, service string) *zap.L
 	if minLevel == zapcore.DebugLevel {
 		writeSyncerList = append(writeSyncerList, zapcore.AddSync(os.Stdout))
 	}
+	var hook *rabbitmqHook
 	if queue != "" {
-		hook := NewRabbitmqHook(queue, service, version)
+		if len(ignore) > 0 {
+			hook = NewRabbitmqHook(queue, service, version, ignore[0])
+		} else {
+			hook = NewRabbitmqHook(queue, service, version, nil)
+		}
 		writeSyncerList = append(writeSyncerList, zapcore.AddSync(hook))
 	}
 	coreList = append(coreList, zapcore.NewCore(zapcore.NewJSONEncoder(NewEncoderConfig()), zapcore.NewMultiWriteSyncer(writeSyncerList...), levelFunc))
