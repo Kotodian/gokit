@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/Kotodian/gokit/ac/lib"
@@ -63,8 +62,8 @@ type Client struct {
 	once    sync.Once
 	// 证书sn
 	certificateSN string
-	//
-	messageNumber int32
+	// 发送消息的序号
+	messageNumber int16
 
 	data sync.Map
 }
@@ -475,12 +474,12 @@ func (c *Client) SetCertificateSN(sn string) {
 	c.certificateSN = sn
 }
 
-func (c *Client) SetMessageNumber(i int32) {
-	atomic.StoreInt32(&c.messageNumber, i)
+func (c *Client) SetMessageNumber(i int16) {
+	c.messageNumber = i
 }
 
-func (c *Client) GetMessageNumber() int32 {
-	return atomic.LoadInt32(&c.messageNumber)
+func (c *Client) GetMessageNumber() int16 {
+	return c.messageNumber
 }
 
 func (c *Client) SetData(key, value interface{}) {

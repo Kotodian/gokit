@@ -64,11 +64,11 @@ type Client struct {
 	certificateSN           string
 }
 
-func (c *Client) MessageNumber() int32 {
+func (c *Client) MessageNumber() int16 {
 	return 0
 }
 
-func (c *Client) SetMessageNumber(i int32) {
+func (c *Client) SetMessageNumber(i int16) {
 	return
 }
 

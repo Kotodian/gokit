@@ -67,9 +67,9 @@ type ClientInterface interface {
 	// CertificateSN 证书sn
 	CertificateSN() string
 
-	MessageNumber() int32
+	MessageNumber() int16
 
-	SetMessageNumber(int32)
+	SetMessageNumber(int16)
 
 	SetData(key, val interface{})
 
