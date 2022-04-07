@@ -42,7 +42,7 @@ func BCDToString(bcd []byte) string {
 }
 
 func BINToBool(bcd []byte) bool {
-	bcd = RemoveZero(bcd)
+	bcd = RemoveMAX(bcd)
 	byteBuff := bytes.NewBuffer(bcd)
 	var data int64
 	binary.Read(byteBuff, binary.LittleEndian, &data)
@@ -53,8 +53,12 @@ func BINToBool(bcd []byte) bool {
 }
 
 func AsciiByteToString(body []byte) string {
-	body = RemoveZero(body)
+	body = RemoveMAX(body)
 	return string(body)
+}
+
+func RemoveMAX(body []byte) []byte {
+	return bytes.TrimRight(body, "\xFF")
 }
 
 func RemoveZero(body []byte) []byte {
@@ -85,6 +89,13 @@ func hex2Byte(str string) []byte {
 func FillZero(payload []byte, length int) []byte {
 	for i := 0; i < length; i++ {
 		payload = append(payload, 0x00)
+	}
+	return payload
+}
+
+func FillMAX(payload []byte, length int) []byte {
+	for i := 0; i < length; i++ {
+		payload = append(payload, 0xFF)
 	}
 	return payload
 }
