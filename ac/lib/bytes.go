@@ -87,8 +87,11 @@ func hex2Byte(str string) []byte {
 }
 
 func FillZero(payload []byte, length int) []byte {
-	for i := 0; i < length; i++ {
-		payload = append(payload, 0x00)
+	l := len(payload)
+	if l < length {
+		for i := 0; i < length; i++ {
+			payload = append(payload, 0x00)
+		}
 	}
 	return payload
 }
