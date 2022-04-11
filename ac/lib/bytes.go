@@ -94,8 +94,11 @@ func FillZero(payload []byte, length int) []byte {
 }
 
 func FillMAX(payload []byte, length int) []byte {
-	for i := 0; i < length; i++ {
-		payload = append(payload, 0xFF)
+	l := len(payload)
+	if l < length {
+		for i := 0; i < length-l; i++ {
+			payload = append(payload, 0xFF)
+		}
 	}
 	return payload
 }
