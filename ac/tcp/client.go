@@ -382,7 +382,10 @@ func (c *Client) WritePump() {
 			if err != nil {
 				return
 			}
-			w.Flush()
+			err = w.Flush()
+			if err != nil {
+				return
+			}
 		}
 	}
 }
