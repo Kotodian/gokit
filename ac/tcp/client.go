@@ -383,7 +383,8 @@ func (c *Client) WritePump() {
 				err = errors.New("send on closed channel")
 				return
 			}
-			_, err = c.conn.Write(message)
+			w := bufio.NewWriter(c.conn)
+			_, err = w.Write(message)
 			if err != nil {
 				return
 			}
