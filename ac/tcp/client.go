@@ -182,13 +182,7 @@ func (c *Client) Reply(ctx context.Context, payload interface{}) {
 	if err != nil {
 		return
 	}
-	//resp := protocol.NewCallResult(ctx, payload)
-	//b, _ := json.Marshal(resp)
 	_ = c.Send(resp)
-	//if _client := ctx.Value("client"); _client != nil {
-	//	client := _client.(*Client)
-	//	client.send <- b
-	//}
 }
 
 func (c *Client) sendCommand(ctx context.Context, payload interface{}) {
@@ -388,6 +382,7 @@ func (c *Client) WritePump() {
 			if err != nil {
 				return
 			}
+			w.Flush()
 		}
 	}
 }
