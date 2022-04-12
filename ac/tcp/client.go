@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -298,8 +299,9 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			break
 		}
-		var msg []byte
-		_, err = c.conn.Read(msg)
+		msg := make([]byte, 256)
+		reader := bufio.NewReader(c.conn)
+		_, err = reader.Read(msg)
 		if err != nil {
 			break
 		}
@@ -315,12 +317,6 @@ func (c *Client) ReadPump() {
 			trData := &lib.TRData{}
 			ctx = context.WithValue(ctx, "trData", trData)
 			var err error
-			defer func() {
-				//如果发生了错误，都回复给设备，否则发送到平台
-				if err != nil {
-					c.ReplyError(ctx, err)
-				}
-			}()
 
 			var payload proto.Message
 			if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
