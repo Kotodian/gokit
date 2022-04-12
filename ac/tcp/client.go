@@ -68,7 +68,7 @@ type Client struct {
 	data sync.Map
 }
 
-func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) *Client {
+func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) lib.ClientInterface {
 	client := &Client{
 		log:           log,
 		hub:           hub,
@@ -457,13 +457,14 @@ func (c *Client) EncryptKey() []byte {
 	return c.encryptKey
 }
 
-func (c *Client) PingHandler(msg string) {
+func (c *Client) PingHandler(msg string) error {
 	redisConn := redis.GetRedis()
 	defer redisConn.Close()
 	_, err := redisConn.Do("expire", keys.Equipment(strconv.FormatUint(c.chargeStation.CoreID(), 10)), 190)
 	if err != nil {
 		c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
 	}
+	return nil
 }
 
 func (c *Client) CertificateSN() string {
@@ -499,4 +500,12 @@ func (c *Client) GetData(key interface{}) interface{} {
 
 func (c *Client) Conn() net.Conn {
 	return c.conn
+}
+
+func (c *Client) MessageNumber() int16 {
+	return c.messageNumber
+}
+
+func (c *Client) SetChargeStation(cs interfaces.ChargeStation) {
+	c.chargeStation = cs
 }
