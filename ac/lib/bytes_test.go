@@ -15,3 +15,9 @@ func TestNumberToBCD(t *testing.T) {
 	// t.Log(BCDToString([]byte{0x32, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x11, 0x15, 0x11, 0x16, 0x15, 0x55, 0x35, 0x02}))
 	fmt.Printf("BCDFromUint32(1648439200): %X\n", StringToBCD("1648439200"))
 }
+
+
+func TestBytesToInt16(t *testing.T) {
+	i := BytesToInt16([]byte{0x01, 0x00})
+	t.Log(i)
+}
