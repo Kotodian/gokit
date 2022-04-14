@@ -107,12 +107,12 @@ func FillMAX(payload []byte, length int) []byte {
 }
 
 func BytesToInt16(buf []byte) int {
-	return int(binary.LittleEndian.Uint16(buf))
+	return int(binary.BigEndian.Uint16(buf))
 }
 
 func Int16ToBytes(n int) []byte {
 	b := make([]byte, 2)
-	binary.LittleEndian.PutUint16(b, uint16(n))
+	binary.BigEndian.PutUint16(b, uint16(n))
 	return b
 }
 
