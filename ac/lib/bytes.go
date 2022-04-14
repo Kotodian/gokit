@@ -287,3 +287,11 @@ func BINToFloat[T types.Float](value []byte, bit int) T {
 func FloatToBIN[T types.Float](value T, bit int) []byte {
 	return nil
 }
+
+func ReserveBytes(b []byte) []byte {
+	_b := make([]byte, len(b))
+	for i := 0; i < len(b); i++ {
+		_b[i] = b[len(b)-1-i]
+	}
+	return _b
+}

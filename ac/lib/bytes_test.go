@@ -27,3 +27,8 @@ func TestCP56Time2a(t *testing.T) {
 	t.Log(now.Format("2006-01-02 15:04:05"))
 	t.Logf("%X", CP56Time2a(now))
 }
+
+func TestReserveBytes(t *testing.T) {
+	b := ReserveBytes([]byte{0x7F, 00, 00, 01})
+	t.Logf("%X", b)
+}
