@@ -111,7 +111,9 @@ func (c *Client) Close(err error) error {
 		c.hub.Clients.Delete(c.chargeStation.CoreID())
 		c.hub.RegClients.Delete(c.chargeStation.CoreID())
 		_ = c.conn.Close()
-		c.log.Sugar().Info(c.chargeStation.SN(), "关闭连接")
+		if c.chargeStation != nil {
+			c.log.Sugar().Info(c.chargeStation.SN(), "关闭连接")
+		}
 		c.conn = nil
 		c.data = sync.Map{}
 		close(c.send)
@@ -122,7 +124,6 @@ func (c *Client) Close(err error) error {
 		c.clientOfflineNotifyFunc(err)
 		c.isClose = true
 	})
-
 	return nil
 }
 
