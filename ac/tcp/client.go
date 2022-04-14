@@ -504,3 +504,7 @@ func (c *Client) MessageNumber() int16 {
 func (c *Client) SetChargeStation(cs interfaces.ChargeStation) {
 	c.chargeStation = cs
 }
+
+func (c *Client) SetKeepalive(keepalive int64) {
+	c.keepalive = keepalive
+}

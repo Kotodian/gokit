@@ -556,3 +556,7 @@ func (c *Client) SetCertificateSN(sn string) {
 func (c *Client) Conn() net.Conn {
 	return c.conn.UnderlyingConn()
 }
+
+func (c *Client) SetKeepalive(keepalive int64) {
+	c.keepalive = keepalive
+}

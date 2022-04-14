@@ -3,6 +3,7 @@ package lib
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestParseCP56Time2a(t *testing.T) {
@@ -16,8 +17,13 @@ func TestNumberToBCD(t *testing.T) {
 	fmt.Printf("BCDFromUint32(1648439200): %X\n", StringToBCD("1648439200"))
 }
 
-
 func TestBytesToInt16(t *testing.T) {
 	i := BytesToInt16([]byte{0x01, 0x00})
 	t.Log(i)
+}
+
+func TestCP56Time2a(t *testing.T) {
+	now := time.Now()
+	t.Log(now.Format("2006-01-02 15:04:05"))
+	t.Logf("%X", CP56Time2a(now))
 }

@@ -73,6 +73,8 @@ type ClientInterface interface {
 
 	SetData(key, val interface{})
 
+	SetKeepalive(int64)
+
 	GetData(key interface{}) interface{}
 
 	Conn() net.Conn
