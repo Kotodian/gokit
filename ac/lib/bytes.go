@@ -14,7 +14,7 @@ import (
 func BytesToInt(bys []byte) int {
 	bytebuff := bytes.NewBuffer(bys)
 	var data int64
-	binary.Read(bytebuff, binary.BigEndian, &data)
+	binary.Read(bytebuff, binary.LittleEndian, &data)
 	return int(data)
 }
 
@@ -24,7 +24,7 @@ func IntToBytes(data int) []byte {
 	}
 	body := make([]byte, 0)
 	buf := bytes.NewBuffer(body)
-	binary.Write(buf, binary.BigEndian, data)
+	binary.Write(buf, binary.LittleEndian, data)
 	return buf.Bytes()
 }
 
