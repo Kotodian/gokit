@@ -59,6 +59,7 @@ require (
 	github.com/panjf2000/gnet v1.6.4
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/reactivex/rxgo/v2 v2.5.0
+	github.com/thinkgos/go-iecp5 v1.2.0
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
