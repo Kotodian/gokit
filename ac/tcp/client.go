@@ -108,10 +108,10 @@ func (c *Client) Close(err error) error {
 			err = errors.New("平台关闭")
 		}
 		c.log.Error(err.Error())
-		c.hub.Clients.Delete(c.chargeStation.CoreID())
-		c.hub.RegClients.Delete(c.chargeStation.CoreID())
 		_ = c.conn.Close()
 		if c.chargeStation != nil {
+			c.hub.Clients.Delete(c.chargeStation.CoreID())
+			c.hub.RegClients.Delete(c.chargeStation.CoreID())
 			c.log.Sugar().Info(c.chargeStation.SN(), "关闭连接")
 		}
 		c.conn = nil
