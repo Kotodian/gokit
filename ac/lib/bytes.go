@@ -132,7 +132,7 @@ func CP56Time2a(t time.Time) []byte {
 func ParseCP56Time2a(b []byte) time.Time {
 	b = ReserveBytes(b)
 	t := asdu.ParseCP56Time2a(b, time.UTC)
-	return t
+	return t.Local()
 	// b = ReserveBytes(b)
 	// if len(b) < 7 || b[2]&0x80 == 0x80 {
 	// 	return time.Time{}

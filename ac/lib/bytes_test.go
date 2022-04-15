@@ -14,6 +14,9 @@ func TestParseCP56Time2a(t *testing.T) {
 	ti := ParseCP56Time2a(b)
 	b = CP56Time2a(ti)
 	t.Logf("%X\n", b)
+	b2 := CP56Time2a(time.Now())
+	t2 := ParseCP56Time2a(b2)
+	t.Log(t2.Format("2006-01-02 15:04:05"))
 }
 
 func TestNumberToBCD(t *testing.T) {
