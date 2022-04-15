@@ -11,7 +11,9 @@ func TestParseCP56Time2a(t *testing.T) {
 	b = ReserveBytes(b)
 	t.Log(ParseCP56Time2a(b).Format("2006-01-02 15:04:05"))
 	b = []byte{0x15, 0x09, 0x01, 0x0A, 0x1F, 0xA1, 0xE3}
-	t.Log(ParseCP56Time2a(b).Format("2006-01-02 15:04:05"))
+	ti := ParseCP56Time2a(b)
+	b = CP56Time2a(ti)
+	t.Logf("%X\n", b)
 }
 
 func TestNumberToBCD(t *testing.T) {

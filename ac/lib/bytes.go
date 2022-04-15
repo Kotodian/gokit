@@ -121,8 +121,9 @@ func CP56Time2a(t time.Time) []byte {
 	t = t.UTC()
 	// 换算成毫秒
 	msec := t.Nanosecond()/int(time.Millisecond) + t.Second()*1000
-	return []byte{byte(msec), byte(msec >> 8), byte(t.Minute()), byte(t.Hour()),
-		byte(t.Weekday()<<5) | byte(t.Day()), byte(t.Month()), byte(t.Year() - 2000)}
+	return []byte{byte(t.Year() - 2000), byte(t.Month()), byte(t.Weekday()<<5) | byte(t.Day()), byte(t.Hour()), byte(t.Minute()), byte(msec >> 8), byte(msec)}
+	// return []byte{byte(msec), byte(msec >> 8), byte(t.Minute()), byte(t.Hour()),
+	// 	byte(t.Weekday()<<5) | byte(t.Day()), byte(t.Month()), byte(t.Year() - 2000)}
 }
 
 func ParseCP56Time2a(b []byte) time.Time {
