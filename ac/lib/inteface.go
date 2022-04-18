@@ -66,18 +66,13 @@ type ClientInterface interface {
 	SetCertificateSN(sn string)
 	// CertificateSN 证书sn
 	CertificateSN() string
-
 	MessageNumber() int16
-
 	SetMessageNumber(int16)
-
 	SetData(key, val interface{})
-
 	SetKeepalive(int64)
-
 	GetData(key interface{}) interface{}
-
 	Conn() net.Conn
-
 	SetRemoteAddress(address string)
+	SetOrderInterval(int)
+	OrderInterval() int
 }
