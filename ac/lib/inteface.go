@@ -78,4 +78,6 @@ type ClientInterface interface {
 	GetData(key interface{}) interface{}
 
 	Conn() net.Conn
+
+	SetRemoteAddress(address string)
 }

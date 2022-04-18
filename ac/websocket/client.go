@@ -560,3 +560,7 @@ func (c *Client) Conn() net.Conn {
 func (c *Client) SetKeepalive(keepalive int64) {
 	c.keepalive = keepalive
 }
+
+func (c *Client) SetRemoteAddress(address string) {
+	c.remoteAddress = address
+}
