@@ -65,6 +65,8 @@ type Client struct {
 	certificateSN string
 	// 发送消息的序号
 	messageNumber int16
+	// 订单推送时间间隔
+	orderInterval int
 
 	data sync.Map
 }
@@ -80,6 +82,7 @@ func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress s
 		mqttRegCh:     make(chan mqtt.MqttMessage, 5),
 		close:         make(chan struct{}),
 		keepalive:     keepalive,
+		orderInterval: 30,
 		isClose:       false,
 		messageNumber: 0,
 	}
@@ -512,4 +515,12 @@ func (c *Client) SetKeepalive(keepalive int64) {
 
 func (c *Client) SetRemoteAddress(address string) {
 	c.remoteAddress = address
+}
+
+func (c *Client) SetOrderInterval(interval int) {
+	c.orderInterval = interval
+}
+
+func (c *Client) OrderInterval() int {
+	return c.orderInterval
 }

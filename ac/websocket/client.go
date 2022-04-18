@@ -62,6 +62,7 @@ type Client struct {
 	encryptKey              []byte
 	id                      string
 	certificateSN           string
+	orderInterval           int
 }
 
 func (c *Client) MessageNumber() int16 {
@@ -133,6 +134,7 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *webso
 		mqttRegCh:     make(chan mqtt.MqttMessage, 5),
 		close:         make(chan struct{}),
 		keepalive:     int64(keepalive),
+		orderInterval: 30,
 	}
 }
 
@@ -563,4 +565,12 @@ func (c *Client) SetKeepalive(keepalive int64) {
 
 func (c *Client) SetRemoteAddress(address string) {
 	c.remoteAddress = address
+}
+
+func (c *Client) SetOrderInterval(interval int) {
+	c.orderInterval = interval
+}
+
+func (c *Client) OrderInterval() int {
+	return c.orderInterval
 }
