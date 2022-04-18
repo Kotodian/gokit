@@ -119,7 +119,7 @@ func Int16ToBytes(n int) []byte {
 
 func CP56Time2a(t time.Time) []byte {
 	b := asdu.CP56Time2a(t, time.UTC)
-	return ReserveBytes(b)
+	return b
 	// 全部转换成utc时间发送
 	// t = t.UTC()
 	// // 换算成毫秒
@@ -130,7 +130,6 @@ func CP56Time2a(t time.Time) []byte {
 }
 
 func ParseCP56Time2a(b []byte) time.Time {
-	b = ReserveBytes(b)
 	t := asdu.ParseCP56Time2a(b, time.UTC)
 	return t.Local()
 	// b = ReserveBytes(b)
