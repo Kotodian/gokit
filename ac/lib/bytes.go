@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -120,43 +121,11 @@ func Int16ToBytes(n int) []byte {
 func CP56Time2a(t time.Time) []byte {
 	b := asdu.CP56Time2a(t, time.UTC)
 	return b
-	// 全部转换成utc时间发送
-	// t = t.UTC()
-	// // 换算成毫秒
-	// msec := t.Nanosecond()/int(time.Millisecond) + t.Second()*1000
-	// // return []byte{byte(t.Year() - 2000), byte(t.Month()), byte(t.Weekday()<<5) | byte(t.Day()), byte(t.Hour()), byte(t.Minute()), byte(msec >> 8), byte(msec)}
-	// return []byte{byte(msec), byte(msec >> 8), byte(t.Minute()), byte(t.Hour()),
-	// 	byte(t.Weekday()<<5) | byte(t.Day()), byte(t.Month()), byte(t.Year() - 2000)}
 }
 
 func ParseCP56Time2a(b []byte) time.Time {
 	t := asdu.ParseCP56Time2a(b, time.UTC)
 	return t.Local()
-	// b = ReserveBytes(b)
-	// if len(b) < 7 || b[2]&0x80 == 0x80 {
-	// 	return time.Time{}
-	// }
-	// // 取出前两个字节代表毫秒
-	// x := int(binary.LittleEndian.Uint16(b))
-	// msec := x % 1000
-	// // 毫秒除1000为秒
-	// sec := x / 1000
-	// // 截取后6位为分钟
-	// // 0011 1111
-	// min := int(b[2] & 0x3f)
-	// // 截取后5位为小时
-	// hour := int(b[3] & 0x1f)
-	// // 截取后5位为天
-	// day := int(b[4] & 0x1f)
-	// // 截取后4位为天
-	// month := time.Month(b[5] & 0x0f)
-	// // 截取后7位+2000为年份
-	// // 0111 1111
-	// year := 2000 + int(b[6]&0x7f)
-
-	// nsec := msec * int(time.Millisecond)
-	// date := time.Date(year, month, day, hour, min, sec, nsec, time.UTC)
-	// return date.Local()
 }
 
 func pow100(power byte) uint64 {
@@ -301,4 +270,15 @@ func ReserveBytes(b []byte) []byte {
 		_b[i] = b[len(b)-1-i]
 	}
 	return _b
+}
+
+func BytesToFloat(b []byte, bit int) float64 {
+	decimal := BytesToInt16(b)
+	pow := math.Pow(10, float64(bit))
+	return float64(decimal) / pow
+}
+
+func FloatToBytes(f float64, bit int) []byte {
+	decimal := int(f * math.Pow(10, float64(bit)))
+	return Int16ToBytes(decimal)
 }

@@ -40,3 +40,13 @@ func TestReserveBytes(t *testing.T) {
 	b := ReserveBytes([]byte{0x7F, 00, 00, 01})
 	t.Logf("%X", b)
 }
+
+func TestBytesToFloat(t *testing.T) {
+	d := BytesToFloat([]byte{0x01, 0x00}, 2)
+	t.Log(d)
+}
+
+func TestFloatToBytes(t *testing.T) {
+	b := FloatToBytes(1.23, 2)
+	t.Logf("%X\n", b)
+}
