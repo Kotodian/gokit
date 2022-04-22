@@ -291,8 +291,6 @@ func (c *Client) ReadPump() {
 	}
 	for {
 		select {
-		case <-c.close:
-			break
 		default:
 			if c.conn == nil {
 				return

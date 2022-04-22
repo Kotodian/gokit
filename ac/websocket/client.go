@@ -300,10 +300,6 @@ func (c *Client) ReadPump() {
 		return c.PingHandler(appData)
 	})
 	for {
-		select {
-		case <-c.close:
-			break
-		default:
 			ctx := context.WithValue(context.TODO(), "client", c)
 			if c.conn == nil {
 				return
@@ -384,8 +380,6 @@ func (c *Client) ReadPump() {
 			}(ctx, msg)
 		}
 	}
-
-}
 
 func (c *Client) Reply(ctx context.Context, payload interface{}) {
 	resp, err := c.hub.ResponseFn(ctx, payload)
