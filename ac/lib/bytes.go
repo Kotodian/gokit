@@ -13,11 +13,12 @@ import (
 	"github.com/thinkgos/go-iecp5/asdu"
 )
 
-func BytesToInt(bys []byte) int {
-	bytebuff := bytes.NewBuffer(bys)
-	var data int64
-	binary.Read(bytebuff, binary.LittleEndian, &data)
-	return int(data)
+func BytesToInt(bys []byte) uint {
+	var data uint
+	for i := 0; i < len(bys); i++ {
+		data += (uint(bys[i]) << uint(8*i))
+	}
+	return data
 }
 
 func IntToBytes(data int) []byte {

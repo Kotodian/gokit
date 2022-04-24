@@ -50,3 +50,8 @@ func TestFloatToBytes(t *testing.T) {
 	b := FloatToBytes(1.23, 2)
 	t.Logf("%X\n", b)
 }
+
+func TestBytesToInt(t *testing.T) {
+	i := BytesToInt([]byte{0x01, 0x01, 0xff})
+	t.Log(i)
+}
