@@ -55,3 +55,8 @@ func TestBytesToInt(t *testing.T) {
 	i := BytesToInt([]byte{0x01, 0x01, 0xff})
 	t.Log(i)
 }
+
+// func TestIntToBytes(t *testing.T) {
+// 	b := IntToBytes(1648439200)
+// 	fmt.Println(b)
+// }

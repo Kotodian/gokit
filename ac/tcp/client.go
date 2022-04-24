@@ -290,80 +290,75 @@ func (c *Client) ReadPump() {
 		return
 	}
 	for {
-		select {
-		default:
-			if c.conn == nil {
+		if c.conn == nil {
+			return
+		}
+		err = c.conn.SetReadDeadline(time.Now().Add(readWait))
+		if err != nil {
+			break
+		}
+		msg := make([]byte, 256)
+		reader := bufio.NewReader(c.conn)
+		_, err = reader.Read(msg)
+		if err != nil {
+			break
+		}
+		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
+			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
+			if err != nil {
+				break
+			}
+		}
+		ctx := context.WithValue(context.TODO(), "client", c)
+
+		go func(ctx context.Context, msg []byte) {
+			trData := &lib.TRData{}
+			ctx = context.WithValue(ctx, "trData", trData)
+			var err error
+
+			var payload proto.Message
+			if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
 				return
 			}
-			err = c.conn.SetReadDeadline(time.Now().Add(readWait))
-			if err != nil {
-				break
+
+			if payload == nil {
+				return
 			}
-			msg := make([]byte, 256)
-			reader := bufio.NewReader(c.conn)
-			_, err = reader.Read(msg)
-			if err != nil {
-				break
+
+			if trData.Ignore {
+				return
 			}
-			if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
-				msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
-				if err != nil {
-					break
+
+			if trData.APDU.Payload, err = proto.Marshal(payload); err != nil {
+				err = fmt.Errorf("encode cmd req payload error, err:%s", err.Error())
+				return
+			}
+			var toCoreMSG []byte
+			if toCoreMSG, err = proto.Marshal(trData.APDU); err != nil {
+				err = fmt.Errorf("encode cmd req apdu error, err:%s", err.Error())
+				return
+			}
+
+			var sendTopic string
+			var sendQos byte
+			if trData.IsTelemetry {
+				sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + datasource.UUID(c.chargeStation.CoreID()).String()
+			} else if !trData.Sync {
+				sendTopic = "coregw/" + c.hub.Hostname + "/command/" + datasource.UUID(c.chargeStation.CoreID()).String()
+			} else {
+				sendTopic = c.coregw + "/sync/" + datasource.UUID(c.chargeStation.CoreID()).String()
+			}
+			sendQos = 2
+			if c.chargeStation != nil {
+				c.hub.PubMqttMsg <- mqtt.MqttMessage{
+					Topic:    sendTopic,
+					Qos:      sendQos,
+					Retained: false,
+					Payload:  toCoreMSG,
 				}
 			}
-			ctx := context.WithValue(context.TODO(), "client", c)
-
-			go func(ctx context.Context, msg []byte) {
-				trData := &lib.TRData{}
-				ctx = context.WithValue(ctx, "trData", trData)
-				var err error
-
-				var payload proto.Message
-				if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
-					return
-				}
-
-				if payload == nil {
-					return
-				}
-
-				if trData.Ignore {
-					return
-				}
-
-				if trData.APDU.Payload, err = proto.Marshal(payload); err != nil {
-					err = fmt.Errorf("encode cmd req payload error, err:%s", err.Error())
-					return
-				}
-				var toCoreMSG []byte
-				if toCoreMSG, err = proto.Marshal(trData.APDU); err != nil {
-					err = fmt.Errorf("encode cmd req apdu error, err:%s", err.Error())
-					return
-				}
-
-				var sendTopic string
-				var sendQos byte
-				if trData.IsTelemetry {
-					sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + datasource.UUID(c.chargeStation.CoreID()).String()
-				} else if !trData.Sync {
-					sendTopic = "coregw/" + c.hub.Hostname + "/command/" + datasource.UUID(c.chargeStation.CoreID()).String()
-				} else {
-					sendTopic = c.coregw + "/sync/" + datasource.UUID(c.chargeStation.CoreID()).String()
-				}
-				sendQos = 2
-				if c.chargeStation != nil {
-					c.hub.PubMqttMsg <- mqtt.MqttMessage{
-						Topic:    sendTopic,
-						Qos:      sendQos,
-						Retained: false,
-						Payload:  toCoreMSG,
-					}
-				}
-			}(ctx, msg)
-		}
-
+		}(ctx, msg)
 	}
-
 }
 
 func (c *Client) WritePump() {

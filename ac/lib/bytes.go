@@ -21,15 +21,15 @@ func BytesToInt(bys []byte) uint {
 	return data
 }
 
-func IntToBytes(data int) []byte {
-	if data == 0 {
-		return []byte{0x00}
-	}
-	body := make([]byte, 0)
-	buf := bytes.NewBuffer(body)
-	binary.Write(buf, binary.LittleEndian, data)
-	return buf.Bytes()
-}
+// func IntToBytes(data int) []byte {
+// 	if data == 0 {
+// 		return []byte{0x00}
+// 	}
+// 	body := make([]byte, 0)
+// 	buf := bytes.NewBuffer(body)
+// 	binary.Write(buf, binary.LittleEndian, data)
+// 	return buf.Bytes()
+// }
 
 func BCDToString(bcd []byte) string {
 	bcd = RemoveZero(bcd)
