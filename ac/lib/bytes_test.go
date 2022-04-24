@@ -42,7 +42,7 @@ func TestReserveBytes(t *testing.T) {
 }
 
 func TestBytesToFloat(t *testing.T) {
-	d := BytesToFloat([]byte{0x01, 0x00}, 2)
+	d := BytesToFloat([]byte{0x01, 0x18}, 2)
 	t.Log(d)
 }
 

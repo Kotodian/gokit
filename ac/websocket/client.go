@@ -300,86 +300,86 @@ func (c *Client) ReadPump() {
 		return c.PingHandler(appData)
 	})
 	for {
-			ctx := context.WithValue(context.TODO(), "client", c)
-			if c.conn == nil {
+		ctx := context.WithValue(context.TODO(), "client", c)
+		if c.conn == nil {
+			return
+		}
+		err = c.conn.SetReadDeadline(time.Now().Add(readWait))
+		if err != nil {
+			break
+		}
+		var msg []byte
+		_, msg, err = c.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
+				c.log.Sugar().Errorf("error: %v", err)
+			}
+			break
+		}
+
+		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
+			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
+			if err != nil {
+				break
+			}
+		}
+
+		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+
+		go func(ctx context.Context, msg []byte) {
+			trData := &lib.TRData{}
+			ctx = context.WithValue(ctx, "trData", trData)
+			var err error
+			defer func() {
+				//如果发生了错误，都回复给设备，否则发送到平台
+				if err != nil {
+					c.ReplyError(ctx, err)
+				}
+			}()
+
+			var payload proto.Message
+			if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
 				return
 			}
-			err = c.conn.SetReadDeadline(time.Now().Add(readWait))
-			if err != nil {
-				break
-			}
-			var msg []byte
-			_, msg, err = c.conn.ReadMessage()
-			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
-					c.log.Sugar().Errorf("error: %v", err)
-				}
-				break
+
+			if payload == nil {
+				return
 			}
 
-			if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
-				msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
-				if err != nil {
-					break
-				}
+			if trData.Ignore {
+				return
 			}
 
-			msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+			if trData.APDU.Payload, err = proto.Marshal(payload); err != nil {
+				err = fmt.Errorf("encode cmd req payload error, err:%s", err.Error())
+				return
+			}
+			var toCoreMSG []byte
+			if toCoreMSG, err = proto.Marshal(trData.APDU); err != nil {
+				err = fmt.Errorf("encode cmd req apdu error, err:%s", err.Error())
+				return
+			}
 
-			go func(ctx context.Context, msg []byte) {
-				trData := &lib.TRData{}
-				ctx = context.WithValue(ctx, "trData", trData)
-				var err error
-				defer func() {
-					//如果发生了错误，都回复给设备，否则发送到平台
-					if err != nil {
-						c.ReplyError(ctx, err)
-					}
-				}()
+			var sendTopic string
+			var sendQos byte
+			if trData.IsTelemetry {
+				sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + datasource.UUID(c.chargeStation.CoreID()).String()
+			} else if !trData.Sync {
+				sendTopic = "coregw/" + c.hub.Hostname + "/command/" + datasource.UUID(c.chargeStation.CoreID()).String()
+			} else {
+				sendTopic = c.Coregw() + "/sync/" + datasource.UUID(c.chargeStation.CoreID()).String()
+			}
+			sendQos = 2
 
-				var payload proto.Message
-				if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
-					return
-				}
-
-				if payload == nil {
-					return
-				}
-
-				if trData.Ignore {
-					return
-				}
-
-				if trData.APDU.Payload, err = proto.Marshal(payload); err != nil {
-					err = fmt.Errorf("encode cmd req payload error, err:%s", err.Error())
-					return
-				}
-				var toCoreMSG []byte
-				if toCoreMSG, err = proto.Marshal(trData.APDU); err != nil {
-					err = fmt.Errorf("encode cmd req apdu error, err:%s", err.Error())
-					return
-				}
-
-				var sendTopic string
-				var sendQos byte
-				if trData.IsTelemetry {
-					sendTopic = "coregw/" + c.hub.Hostname + "/telemetry/" + datasource.UUID(c.chargeStation.CoreID()).String()
-				} else if !trData.Sync {
-					sendTopic = "coregw/" + c.hub.Hostname + "/command/" + datasource.UUID(c.chargeStation.CoreID()).String()
-				} else {
-					sendTopic = c.Coregw() + "/sync/" + datasource.UUID(c.chargeStation.CoreID()).String()
-				}
-				sendQos = 2
-
-				c.hub.PubMqttMsg <- mqtt.MqttMessage{
-					Topic:    sendTopic,
-					Qos:      sendQos,
-					Retained: false,
-					Payload:  toCoreMSG,
-				}
-			}(ctx, msg)
-		}
+			c.hub.PubMqttMsg <- mqtt.MqttMessage{
+				Topic:    sendTopic,
+				Qos:      sendQos,
+				Retained: false,
+				Payload:  toCoreMSG,
+			}
+		}(ctx, msg)
 	}
+}
 
 func (c *Client) Reply(ctx context.Context, payload interface{}) {
 	resp, err := c.hub.ResponseFn(ctx, payload)
