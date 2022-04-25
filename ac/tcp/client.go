@@ -280,7 +280,6 @@ func (c *Client) SubMQTT() {
 func (c *Client) ReadPump() {
 	var err error
 	defer func() {
-		// todo 关闭连接
 		if err != nil {
 			_ = c.Close(err)
 		}
@@ -289,16 +288,17 @@ func (c *Client) ReadPump() {
 	if err != nil {
 		return
 	}
+	reader := bufio.NewReader(c.conn)
 	for {
 		if c.conn == nil {
-			return
+			break
 		}
 		err = c.conn.SetReadDeadline(time.Now().Add(readWait))
 		if err != nil {
 			break
 		}
 		msg := make([]byte, 256)
-		reader := bufio.NewReader(c.conn)
+
 		_, err = reader.Read(msg)
 		if err != nil {
 			break
