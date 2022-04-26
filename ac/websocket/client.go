@@ -63,6 +63,7 @@ type Client struct {
 	id                      string
 	certificateSN           string
 	orderInterval           int
+	baseURL                 string // 上传日志、下载固件基本地址
 }
 
 func (c *Client) MessageNumber() int16 {
@@ -571,4 +572,12 @@ func (c *Client) SetOrderInterval(interval int) {
 
 func (c *Client) OrderInterval() int {
 	return c.orderInterval
+}
+
+func (c *Client) BaseURL() string {
+	return c.baseURL
+}
+
+func (c *Client) SetBaseURL(baseURL string) {
+	c.baseURL = baseURL
 }

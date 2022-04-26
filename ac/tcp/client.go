@@ -67,8 +67,8 @@ type Client struct {
 	messageNumber int16
 	// 订单推送时间间隔
 	orderInterval int
-
-	data sync.Map
+	baseURL       string
+	data          sync.Map
 }
 
 func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) lib.ClientInterface {
@@ -523,4 +523,12 @@ func (c *Client) SetOrderInterval(interval int) {
 
 func (c *Client) OrderInterval() int {
 	return c.orderInterval
+}
+
+func (c *Client) BaseURL() string {
+	return c.baseURL
+}
+
+func (c *Client) SetBaseURL(baseURL string) {
+	c.baseURL = baseURL
 }

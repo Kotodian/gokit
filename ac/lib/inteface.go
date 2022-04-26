@@ -75,4 +75,6 @@ type ClientInterface interface {
 	SetRemoteAddress(address string)
 	SetOrderInterval(int)
 	OrderInterval() int
+	SetBaseURL(string)
+	BaseURL() string
 }
