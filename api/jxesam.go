@@ -32,6 +32,7 @@ type Equipment struct {
 	KeepAlive  int    `json:"keepalive"`
 	CoreID     string `json:"id"`
 	Registered bool   `json:"registered"`
+	BaseURL    string `json:"-"`
 }
 
 const defaultURL = "http://jx-esam:8080"
