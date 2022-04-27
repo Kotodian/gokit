@@ -95,12 +95,6 @@ func (c *Client) Send(msg []byte) (err error) {
 			err = e.(error)
 		}
 	}()
-	if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
-		msg, err = c.hub.Encrypt.Encode(msg, c.encryptKey)
-		if err != nil {
-			return err
-		}
-	}
 	c.send <- msg
 	return
 }

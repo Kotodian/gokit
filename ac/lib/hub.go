@@ -31,7 +31,7 @@ type Hub struct {
 	// PubMqttMsg 发送到MQTT的信息通道
 	PubMqttMsg chan mqtt.MqttMessage
 
-	// TR 协议翻译器
+	// TR 协议翻译, 把协议的内容发到core-gw
 	TR ITranslate //协议翻译器
 
 	// CommandFn 发送函数

@@ -33,6 +33,7 @@ type Equipment struct {
 	CoreID     string `json:"id"`
 	Registered bool   `json:"registered"`
 	BaseURL    string `json:"-"`
+	Key        string `json:"-"`
 }
 
 const defaultURL = "http://jx-esam:8080"
