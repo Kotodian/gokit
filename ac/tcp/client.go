@@ -71,7 +71,7 @@ type Client struct {
 	data          sync.Map
 }
 
-func NewClient(hub *lib.Hub, conn *net.TCPConn, keepalive int64, remoteAddress string, log *zap.Logger) lib.ClientInterface {
+func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress string, log *zap.Logger) lib.ClientInterface {
 	client := &Client{
 		log:           log,
 		hub:           hub,
