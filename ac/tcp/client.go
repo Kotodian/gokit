@@ -58,7 +58,7 @@ type Client struct {
 	// 平台端id
 	id string
 	// 连接
-	conn    *net.TCPConn
+	conn    net.Conn
 	isClose bool
 	once    sync.Once
 	// 证书sn
@@ -297,14 +297,7 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			break
 		}
-		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
-			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
-			if err != nil {
-				break
-			}
-		}
 		ctx := context.WithValue(context.TODO(), "client", c)
-
 		go func(ctx context.Context, msg []byte) {
 			trData := &lib.TRData{}
 			ctx = context.WithValue(ctx, "trData", trData)
