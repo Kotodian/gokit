@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"strconv"
 	"strings"
@@ -309,15 +310,21 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			break
 		}
-		var msg []byte
-		_, msg, err = c.conn.ReadMessage()
+		_, r, err := c.conn.NextReader()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
 				c.log.Sugar().Errorf("error: %v", err)
 			}
 			break
 		}
-
+		var msg []byte
+		msg, err = ioutil.ReadAll(r)
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
+				c.log.Sugar().Errorf("error: %v", err)
+			}
+			break
+		}
 		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
 			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
 			if err != nil {
