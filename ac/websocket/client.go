@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -34,6 +35,7 @@ const (
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 4096
+	readBufferSize = 2048
 )
 
 var (
@@ -287,7 +289,9 @@ func (c *Client) SubMQTT() {
 // reads from this goroutine.
 func (c *Client) ReadPump() {
 	var err error
+	msg := make([]byte, readBufferSize)
 	defer func() {
+		msg = nil
 		_ = c.Close(err)
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -309,8 +313,14 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			break
 		}
-		var msg []byte
-		_, msg, err = c.conn.ReadMessage()
+		_, r, err := c.conn.NextReader()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
+				c.log.Sugar().Errorf("error: %v", err)
+			}
+			break
+		}
+		_, err = bufio.NewReader(r).Read(msg)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
 				c.log.Sugar().Errorf("error: %v", err)
