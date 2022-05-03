@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -320,13 +319,19 @@ func (c *Client) ReadPump() {
 			}
 			break
 		}
-		_, err = bufio.NewReader(r).Read(msg)
+		buffer := bytebufferpool.Get()
+		_, err = buffer.ReadFrom(r)
 		if err != nil {
+			buffer.Reset()
+			bytebufferpool.Put(buffer)
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
 				c.log.Sugar().Errorf("error: %v", err)
 			}
 			break
 		}
+		msg = buffer.Bytes()
+		buffer.Reset()
+		bytebufferpool.Put(buffer)
 		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
 			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
 			if err != nil {
