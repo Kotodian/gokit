@@ -288,7 +288,7 @@ func (c *Client) SubMQTT() {
 // reads from this goroutine.
 func (c *Client) ReadPump() {
 	var err error
-	msg := make([]byte, readBufferSize)
+	msg := make([]byte, 0, readBufferSize)
 	defer func() {
 		msg = nil
 		_ = c.Close(err)
@@ -303,6 +303,7 @@ func (c *Client) ReadPump() {
 		fmt.Printf("[%s]ping message received from %s\n", time.Now().Format("2006-01-02 15:04:05"), c.chargeStation.SN())
 		return c.PingHandler(appData)
 	})
+
 	for {
 		ctx := context.WithValue(context.TODO(), "client", c)
 		if c.conn == nil {
@@ -312,26 +313,14 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			break
 		}
-		_, r, err := c.conn.NextReader()
+		_, msg, err = c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
 				c.log.Sugar().Errorf("error: %v", err)
 			}
 			break
 		}
-		buffer := bytebufferpool.Get()
-		_, err = buffer.ReadFrom(r)
-		if err != nil {
-			buffer.Reset()
-			bytebufferpool.Put(buffer)
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
-				c.log.Sugar().Errorf("error: %v", err)
-			}
-			break
-		}
-		msg = buffer.Bytes()
-		buffer.Reset()
-		bytebufferpool.Put(buffer)
+
 		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
 			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
 			if err != nil {
