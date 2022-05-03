@@ -186,8 +186,12 @@ func (c *Client) SubRegMQTT() {
 				buffer := bytebufferpool.Get()
 				encoder := json.NewEncoder(buffer)
 				if err = encoder.Encode(msg); err != nil {
+					buffer.Reset()
+					bytebufferpool.Put(buffer)
 					return
 				} else if err = c.Send(buffer.Bytes()); err != nil {
+					buffer.Reset()
+					bytebufferpool.Put(buffer)
 					return
 				}
 			}()
@@ -263,8 +267,12 @@ func (c *Client) SubMQTT() {
 					buffer := bytebufferpool.Get()
 					encoder := json.NewEncoder(buffer)
 					if err = encoder.Encode(msg); err != nil {
+						buffer.Reset()
+						bytebufferpool.Put(buffer)
 						return
 					} else if err = c.Send(buffer.Bytes()); err != nil {
+						buffer.Reset()
+						bytebufferpool.Put(buffer)
 						return
 					}
 					return
