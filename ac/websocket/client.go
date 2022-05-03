@@ -187,7 +187,7 @@ func (c *Client) SubRegMQTT() {
 				encoder := json.NewEncoder(buffer)
 				if err = encoder.Encode(msg); err != nil {
 					return
-				} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), buffer.Bytes()); err != nil {
+				} else if err = c.Send(buffer.Bytes()); err != nil {
 					return
 				}
 			}()
@@ -264,7 +264,7 @@ func (c *Client) SubMQTT() {
 					encoder := json.NewEncoder(buffer)
 					if err = encoder.Encode(msg); err != nil {
 						return
-					} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), buffer.Bytes()); err != nil {
+					} else if err = c.Send(buffer.Bytes()); err != nil {
 						return
 					}
 					return
