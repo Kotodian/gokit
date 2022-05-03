@@ -18,6 +18,7 @@ import (
 	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/gokit/datasource/redis"
 	"github.com/Kotodian/protocol/golang/keys"
+	"github.com/valyala/bytebufferpool"
 	"go.uber.org/zap"
 
 	"github.com/Kotodian/gokit/ac/lib"
@@ -179,22 +180,17 @@ func (c *Client) SubRegMQTT() {
 				} else if msg == nil {
 					return
 				}
-
-				//b, err := f(ctx)
-				//if err != nil {
-				//	log.Errorf("translate register conf error, err:%v topic:%s", err.Error(), topic)
-				//	return
 				if trData.Ignore {
 					return
 				}
-				var bMsg []byte
-				if bMsg, err = json.Marshal(msg); err != nil {
+				buffer := bytebufferpool.Get()
+				encoder := json.NewEncoder(buffer)
+				if err = encoder.Encode(msg); err != nil {
 					return
-				} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), bMsg); err != nil {
+				} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), buffer.Bytes()); err != nil {
 					return
 				}
 			}()
-			//logrus.Infof("reg resp:%s, sn:%s", string(bMsg), c.Evse.SN())
 		}
 	}
 }
@@ -263,18 +259,14 @@ func (c *Client) SubMQTT() {
 					if trData.Ignore {
 						return
 					}
-
-					//平台下发的命令都要回复，不存在不回复的情况
-					//else if apdu.NoNeedReply {
-					//	return
-					//}
-					var bMsg []byte
-					if bMsg, err = json.Marshal(msg); err != nil {
+					// 优化bytes
+					buffer := bytebufferpool.Get()
+					encoder := json.NewEncoder(buffer)
+					if err = encoder.Encode(msg); err != nil {
 						return
-					} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), bMsg); err != nil {
+					} else if err = c.hub.SendMsgToDevice(c.chargeStation.CoreID(), buffer.Bytes()); err != nil {
 						return
 					}
-					//}()
 					return
 				}, Args: []interface{}{apdu},
 			})
