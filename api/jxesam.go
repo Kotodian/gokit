@@ -32,7 +32,7 @@ type Equipment struct {
 	KeepAlive  int    `json:"keepalive"`
 	CoreID     string `json:"id"`
 	Registered bool   `json:"registered"`
-	BaseURL    string `json:"-"`
+	BaseURL    string `json:"baseUrl"`
 	Key        string `json:"-"`
 }
 
