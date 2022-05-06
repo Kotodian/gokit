@@ -9,15 +9,15 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.5.0
-	github.com/influxdata/influxdb-client-go/v2 v2.8.0
+	github.com/influxdata/influxdb-client-go/v2 v2.8.2
 	github.com/json-iterator/go v1.1.12
-	github.com/letsfire/redigo/v2 v2.0.3
 	github.com/makasim/amqpextra v0.16.4
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/silenceper/pool v1.0.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/streadway/amqp v1.0.1-0.20200716223359-e6b33f460591
 	github.com/tidwall/gjson v1.14.0
+	github.com/valyala/bytebufferpool v1.0.0
 	github.com/wumansgy/goEncrypt v1.0.0
 	github.com/yitter/idgenerator-go v1.2.1
 	go.mongodb.org/mongo-driver v1.8.4
@@ -30,20 +30,7 @@ require (
 )
 
 require (
-	github.com/cenkalti/backoff/v4 v4.0.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/emirpasic/gods v1.12.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/objx v0.1.1 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
-	github.com/teivah/onecontext v0.0.0-20200513185103-40f981bfd775 // indirect
-	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-)
-
-require (
-	github.com/FZambia/sentinel v1.1.0 // indirect
+	github.com/FZambia/sentinel v1.1.0
 	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
@@ -56,9 +43,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/panjf2000/gnet v1.6.4
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/reactivex/rxgo/v2 v2.5.0
 	github.com/thinkgos/go-iecp5 v1.2.0
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
