@@ -349,12 +349,12 @@ func (c *Client) ReadPump() {
 
 func (c *Client) WritePump() {
 	var err error
+	w := bufio.NewWriter(c.conn)
 	defer func() {
 		if err != nil {
 			_ = c.Close(err)
 		}
 	}()
-	w := bufio.NewWriter(c.conn)
 	for {
 		select {
 		case <-c.close:
