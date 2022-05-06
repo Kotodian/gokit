@@ -354,6 +354,7 @@ func (c *Client) WritePump() {
 			_ = c.Close(err)
 		}
 	}()
+	w := bufio.NewWriter(c.conn)
 	for {
 		select {
 		case <-c.close:
@@ -367,7 +368,6 @@ func (c *Client) WritePump() {
 				err = errors.New("send on closed channel")
 				return
 			}
-			w := bufio.NewWriter(c.conn)
 			_, err = w.Write(message)
 			if err != nil {
 				return
