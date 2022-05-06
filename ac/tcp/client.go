@@ -283,6 +283,7 @@ func (c *Client) ReadPump() {
 		return
 	}
 	reader := bufio.NewReader(c.conn)
+	msg := make([]byte, 256)
 	for {
 		if c.conn == nil {
 			break
@@ -291,8 +292,6 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			break
 		}
-		msg := make([]byte, 256)
-
 		_, err = reader.Read(msg)
 		if err != nil {
 			break
