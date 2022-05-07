@@ -201,6 +201,7 @@ func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
 func (c *Client) SubMQTT() {
 	c.hub.Clients.Store(c.chargeStation.CoreID(), c)
 	wp := workpool.New(1, 5).Start()
+	defer wp.Stop()
 	for {
 		select {
 		case <-c.close:
