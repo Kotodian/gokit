@@ -66,6 +66,7 @@ type Client struct {
 	certificateSN           string
 	orderInterval           int
 	baseURL                 string // 上传日志、下载固件基本地址
+	debug                   bool
 }
 
 func (c *Client) MessageNumber() int16 {
@@ -124,7 +125,11 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger) lib.ClientInterface {
+func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger, debug ...bool) lib.ClientInterface {
+	var b bool
+	if len(debug) > 0 {
+		b = debug[0]
+	}
 	return &Client{
 		log:           log,
 		chargeStation: chargeStation,
@@ -138,6 +143,7 @@ func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *webso
 		close:         make(chan struct{}),
 		keepalive:     int64(keepalive),
 		orderInterval: 30,
+		debug:         b,
 	}
 }
 
@@ -322,6 +328,10 @@ func (c *Client) ReadPump() {
 			break
 		}
 
+		if c.debug {
+			fmt.Printf("[%s]received message from %s\n", time.Now().Format("2006-01-02 15:04:05"), c.chargeStation.SN())
+		}
+
 		if c.hub.Encrypt != nil && len(c.encryptKey) > 0 {
 			msg, err = c.hub.Encrypt.Decode(msg, c.encryptKey)
 			if err != nil {
@@ -452,6 +462,9 @@ func (c *Client) WritePump() {
 			if err = w.Close(); err != nil {
 				return
 			}
+			if c.debug {
+				fmt.Printf("[%s]send message to %s\n", time.Now().Format("2006-01-02 15:04:05"), c.chargeStation.SN())
+			}
 		case <-c.sendPing:
 			if c.conn == nil {
 				return
@@ -459,6 +472,9 @@ func (c *Client) WritePump() {
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err = c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
+			}
+			if c.debug {
+				fmt.Printf("[%s]send message to %s\n", time.Now().Format("2006-01-02 15:04:05"), c.chargeStation.SN())
 			}
 		}
 	}
