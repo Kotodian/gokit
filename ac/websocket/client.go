@@ -343,6 +343,12 @@ func (c *Client) ReadPump() {
 			}()
 
 			var payload proto.Message
+			defer func() {
+				if r := recover(); r != nil {
+					c.log.Sugar().Errorf("%v\n", r)
+				}
+			}()
+
 			if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
 				return
 			}
