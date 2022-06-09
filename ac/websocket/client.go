@@ -15,6 +15,7 @@ import (
 
 	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/datasource/mqtt"
+	"github.com/Kotodian/gokit/datasource/rabbitmq"
 	"github.com/Kotodian/gokit/datasource/redis"
 	"github.com/Kotodian/protocol/golang/keys"
 	"github.com/valyala/bytebufferpool"
@@ -57,7 +58,7 @@ type Client struct {
 	mqttRegCh               chan mqtt.MqttMessage //注册信息
 	mqttMsgCh               chan mqtt.MqttMessage //返回或下发的信息
 	remoteAddress           string
-	log                     *zap.Logger
+	log                     *rabbitmq.Logger
 	keepalive               int64
 	coregw                  string
 	isClose                 bool
@@ -125,7 +126,7 @@ func (c *Client) Close(err error) error {
 
 // NewClient
 // 连接客户端管理类
-func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *zap.Logger, debug ...bool) lib.ClientInterface {
+func NewClient(chargeStation interfaces.ChargeStation, hub *lib.Hub, conn *websocket.Conn, keepalive int, remoteAddress string, log *rabbitmq.Logger, debug ...bool) lib.ClientInterface {
 	var b bool
 	if len(debug) > 0 {
 		b = debug[0]
@@ -496,10 +497,6 @@ func (c *Client) Publish(m mqtt.MqttMessage) {
 
 func (c *Client) KeepAlive() int64 {
 	return c.keepalive
-}
-
-func (c *Client) Logger() *zap.Logger {
-	return c.log
 }
 
 func (c *Client) Hub() *lib.Hub {

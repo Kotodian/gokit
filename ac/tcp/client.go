@@ -14,6 +14,7 @@ import (
 	"github.com/Kotodian/gokit/ac/lib"
 	"github.com/Kotodian/gokit/datasource"
 	"github.com/Kotodian/gokit/datasource/mqtt"
+	"github.com/Kotodian/gokit/datasource/rabbitmq"
 	"github.com/Kotodian/gokit/datasource/redis"
 	"github.com/Kotodian/gokit/workpool"
 	"github.com/Kotodian/protocol/golang/hardware/charger"
@@ -48,7 +49,7 @@ type Client struct {
 	// 客户端地址
 	remoteAddress string
 	// 日志组件
-	log *zap.Logger
+	log *rabbitmq.Logger
 	// 维持连接的超时时间
 	keepalive int64
 	// 记录coregw发送的请求host,以便回复给请求的coregw
@@ -71,7 +72,7 @@ type Client struct {
 	data          sync.Map
 }
 
-func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress string, log *zap.Logger) lib.ClientInterface {
+func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress string, log *rabbitmq.Logger) lib.ClientInterface {
 	client := &Client{
 		log:           log,
 		hub:           hub,
@@ -306,10 +307,10 @@ func (c *Client) ReadPump() {
 			var payload proto.Message
 			defer func() {
 				if r := recover(); r != nil {
-					c.Logger().Sugar().Errorf("%v", r)
+					c.log.Sugar().Errorf("%v", r)
 				}
 			}()
-			
+
 			if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
 				return
 			}
@@ -399,10 +400,6 @@ func (c *Client) Publish(m mqtt.MqttMessage) {
 
 func (c *Client) KeepAlive() int64 {
 	return c.keepalive
-}
-
-func (c *Client) Logger() *zap.Logger {
-	return c.log
 }
 
 func (c *Client) RemoteAddress() string {

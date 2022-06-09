@@ -137,7 +137,7 @@ var (
 )
 
 type Logger struct {
-	*zap.SugaredLogger
+	*zap.Logger
 	sync.RWMutex
 	Opts      *Options `json:"opts"`
 	zapConfig zap.Config
@@ -178,8 +178,8 @@ func (l *Logger) init() {
 	if err != nil {
 		panic(err)
 	}
-	l.SugaredLogger = mylogger.Sugar()
-	defer l.SugaredLogger.Sync()
+	l.Logger = mylogger
+	defer l.Logger.Sync()
 }
 
 func (l *Logger) loadCfg() {

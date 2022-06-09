@@ -6,7 +6,6 @@ import (
 
 	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/protocol/interfaces"
-	"go.uber.org/zap"
 )
 
 type ClientInterface interface {
@@ -38,8 +37,6 @@ type ClientInterface interface {
 	Hub() *Hub
 	// KeepAlive 心跳时间
 	KeepAlive() int64
-	// Logger 日志服务
-	Logger() *zap.Logger
 	// RemoteAddress 客户端地址
 	RemoteAddress() string
 	// SetClientOfflineFunc 设置客户端离线通知
