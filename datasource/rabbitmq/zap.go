@@ -152,7 +152,6 @@ func InitLogger(cf ...*Options) {
 	logger.Lock()
 	defer logger.Unlock()
 	if logger.inited {
-		logger.Info("[initLogger] logger Inited")
 		return
 	}
 	if len(cf) > 0 {
@@ -160,7 +159,6 @@ func InitLogger(cf ...*Options) {
 	}
 	logger.loadCfg()
 	logger.init()
-	logger.Info("[initLogger] zap plugin initializing completed")
 	logger.inited = true
 }
 
