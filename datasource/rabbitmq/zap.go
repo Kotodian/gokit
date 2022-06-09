@@ -233,7 +233,7 @@ func (l *Logger) setSyncers() {
 		logf, _ := rotatelogs.New(l.Opts.LogFileDir+sp+l.Opts.AppName+"-%Y-%m-%d.%H"+"."+fN,
 			// rotatelogs.WithLinkName(l.Opts.LogFileDir+sp+l.Opts.AppName+"-"+fN),
 			// rotatelogs.WithMaxAge(30*24*time.Hour),
-			rotatelogs.WithRotationTime(time.Hour),
+			rotatelogs.WithRotationTime(time.Minute),
 		)
 		return zapcore.AddSync(logf)
 	}
