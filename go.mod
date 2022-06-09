@@ -30,6 +30,12 @@ require (
 )
 
 require (
+	github.com/Me1onRind/logrotate v0.0.0-20201207055048-cc28c78da981 // indirect
+	github.com/lestrrat/go-strftime v0.0.0-20180220042222-ba3bf9c1d042 // indirect
+	github.com/natefinch/lumberjack v2.0.0+incompatible // indirect
+)
+
+require (
 	github.com/FZambia/sentinel v1.1.0
 	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
@@ -40,6 +46,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
