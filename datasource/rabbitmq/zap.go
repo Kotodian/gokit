@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/Kotodian/gokit/id"
@@ -128,7 +127,6 @@ func NewZapLogger(minLevel zapcore.Level, version, queue, service string, ignore
 }
 
 var (
-	logger                         *Logger
 	sp                             = string(filepath.Separator)
 	errWS, warnWS, infoWS, debugWS zapcore.WriteSyncer       // IO输出
 	rabbitmqWS                     zapcore.WriteSyncer       // rabbitmq 输出
@@ -138,32 +136,20 @@ var (
 
 type Logger struct {
 	*zap.Logger
-	sync.RWMutex
 	Opts      *Options `json:"opts"`
 	zapConfig zap.Config
-	inited    bool
 	hostname  string
 }
 
-func InitLogger(cf ...*Options) {
-	logger = &Logger{
+func InitLogger(cf ...*Options) *Logger {
+	logger := &Logger{
 		Opts: &Options{},
-	}
-	logger.Lock()
-	defer logger.Unlock()
-	if logger.inited {
-		return
 	}
 	if len(cf) > 0 {
 		logger.Opts = cf[0]
 	}
 	logger.loadCfg()
 	logger.init()
-	logger.inited = true
-}
-
-// GetLogger returns logger
-func GetLogger() (ret *Logger) {
 	return logger
 }
 

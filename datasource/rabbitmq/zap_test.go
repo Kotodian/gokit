@@ -18,7 +18,7 @@ func TestZapLog(t *testing.T) {
 		Config:     zap.Config{},
 	}
 	data.Development = true
-	InitLogger(data)
+	logger := InitLogger(data)
 	for i := 0; i < 2; i++ {
 		time.Sleep(time.Second)
 		logger.Debug(fmt.Sprint("debug log ", i), zap.Int("line", 999))
