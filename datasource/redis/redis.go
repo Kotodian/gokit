@@ -44,7 +44,7 @@ func Init() {
 				if err != nil {
 					return nil, err
 				}
-				conn = redis.NewLoggingConn(conn, log.Default(), "redis")
+				// conn = redis.NewLoggingConn(conn, log.Default(), "redis")
 				if len(auth) > 0 {
 					_, err = conn.Do("auth", auth)
 					if err != nil {
