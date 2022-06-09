@@ -217,7 +217,7 @@ func (l *Logger) setSyncers() {
 	f := func(fN string) zapcore.WriteSyncer {
 		// 每小时一个文件
 		logf, _ := rotatelogs.New(l.Opts.LogFileDir+sp+l.Opts.AppName+"-%Y-%m-%d.%H"+"."+fN,
-			// rotatelogs.WithLinkName(l.Opts.LogFileDir+sp+l.Opts.AppName+"-"+fN),
+			rotatelogs.WithLinkName(l.Opts.LogFileDir+sp+l.Opts.AppName+"-"+fN),
 			// rotatelogs.WithMaxAge(30*24*time.Hour),
 			rotatelogs.WithRotationTime(time.Minute),
 		)
