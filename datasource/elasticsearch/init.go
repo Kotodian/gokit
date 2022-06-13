@@ -2,18 +2,27 @@ package elasticsearch
 
 import (
 	"context"
-	"github.com/olivere/elastic/v7"
 	"reflect"
 	"time"
+
+	"github.com/olivere/elastic/v7"
+	"go.uber.org/zap/zapcore"
 )
 
 var client *elastic.Client
 var mapping = `
 	{
 		"settings":{
-			"number_of_shards":5,
+			"number_of_shards":2,
 			"number_of_replicas":1,
-			"max_result_window": 99999
+			"max_result_window": 100000000
+		},
+		"mappings": {
+			"properties": {
+				"message": {
+					"type": "text"
+				}
+			}
 		}
 	}
 `
@@ -30,6 +39,54 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+type ElasticsearchHook struct {
+	index string
+}
+
+func NewElasticHook(index string) *ElasticsearchHook {
+	return &ElasticsearchHook{index: index}
+}
+
+func ZapEncoderConfig() zapcore.EncoderConfig {
+	return zapcore.EncoderConfig{
+		MessageKey:   "message",
+		LevelKey:     "severity",
+		TimeKey:      "@timestamp",
+		EncodeTime:   ZapTimeEncoder,
+		CallerKey:    "logger",
+		EncodeCaller: zapcore.ShortCallerEncoder,
+	}
+}
+
+const RFC3339Mili = "2006-01-02T15:04:05.999Z07:00"
+
+func ZapTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+	enc.AppendString(t.Format(RFC3339Mili))
+}
+
+func (r *ElasticsearchHook) Write(data []byte) (n int, err error) {
+	index := r.index + "-" + time.Now().Format("2006-01-02")
+	exists := false
+	ctx := context.Background()
+	if exists, err = IndexExists(ctx, index); err != nil {
+		return 0, err
+	}
+	if !exists {
+		err = IndexCreate(ctx, index)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	indexService := client.Index().Index(index).BodyString(string(data))
+	_, err = indexService.Do(ctx)
+	if err != nil {
+		return 0, err
+	}
+	_, err = client.Refresh(index).Do(ctx)
+	return len(data), nil
 }
 
 func IndexCreate(ctx context.Context, index string) error {

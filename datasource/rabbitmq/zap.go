@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Kotodian/gokit/datasource/elasticsearch"
 	"github.com/Kotodian/gokit/id"
 	jsoniter "github.com/json-iterator/go"
-	rotatelogs "github.com/lestrrat/go-file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -96,6 +96,7 @@ type Options struct {
 	MaxAge        int    // MaxAge是根据日期保留旧日志文件的最大天数
 	Queue         string // rabbitmq queue
 	IgnoreFunc    func(map[string]interface{}) bool
+	Index         string // elasticsearch index
 	zap.Config
 }
 
@@ -130,6 +131,7 @@ var (
 	sp                             = string(filepath.Separator)
 	errWS, warnWS, infoWS, debugWS zapcore.WriteSyncer       // IO输出
 	rabbitmqWS                     zapcore.WriteSyncer       // rabbitmq 输出
+	elasticWS                      zapcore.WriteSyncer       // elasticsearch 输出
 	debugConsoleWS                 = zapcore.Lock(os.Stdout) // 控制台标准输出
 	errorConsoleWS                 = zapcore.Lock(os.Stderr)
 )
@@ -183,61 +185,54 @@ func (l *Logger) loadCfg() {
 		l.zapConfig.OutputPaths = []string{"stderr"}
 	}
 	// 默认输出到程序运行目录的logs子目录
-	if l.Opts.LogFileDir == "" {
-		l.Opts.LogFileDir, _ = filepath.Abs(filepath.Dir(filepath.Join(".")))
-		// l.Opts.LogFileDir += sp + "logs" + sp
-	}
-	if l.Opts.AppName == "" {
-		l.Opts.AppName = "app"
-	}
-	if l.Opts.ErrorFileName == "" {
-		l.Opts.ErrorFileName = "error.log"
-	}
-	if l.Opts.WarnFileName == "" {
-		l.Opts.WarnFileName = "warn.log"
-	}
-	if l.Opts.InfoFileName == "" {
-		l.Opts.InfoFileName = "info.log"
-	}
-	if l.Opts.DebugFileName == "" {
-		l.Opts.DebugFileName = "debug.log"
-	}
-	if l.Opts.MaxSize == 0 {
-		l.Opts.MaxSize = 100
-	}
-	if l.Opts.MaxBackups == 0 {
-		l.Opts.MaxBackups = 30
-	}
-	if l.Opts.MaxAge == 0 {
-		l.Opts.MaxAge = 30
-	}
+	// if l.Opts.LogFileDir == "" {
+	// 	l.Opts.LogFileDir, _ = filepath.Abs(filepath.Dir(filepath.Join(".")))
+	// 	// l.Opts.LogFileDir += sp + "logs" + sp
+	// }
+	// if l.Opts.AppName == "" {
+	// 	l.Opts.AppName = "app"
+	// }
+	// if l.Opts.ErrorFileName == "" {
+	// 	l.Opts.ErrorFileName = "error.log"
+	// }
+	// if l.Opts.WarnFileName == "" {
+	// 	l.Opts.WarnFileName = "warn.log"
+	// }
+	// if l.Opts.InfoFileName == "" {
+	// 	l.Opts.InfoFileName = "info.log"
+	// }
+	// if l.Opts.DebugFileName == "" {
+	// 	l.Opts.DebugFileName = "debug.log"
+	// }
+	// if l.Opts.MaxSize == 0 {
+	// 	l.Opts.MaxSize = 100
+	// }
+	// if l.Opts.MaxBackups == 0 {
+	// 	l.Opts.MaxBackups = 30
+	// }
+	// if l.Opts.MaxAge == 0 {
+	// 	l.Opts.MaxAge = 30
+	// }
 }
 
 func (l *Logger) setSyncers() {
-	f := func(fN string) zapcore.WriteSyncer {
-		// 每小时一个文件
-		logf, _ := rotatelogs.New(l.Opts.LogFileDir+sp+l.Opts.AppName+"-%Y-%m-%d.%H"+"."+fN,
-			rotatelogs.WithLinkName(l.Opts.LogFileDir+sp+l.Opts.AppName+"-"+fN),
-			rotatelogs.WithMaxAge(100*24*time.Hour),
-			rotatelogs.WithRotationTime(time.Minute),
-		)
-		return zapcore.AddSync(logf)
-	}
-	errWS = f(l.Opts.ErrorFileName)
-	warnWS = f(l.Opts.WarnFileName)
-	infoWS = f(l.Opts.InfoFileName)
-	debugWS = f(l.Opts.DebugFileName)
 	if l.Opts.Queue != "" {
 		rf := func() zapcore.WriteSyncer {
 			return zapcore.AddSync(NewRabbitmqHook(l.Opts.Queue, l.Opts.AppName, l.Opts.AppVersion, l.Opts.IgnoreFunc))
 		}
 		rabbitmqWS = rf()
 	}
+	if l.Opts.Index != "" {
+		ef := func() zapcore.WriteSyncer {
+			return zapcore.AddSync(elasticsearch.NewElasticHook(l.Opts.Index))
+		}
+		elasticWS = ef()
+	}
 	return
 }
 
 func (l *Logger) cores() zap.Option {
-	fileEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
+	// fileEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
 	consoleEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
 
 	errPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -252,12 +247,13 @@ func (l *Logger) cores() zap.Option {
 	debugPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl == zapcore.DebugLevel && zapcore.DebugLevel-l.zapConfig.Level.Level() > -1
 	})
-	cores := []zapcore.Core{
-		zapcore.NewCore(fileEncoder, errWS, errPriority),
-		zapcore.NewCore(fileEncoder, warnWS, warnPriority),
-		zapcore.NewCore(fileEncoder, infoWS, infoPriority),
-		zapcore.NewCore(fileEncoder, debugWS, debugPriority),
-	}
+	cores := make([]zapcore.Core, 0)
+	// cores := []zapcore.Core{
+	// 	zapcore.NewCore(fileEncoder, errWS, errPriority),
+	// 	zapcore.NewCore(fileEncoder, warnWS, warnPriority),
+	// 	zapcore.NewCore(fileEncoder, infoWS, infoPriority),
+	// 	zapcore.NewCore(fileEncoder, debugWS, debugPriority),
+	// }
 	if l.Opts.Development {
 		cores = append(cores, []zapcore.Core{
 			zapcore.NewCore(consoleEncoder, errorConsoleWS, errPriority),
@@ -277,6 +273,15 @@ func (l *Logger) cores() zap.Option {
 		}...)
 	}
 
+	if l.Opts.Index != "" {
+		cores = append(cores, []zapcore.Core{
+			zapcore.NewCore(l.esEncoder("ERROR"), elasticWS, errPriority),
+			zapcore.NewCore(l.esEncoder("WARN"), elasticWS, warnPriority),
+			zapcore.NewCore(l.esEncoder("INFO"), elasticWS, infoPriority),
+			zapcore.NewCore(l.esEncoder("DEBUG"), elasticWS, debugPriority),
+		}...)
+	}
+
 	return zap.WrapCore(func(c zapcore.Core) zapcore.Core {
 		return zapcore.NewTee(cores...)
 	})
@@ -293,4 +298,15 @@ func timeUnixNano(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 func (l *Logger) defaultFields(ecd zapcore.Encoder) {
 	ecd.AddString("host", l.hostname)
 	ecd.AddString("edition", l.Opts.AppVersion)
+}
+
+func (l *Logger) esDefaultFields(ecd zapcore.Encoder) {
+	ecd.AddString("host", l.hostname)
+}
+
+func (l *Logger) esEncoder(level string) zapcore.Encoder {
+	elasticEncoder := zapcore.NewJSONEncoder(elasticsearch.ZapEncoderConfig())
+	elasticEncoder.AddString("severity", level)
+	l.esDefaultFields(elasticEncoder)
+	return elasticEncoder
 }
