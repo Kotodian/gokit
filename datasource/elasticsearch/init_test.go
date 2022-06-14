@@ -8,10 +8,12 @@ import (
 
 func TestIndexCreate(t *testing.T) {
 	Init()
-	err := IndexCreate(context.Background(), "test2")
+	index := "jx-test-" + time.Now().Format("2006-01-02")
+	_, err := client.CreateIndex(index).Do(context.Background())
 	if err != nil {
 		t.Error(err)
 	}
+
 }
 
 func TestUpdateByQuery(t *testing.T) {

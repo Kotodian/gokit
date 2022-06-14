@@ -67,25 +67,13 @@ func ZapTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 }
 
 func (r *ElasticsearchHook) Write(data []byte) (n int, err error) {
-	index := r.index + "-" + time.Now().Format("2006-01-02")
-	exists := false
 	ctx := context.Background()
-	if exists, err = IndexExists(ctx, index); err != nil {
-		return 0, err
-	}
-	if !exists {
-		err = IndexCreate(ctx, index)
-		if err != nil {
-			return 0, err
-		}
-	}
-
+	index := r.index + "-" + time.Now().Format("2006-01-02")
 	indexService := client.Index().Index(index).BodyString(string(data))
 	_, err = indexService.Do(ctx)
 	if err != nil {
 		return 0, err
 	}
-	_, err = client.Refresh(index).Do(ctx)
 	return len(data), nil
 }
 
