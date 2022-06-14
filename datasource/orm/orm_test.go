@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Kotodian/gokit/datasource"
+	"github.com/Kotodian/protocol/interfaces"
 	"gorm.io/gorm"
 )
 
@@ -137,29 +138,79 @@ func (e *SmallEquipment) AfterUpdate(db *gorm.DB) error {
 func (e *SmallEquipment) AfterFind(db *gorm.DB) error {
 	return nil
 }
+
+type Connector struct {
+	GormModel
+	// 需要设置redis的时候必须要赋值
+	EvseSerial      string `gorm:"column:evse_serial" json:"evse_serial"`
+	EquipmentSerial string `gorm:"column:equipment_sn" json:"equipment_sn"`
+
+	EvseID          datasource.UUID  `gorm:"column:evse_id;not null" json:"evse_id"`           // evse_id
+	EquipmentID     datasource.UUID  `gorm:"column:equipment_id;not null" json:"equipment_id"` // equipment_id
+	ConnectorSerial string           `gorm:"column:serial;type:varchar(6)" json:"serial"`      // 枪序号
+	OrderID         *datasource.UUID `gorm:"column:order_id" json:"order_id"`                  // 当前订单id
+	// RecordID           *datasource.UUID                      `gorm:"column:record_id" json:"record_id"`                     // 当前报告记录id
+	CurrentState  interfaces.KindConnectorState         `gorm:"column:current_state;default:0" json:"current_state"`   // 枪当前状态
+	BeforeState   interfaces.KindConnectorState         `gorm:"column:before_state;default:0" json:"before_state"`     // 之前的状态
+	ChargingState interfaces.KindConnectorChargingState `gorm:"column:charging_state;default:0" json:"charging_state"` // 充电状态
+	ReservationID *int64                                `gorm:"column:reservation_id" json:"reservation_id"`
+	// ConnectorType      int                                   `gorm:"column:category;default:0" json:"category"` // 接口类型
+	// VoltageUpperLimits int                                   `gorm:"column:voltage_upper_limits" json:"voltage_upper_limits"`
+	// VoltageLowerLimits int                                   `gorm:"column:voltage_lower_limits" json:"voltage_lower_limits"`
+	// NationalStandard   int                                   `gorm:"column:national_standard" json:"national_standard"`
+	ParkNo       string                     `gorm:"column:park_no" json:"park_no"`
+	PushInterval int                        `gorm:"-" json:"push_interval"`
+	LastPushTime int64                      `gorm:"-" json:"last_push_time"`
+	OrderState   *interfaces.KindOrderState `gorm:"-" json:"order_state"`
+	StationID    datasource.UUID            `gorm:"-" json:"station_id"`
+}
+
+func (e Connector) TableName() string {
+	return "base_connector"
+}
+
+// Key 缓存的键
+func (e *Connector) Key() string {
+	return ""
+}
+
+// AfterCreate 钩子函数
+func (e *Connector) AfterCreate(db *gorm.DB) error {
+	return nil
+}
+
+func (e *Connector) AfterUpdate(db *gorm.DB) error {
+	return nil
+}
+
+func (e *Connector) AfterFind(db *gorm.DB) error {
+	return nil
+}
+
 func TestSmallGet(t *testing.T) {
 	os.Setenv("DB_HOST", "192.168.0.4")
 	os.Setenv("DB_USER", "root")
 	os.Setenv("DB_PASSWD", "jqcsms@uat123")
 	InitMysqlWithEnvAndDB("jx-csms", nil)
 	SetDB(mysqlDB)
-	equipment := &Equipment{}
-	smallEquipment := &SmallEquipment{}
-	err := SmallGet(db.WithContext(context.Background()), equipment, smallEquipment, "sn = ?", "T1641735211")
-	if err != nil {
-		t.Error(err)
-	}
-	t.Log(smallEquipment.SerialNumber)
+	// equipment := &Equipment{}
+	// smallEquipment := &SmallEquipment{}
+	// err := SmallGet(db.WithContext(context.Background()), equipment, smallEquipment, "sn = ?", "T1641735211")
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+	// t.Log(smallEquipment.SerialNumber)
+	GetByID(db.WithContext(context.Background()), &Connector{}, 296409967734917)
 }
 
-func TestFindInBatch(t *testing.T)  {
+func TestFindInBatch(t *testing.T) {
 	os.Setenv("DB_HOST", "192.168.0.4")
 	os.Setenv("DB_USER", "root")
 	os.Setenv("DB_PASSWD", "jqcsms@uat123")
 	InitMysqlWithEnvAndDB("jx-csms", nil)
 	SetDB(mysqlDB)
 	equipments := make([]*SmallEquipment, 0)
-	err := FindInBatches(db.WithContext(context.Background()), &equipments, 100,func(tx *gorm.DB, batch int) error {
+	err := FindInBatches(db.WithContext(context.Background()), &equipments, 100, func(tx *gorm.DB, batch int) error {
 		for _, v := range equipments {
 			t.Log(v.SerialNumber)
 		}
