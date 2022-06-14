@@ -67,6 +67,7 @@ func NewMysql(dns string, zapLog *zap.Logger) (*gorm.DB, error) {
 	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{
 		QueryFields: true,
 		PrepareStmt: true,
+		SkipDefaultTransaction: true,
 	})
 	if err != nil {
 		return nil, err
