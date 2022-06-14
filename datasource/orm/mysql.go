@@ -2,13 +2,14 @@ package orm
 
 import (
 	"fmt"
-	"go.uber.org/zap"
-	"gorm.io/gorm/logger"
-	"moul.io/zapgorm2"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"go.uber.org/zap"
+	"gorm.io/gorm/logger"
+	"moul.io/zapgorm2"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -65,6 +66,7 @@ func NewMysql(dns string, zapLog *zap.Logger) (*gorm.DB, error) {
 	}
 	db, err := gorm.Open(mysql.Open(dns), &gorm.Config{
 		QueryFields: true,
+		PrepareStmt: true,
 	})
 	if err != nil {
 		return nil, err
