@@ -1,5 +1,12 @@
 package lib
 
+import (
+	"crypto/md5"
+	"fmt"
+	"io"
+	"os"
+)
+
 type Check interface {
 	// Generate 生成校验码
 	Generate([]byte) []byte
@@ -49,4 +56,37 @@ func CheckSum(data []byte) []byte {
 	}
 	h, l := uint8(crc16>>8), uint8(crc16&0xff)
 	return []byte{l, h}
+}
+
+func MD5(data []byte) [16]byte {
+	return md5.Sum(data)
+}
+
+const filechunk = 1024 // 1KB
+
+func MD5Chunck(path string) {
+	file, err := os.Open(path)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer file.Close()
+
+	// calculate the file size
+	// info, _ := file.Stat()
+
+	// filesize := info.Size()
+
+	// blocks := uint64(math.Ceil(float64(filesize) / float64(filechunk)))
+
+	// for i := uint64(0); i < blocks; i++ {
+	hash := md5.New()
+	// blocksize := int(math.Min(filechunk, float64(filesize-int64(i*filechunk))))
+	buf := make([]byte, filechunk)
+	file.Read(buf)
+	io.WriteString(hash, string(buf)) // append into the hash
+	fmt.Printf("length: %d, block checksum is %x\n", len(buf), hash.Sum(nil))
+	// }
+
 }
