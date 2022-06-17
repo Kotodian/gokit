@@ -11,6 +11,7 @@ import (
 )
 
 type Encrypt interface {
+	Type() byte
 	Encode(data []byte, key []byte) ([]byte, error)
 	Decode(data []byte, key []byte) ([]byte, error)
 }
@@ -33,6 +34,10 @@ var (
 
 func NewAESEncrypt(mode AESMode) Encrypt {
 	return &aesEncrypt{mode: mode}
+}
+
+func (a *aesEncrypt) Type() byte {
+	return 0x00
 }
 
 func (a *aesEncrypt) Encode(data []byte, key []byte) ([]byte, error) {
@@ -197,6 +202,10 @@ func TripAES() Encrypt {
 	return &triple{}
 }
 
+func (a *triple) Type() byte {
+	return 0x00
+}
+
 func (t *triple) Encode(data []byte, key []byte) ([]byte, error) {
 	block, err := des.NewTripleDESCipher(key)
 	if err != nil {
@@ -226,6 +235,10 @@ type cbcEncrypt struct {
 
 func NewCBCEncrypt() Encrypt {
 	return &cbcEncrypt{}
+}
+
+func (a *cbcEncrypt) Type() byte {
+	return 0x02
 }
 
 func (a *cbcEncrypt) Encode(data []byte, key []byte) ([]byte, error) {
