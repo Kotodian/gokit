@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/des"
 	"errors"
+
 	"github.com/wumansgy/goEncrypt"
 )
 
@@ -218,4 +219,36 @@ func (t *triple) Decode(data []byte, key []byte) ([]byte, error) {
 	blockMode.CryptBlocks(ctx, data)
 	ctx = PKCS5UnPadding(ctx)
 	return ctx, nil
+}
+
+type cbcEncrypt struct {
+}
+
+func NewCBCEncrypt() Encrypt {
+	return &cbcEncrypt{}
+}
+
+func (a *cbcEncrypt) Encode(data []byte, key []byte) ([]byte, error) {
+	block, err := des.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	blockSize := block.BlockSize()
+	data = PKCS5Padding(data, blockSize)
+	blockMode := cipher.NewCBCEncrypter(block, key)
+	encrypted := make([]byte, len(data))
+	blockMode.CryptBlocks(encrypted, data)
+	return encrypted, nil
+}
+
+func (a *cbcEncrypt) Decode(encrypted []byte, key []byte) ([]byte, error) {
+	block, err := des.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	blockMode := cipher.NewCBCDecrypter(block, key)
+	decrypted := make([]byte, len(encrypted))
+	blockMode.CryptBlocks(decrypted, encrypted)
+	decrypted = PKCS5UnPadding(decrypted)
+	return decrypted, nil
 }
