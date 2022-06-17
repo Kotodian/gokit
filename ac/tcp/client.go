@@ -70,6 +70,8 @@ type Client struct {
 	orderInterval int
 	baseURL       string
 	data          sync.Map
+	// 加密解密方式
+	encrypt lib.Encrypt
 }
 
 func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress string, log *rabbitmq.Logger) lib.ClientInterface {
@@ -436,6 +438,14 @@ func (c *Client) SetCoregw(coregw string) {
 
 func (c *Client) SetEncryptKey(encryptKey string) {
 	c.encryptKey = []byte(encryptKey)
+}
+
+func (c *Client) Encrypt() lib.Encrypt {
+	return c.encrypt
+}
+
+func (c *Client) SetEncrypt(encrypt lib.Encrypt) {
+	c.encrypt = encrypt
 }
 
 func (c *Client) IsClose() bool {

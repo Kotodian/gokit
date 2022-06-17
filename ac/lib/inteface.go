@@ -53,6 +53,10 @@ type ClientInterface interface {
 	SetCoregw(coregw string)
 	// IsClose 该客户端是否关闭
 	IsClose() bool
+	// Encrypt
+	Encrypt() Encrypt
+	// SetEncrypt
+	SetEncrypt(Encrypt)
 	// EncryptKey 加密的公钥
 	EncryptKey() []byte
 	// SetEncryptKey 设置加密的公钥

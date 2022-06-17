@@ -102,6 +102,14 @@ func (c *Client) Send(msg []byte) (err error) {
 	return
 }
 
+func (c *Client) Encrypt() lib.Encrypt {
+	return nil
+}
+
+func (c *Client) SetEncrypt(encrypt lib.Encrypt) {
+
+}
+
 func (c *Client) Close(err error) error {
 	c.once.Do(func() {
 		if err == nil {
