@@ -3,12 +3,13 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"strings"
+
 	"github.com/makasim/amqpextra"
 	"github.com/makasim/amqpextra/consumer"
 	"github.com/makasim/amqpextra/publisher"
 	"github.com/streadway/amqp"
-	"os"
-	"strings"
 )
 
 var dialer *amqpextra.Dialer
@@ -31,6 +32,28 @@ func Init() {
 func Publish(ctx context.Context,
 	key string,
 	headers map[string]interface{}, body interface{}) error {
+	p, err := dialer.Publisher()
+	if err != nil {
+		return err
+	}
+	defer p.Close()
+	bytes, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	return p.Publish(publisher.Message{
+		Context: ctx,
+		Key:     key,
+		Publishing: amqp.Publishing{
+			Headers:     headers,
+			ContentType: "application/json",
+			Body:        bytes,
+		},
+	})
+}
+
+func PublishJSON(ctx context.Context,
+	key string, headers map[string]interface{}, body []byte) error {
 	p, err := dialer.Publisher()
 	if err != nil {
 		return err
