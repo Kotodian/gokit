@@ -265,3 +265,55 @@ func (a *cbcEncrypt) Decode(encrypted []byte, key []byte) ([]byte, error) {
 	decrypted = PKCS5UnPadding(decrypted)
 	return decrypted, nil
 }
+
+type ecbEncypt struct {
+}
+
+func NewECBEncrypt() Encrypt {
+	return &ecbEncypt{}
+}
+
+func (a *ecbEncypt) Type() byte {
+	return 0x03
+}
+
+func (a *ecbEncypt) Encode(data []byte, key []byte) ([]byte, error) {
+	block, err := des.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	bs := block.BlockSize()
+	data = PKCS5Padding(data, bs)
+	if len(data)%bs != 0 {
+		return nil, errors.New("Need a multiple of the blocksize")
+	}
+	ciphertext := make([]byte, len(data))
+	dst := ciphertext
+	for len(data) > 0 {
+		block.Encrypt(dst, data[:bs])
+		data = data[bs:]
+		dst = dst[bs:]
+	}
+	return ciphertext, nil
+}
+
+func (a *ecbEncypt) Decode(data []byte, key []byte) ([]byte, error) {
+	block, err := des.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	bs := block.BlockSize()
+	if len(data)%bs != 0 {
+		return nil, errors.New("input not full blocks")
+	}
+	plaintext := make([]byte, len(data))
+	dst := plaintext
+	for len(data) > 0 {
+		block.Decrypt(dst, data[:bs])
+		data = data[bs:]
+		dst = dst[bs:]
+	}
+	plaintext = PKCS5UnPadding(plaintext)
+	return plaintext, nil
+}
