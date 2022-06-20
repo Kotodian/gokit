@@ -7,9 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
 	"gorm.io/gorm/logger"
-	"moul.io/zapgorm2"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -22,7 +20,7 @@ const (
 
 var mysqlDB *gorm.DB
 
-func InitMysql(dns string, logger *zap.Logger) {
+func InitMysql(dns string, logger logger.Interface) {
 	var err error
 	mysqlDB, err = NewMysql(dns, logger)
 	if err != nil {
@@ -39,7 +37,7 @@ func InitMysql(dns string, logger *zap.Logger) {
 //	}
 //}
 
-func InitMysqlWithEnvAndDB(db string, logger *zap.Logger) {
+func InitMysqlWithEnvAndDB(db string, logger logger.Interface) {
 	user := os.Getenv("DB_USER")
 	passwd := os.Getenv("DB_PASSWD")
 	host := os.Getenv("DB_HOST")
@@ -57,7 +55,7 @@ func GetMysql() *gorm.DB {
 	return mysqlDB
 }
 
-func NewMysql(dns string, zapLog *zap.Logger) (*gorm.DB, error) {
+func NewMysql(dns string, logger logger.Interface) (*gorm.DB, error) {
 	condition := "timeout=60s&parseTime=true&charset=utf8mb4,utf8&loc=Local"
 	if strings.Contains(dns, "?") {
 		dns = dns + "&" + condition
@@ -71,11 +69,12 @@ func NewMysql(dns string, zapLog *zap.Logger) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	if zapLog != nil {
-		db.Logger = zapgorm2.New(zapLog)
-	} else {
-		db.Logger = logger.Default.LogMode(logger.Info)
+	if logger != nil {
+		db.Logger = logger
 	}
+	// } else {
+	// 	db.Logger = logger.Default.LogMode(logger.Info)
+	// }
 	d, _ := db.DB()
 	d.SetConnMaxLifetime(300 * time.Second)
 	d.SetMaxIdleConns(getIntEnv(EnvMaxIdleConns, 100))
