@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -64,7 +63,7 @@ func Init() {
 				if err != nil {
 					return nil, err
 				}
-				c = redis.NewLoggingConn(c, log.Default(), "redis")
+				// c = redis.NewLoggingConn(c, log.Default(), "redis")
 				return c, nil
 			},
 		}
@@ -86,7 +85,7 @@ func Init() {
 						return nil, err
 					}
 				}
-				c = redis.NewLoggingConn(c, log.Default(), "redis")
+				// c = redis.NewLoggingConn(c, log.Default(), "redis")
 				return c, nil
 			},
 		}
