@@ -261,6 +261,11 @@ func (l *Logger) cores() zap.Option {
 			zapcore.NewCore(consoleEncoder, debugConsoleWS, infoPriority),
 			zapcore.NewCore(consoleEncoder, debugConsoleWS, debugPriority),
 		}...)
+	} else {
+		cores = append(cores, []zapcore.Core{
+			zapcore.NewCore(consoleEncoder, errorConsoleWS, errPriority),
+			zapcore.NewCore(consoleEncoder, debugConsoleWS, warnPriority),
+		}...)
 	}
 	if l.Opts.Queue != "" {
 		rabbitmqEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
