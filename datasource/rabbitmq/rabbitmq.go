@@ -59,17 +59,13 @@ func PublishJSON(ctx context.Context,
 		return err
 	}
 	defer p.Close()
-	bytes, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
 	return p.Publish(publisher.Message{
 		Context: ctx,
 		Key:     key,
 		Publishing: amqp.Publishing{
 			Headers:     headers,
 			ContentType: "application/json",
-			Body:        bytes,
+			Body:        body,
 		},
 	})
 }
