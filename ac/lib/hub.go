@@ -185,8 +185,9 @@ func (h *Hub) Run() {
 	})
 
 	g.Go(func(ctx context.Context) (err error) {
-		n := 100
+		n := 10
 		wp := workpool.New(n, n*3).Start()
+		defer wp.Stop()
 		//for i := 0; i < n; i++ {
 		for {
 			select {
