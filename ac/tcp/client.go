@@ -16,7 +16,6 @@ import (
 	"github.com/Kotodian/gokit/datasource/mqtt"
 	"github.com/Kotodian/gokit/datasource/rabbitmq"
 	"github.com/Kotodian/gokit/datasource/redis"
-	"github.com/Kotodian/gokit/workpool"
 	"github.com/Kotodian/protocol/golang/hardware/charger"
 	"github.com/Kotodian/protocol/golang/keys"
 	"github.com/Kotodian/protocol/interfaces"
@@ -203,8 +202,8 @@ func (c *Client) ReplyError(ctx context.Context, err error, desc ...string) {
 
 func (c *Client) SubMQTT() {
 	c.hub.Clients.Store(c.chargeStation.CoreID(), c)
-	wp := workpool.New(1, 5).Start()
-	defer wp.Stop()
+	// wp := workpool.New(1, 5).Start()
+	// defer wp.Stop()
 	for {
 		select {
 		case <-c.close:
@@ -217,60 +216,111 @@ func (c *Client) SubMQTT() {
 			if err := proto.Unmarshal(m.Payload, &apdu); err != nil {
 				break
 			}
-			wp.PushTask(workpool.Task{
-				F: func(w *workpool.WorkPool, args ...interface{}) (flag workpool.Flag) {
-					flag = workpool.FLAG_OK
-					topic := m.Topic
 
-					apdu := args[0].(charger.APDU)
-					trData := &lib.TRData{
-						APDU:  &apdu,
-						Topic: topic,
-					}
-					ctx := context.WithValue(context.TODO(), "client", c)
-					ctx = context.WithValue(ctx, "trData", trData)
-					var msg interface{}
+			func() {
+				topic := m.Topic
+				trData := &lib.TRData{
+					APDU:  &apdu,
+					Topic: topic,
+				}
+				ctx := context.WithValue(context.TODO(), "client", c)
+				ctx = context.WithValue(ctx, "trData", trData)
+				var msg interface{}
 
-					var err error
-					defer func() {
-						//如果没有错误就转发到设备上，否则写日志，回复到平台的错误日志有FromAPDU实现了
-						if err != nil {
-							c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
-							if trData.Ignore == false && (int32(apdu.MessageId)>>7 == 0 || apdu.MessageId == charger.MessageID_ID_MessageError) {
-								if apdu.MessageId != charger.MessageID_ID_MessageError {
-									apdu.MessageId = charger.MessageID_ID_MessageError
-									apdu.Payload, _ = proto.Marshal(&charger.MessageError{
-										Error:       charger.ErrorCode_EC_GenericError,
-										Description: err.Error(),
-									})
-								}
-								apduEncoded, _ := proto.Marshal(&apdu)
-								pubMqttMsg := mqtt.MqttMessage{
-									Topic:    strings.Replace(trData.Topic, c.hub.Hostname, "coregw", 1),
-									Qos:      2,
-									Retained: false,
-									Payload:  apduEncoded,
-								}
-								c.hub.PubMqttMsg <- pubMqttMsg
+				var err error
+				defer func() {
+					//如果没有错误就转发到设备上，否则写日志，回复到平台的错误日志有FromAPDU实现了
+					if err != nil {
+						c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
+						if trData.Ignore == false && (int32(apdu.MessageId)>>7 == 0 || apdu.MessageId == charger.MessageID_ID_MessageError) {
+							if apdu.MessageId != charger.MessageID_ID_MessageError {
+								apdu.MessageId = charger.MessageID_ID_MessageError
+								apdu.Payload, _ = proto.Marshal(&charger.MessageError{
+									Error:       charger.ErrorCode_EC_GenericError,
+									Description: err.Error(),
+								})
 							}
+							apduEncoded, _ := proto.Marshal(&apdu)
+							pubMqttMsg := mqtt.MqttMessage{
+								Topic:    strings.Replace(trData.Topic, c.hub.Hostname, "coregw", 1),
+								Qos:      2,
+								Retained: false,
+								Payload:  apduEncoded,
+							}
+							c.hub.PubMqttMsg <- pubMqttMsg
 						}
-					}()
-					if msg, err = c.hub.TR.FromAPDU(ctx, &apdu); err != nil {
-						return
-					} else if msg == nil {
-						return
 					}
-					if trData.Ignore {
-						return
-					}
-					if apdu.IsRequest() {
-						c.sendCommand(ctx, msg)
-					} else {
-						c.Reply(ctx, msg)
-					}
+				}()
+				if msg, err = c.hub.TR.FromAPDU(ctx, &apdu); err != nil {
 					return
-				}, Args: []interface{}{apdu},
-			})
+				} else if msg == nil {
+					return
+				}
+				if trData.Ignore {
+					return
+				}
+				if apdu.IsRequest() {
+					c.sendCommand(ctx, msg)
+				} else {
+					c.Reply(ctx, msg)
+				}
+				return
+			}()
+
+			// wp.PushTask(workpool.Task{
+			// 	F: func(w *workpool.WorkPool, args ...interface{}) (flag workpool.Flag) {
+			// 		flag = workpool.FLAG_OK
+			// 		topic := m.Topic
+
+			// 		apdu := args[0].(charger.APDU)
+			// 		trData := &lib.TRData{
+			// 			APDU:  &apdu,
+			// 			Topic: topic,
+			// 		}
+			// 		ctx := context.WithValue(context.TODO(), "client", c)
+			// 		ctx = context.WithValue(ctx, "trData", trData)
+			// 		var msg interface{}
+
+			// 		var err error
+			// 		defer func() {
+			// 			//如果没有错误就转发到设备上，否则写日志，回复到平台的错误日志有FromAPDU实现了
+			// 			if err != nil {
+			// 				c.log.Error(err.Error(), zap.String("sn", c.chargeStation.SN()))
+			// 				if trData.Ignore == false && (int32(apdu.MessageId)>>7 == 0 || apdu.MessageId == charger.MessageID_ID_MessageError) {
+			// 					if apdu.MessageId != charger.MessageID_ID_MessageError {
+			// 						apdu.MessageId = charger.MessageID_ID_MessageError
+			// 						apdu.Payload, _ = proto.Marshal(&charger.MessageError{
+			// 							Error:       charger.ErrorCode_EC_GenericError,
+			// 							Description: err.Error(),
+			// 						})
+			// 					}
+			// 					apduEncoded, _ := proto.Marshal(&apdu)
+			// 					pubMqttMsg := mqtt.MqttMessage{
+			// 						Topic:    strings.Replace(trData.Topic, c.hub.Hostname, "coregw", 1),
+			// 						Qos:      2,
+			// 						Retained: false,
+			// 						Payload:  apduEncoded,
+			// 					}
+			// 					c.hub.PubMqttMsg <- pubMqttMsg
+			// 				}
+			// 			}
+			// 		}()
+			// 		if msg, err = c.hub.TR.FromAPDU(ctx, &apdu); err != nil {
+			// 			return
+			// 		} else if msg == nil {
+			// 			return
+			// 		}
+			// 		if trData.Ignore {
+			// 			return
+			// 		}
+			// 		if apdu.IsRequest() {
+			// 			c.sendCommand(ctx, msg)
+			// 		} else {
+			// 			c.Reply(ctx, msg)
+			// 		}
+			// 		return
+			// 	}, Args: []interface{}{apdu},
+			// })
 		}
 	}
 }
