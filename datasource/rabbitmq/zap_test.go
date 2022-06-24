@@ -13,11 +13,11 @@ func TestZapLog(t *testing.T) {
 	elasticsearch.Init()
 	data := &Options{
 		AppName:    "jx-coregw",
-		MaxSize:    30,
-		MaxBackups: 7,
-		MaxAge:     7,
+		// MaxSize:    30,
+		// MaxBackups: 7,
+		// MaxAge:     7,
 		Config:     zap.Config{},
-		Index:      "jx-coregw",
+		// Index:      "jx-coregw",
 	}
 	data.Development = true
 	logger := InitLogger(data)

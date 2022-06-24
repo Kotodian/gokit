@@ -233,7 +233,7 @@ func (l *Logger) setSyncers() {
 
 func (l *Logger) cores() zap.Option {
 	// fileEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
-	consoleEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
+	consoleEncoder := zapcore.NewConsoleEncoder(l.zapConfig.EncoderConfig)
 
 	errPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl > zapcore.WarnLevel && zapcore.WarnLevel-l.zapConfig.Level.Level() > -1
