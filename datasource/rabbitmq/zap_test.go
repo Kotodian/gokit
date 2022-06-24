@@ -28,5 +28,6 @@ func TestZapLog(t *testing.T) {
 		logger.Info(fmt.Sprint("Info log ", i), zap.Any("line", "1231231231"))
 		logger.Info(fmt.Sprint("Info log ", i), zap.Any("line", "1231231231"))
 		logger.Info(fmt.Sprint("Info log ", i), zap.Any("line", "1231231231"))
+		logger.Error("error log")
 	}
 }
