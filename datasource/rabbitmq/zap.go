@@ -178,6 +178,7 @@ func (l *Logger) loadCfg() {
 		l.zapConfig = zap.NewProductionConfig()
 		l.zapConfig.EncoderConfig = NewEncoderConfig()
 	}
+	l.zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	if l.Opts.OutputPaths == nil || len(l.Opts.OutputPaths) == 0 {
 		l.zapConfig.OutputPaths = []string{"stdout"}
 	}
