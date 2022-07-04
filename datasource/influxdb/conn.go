@@ -2,9 +2,10 @@ package influxdb
 
 import (
 	"context"
-	"github.com/influxdata/influxdb-client-go/v2/api"
 	"os"
 	"time"
+
+	"github.com/influxdata/influxdb-client-go/v2/api"
 
 	influxdb "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/silenceper/pool"
@@ -14,12 +15,14 @@ var _pool pool.Pool
 var org string
 var token string
 var url string
+var client influxdb.Client
 
 // Init Deprecated
 func Init() {
 	org = os.Getenv("INFLUXDB_ORG")
 	token = os.Getenv("INFLUXDB_AUTH_TOKEN")
 	url = "http://" + os.Getenv("INFLUXDB_POOL")
+	client = influxdb.NewClient(url, token)
 }
 
 // GetClient Deprecated
@@ -36,8 +39,6 @@ func CloseClient(v interface{}) error {
 }
 
 func WriteAPIBlocking(bucket, measurement string, tags map[string]string, fields map[string]interface{}, ts time.Time) error {
-	client := influxdb.NewClient(url, token)
-	defer client.Close()
 	writeAPI := client.WriteAPIBlocking(org, bucket)
 	p := influxdb.NewPoint(measurement, tags, fields, ts)
 	err := writeAPI.WritePoint(context.Background(), p)
@@ -45,11 +46,6 @@ func WriteAPIBlocking(bucket, measurement string, tags map[string]string, fields
 }
 
 func Query(query string) (*api.QueryTableResult, error) {
-	client, err := GetClient()
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
 	queryAPI := client.QueryAPI(org)
 	result, err := queryAPI.Query(context.Background(), query)
 	if err != nil {
@@ -59,8 +55,6 @@ func Query(query string) (*api.QueryTableResult, error) {
 }
 
 func WriteAPI(bucket, measurement string, tags map[string]string, fields map[string]interface{}, ts time.Time) {
-	client := influxdb.NewClient("http://influxdb:8086", token)
-
 	writeAPI := client.WriteAPI(org, bucket)
 	p := influxdb.NewPoint(measurement, tags, fields, ts)
 	writeAPI.WritePoint(p)
