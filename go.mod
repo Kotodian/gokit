@@ -12,6 +12,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.8.2
 	github.com/json-iterator/go v1.1.12
 	github.com/makasim/amqpextra v0.16.4
+	github.com/nacos-group/nacos-sdk-go/v2 v2.0.3
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/silenceper/pool v1.0.0
 	github.com/sirupsen/logrus v1.8.1
@@ -26,13 +27,25 @@ require (
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 	gorm.io/driver/mysql v1.3.2
 	gorm.io/gorm v1.23.3
-	moul.io/zapgorm2 v1.1.3
 )
 
 require (
-	github.com/Me1onRind/logrotate v0.0.0-20201207055048-cc28c78da981 // indirect
-	github.com/lestrrat/go-strftime v0.0.0-20180220042222-ba3bf9c1d042 // indirect
-	github.com/natefinch/lumberjack v2.0.0+incompatible // indirect
+	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/go-errors/errors v1.0.1 // indirect
+	github.com/golang/mock v1.4.4 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/prometheus/client_golang v1.11.0 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.26.0 // indirect
+	github.com/prometheus/procfs v0.6.0 // indirect
+	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
+	google.golang.org/grpc v1.39.0 // indirect
+	gopkg.in/ini.v1 v1.42.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
 
 require (
@@ -46,10 +59,9 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f
 	github.com/magiconair/properties v1.8.6
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/thinkgos/go-iecp5 v1.2.0

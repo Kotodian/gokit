@@ -178,7 +178,6 @@ func (l *Logger) loadCfg() {
 		l.zapConfig = zap.NewProductionConfig()
 		l.zapConfig.EncoderConfig = NewEncoderConfig()
 	}
-	l.zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	if l.Opts.OutputPaths == nil || len(l.Opts.OutputPaths) == 0 {
 		l.zapConfig.OutputPaths = []string{"stdout"}
 	}
@@ -233,8 +232,7 @@ func (l *Logger) setSyncers() {
 }
 
 func (l *Logger) cores() zap.Option {
-	// fileEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
-	consoleEncoder := zapcore.NewConsoleEncoder(l.zapConfig.EncoderConfig)
+	
 
 	errPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl > zapcore.WarnLevel && zapcore.WarnLevel-l.zapConfig.Level.Level() > -1
@@ -255,6 +253,19 @@ func (l *Logger) cores() zap.Option {
 	// 	zapcore.NewCore(fileEncoder, infoWS, infoPriority),
 	// 	zapcore.NewCore(fileEncoder, debugWS, debugPriority),
 	// }
+	// fileEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
+	if l.Opts.Queue != "" {
+		rabbitmqEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
+		l.defaultFields(rabbitmqEncoder)
+		cores = append(cores, []zapcore.Core{
+			zapcore.NewCore(rabbitmqEncoder, rabbitmqWS, errPriority),
+			zapcore.NewCore(rabbitmqEncoder, rabbitmqWS, warnPriority),
+			zapcore.NewCore(rabbitmqEncoder, rabbitmqWS, infoPriority),
+			zapcore.NewCore(rabbitmqEncoder, rabbitmqWS, debugPriority),
+		}...)
+	}
+	l.zapConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	consoleEncoder := zapcore.NewConsoleEncoder(l.zapConfig.EncoderConfig)
 	if l.Opts.Development {
 		cores = append(cores, []zapcore.Core{
 			zapcore.NewCore(consoleEncoder, errorConsoleWS, errPriority),
@@ -268,16 +279,7 @@ func (l *Logger) cores() zap.Option {
 			zapcore.NewCore(consoleEncoder, debugConsoleWS, warnPriority),
 		}...)
 	}
-	if l.Opts.Queue != "" {
-		rabbitmqEncoder := zapcore.NewJSONEncoder(l.zapConfig.EncoderConfig)
-		l.defaultFields(rabbitmqEncoder)
-		cores = append(cores, []zapcore.Core{
-			zapcore.NewCore(rabbitmqEncoder, rabbitmqWS, errPriority),
-			zapcore.NewCore(rabbitmqEncoder, rabbitmqWS, warnPriority),
-			zapcore.NewCore(rabbitmqEncoder, rabbitmqWS, infoPriority),
-			zapcore.NewCore(rabbitmqEncoder, rabbitmqWS, debugPriority),
-		}...)
-	}
+	
 
 	if l.Opts.Index != "" {
 		cores = append(cores, []zapcore.Core{

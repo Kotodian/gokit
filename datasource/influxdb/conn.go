@@ -23,6 +23,7 @@ func Init() {
 	token = os.Getenv("INFLUXDB_AUTH_TOKEN")
 	url = "http://" + os.Getenv("INFLUXDB_POOL")
 	client = influxdb.NewClient(url, token)
+	client.Options().HTTPOptions()
 }
 
 // GetClient Deprecated
