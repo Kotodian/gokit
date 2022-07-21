@@ -13,6 +13,14 @@ import (
 	"github.com/thinkgos/go-iecp5/asdu"
 )
 
+func IntToBytes(data uint, len int) []byte {
+	bys := make([]byte, len)
+	for i := 0; i < len; i++ {
+		bys[i] = byte(data >> uint(8*i))
+	}
+	return bys
+}
+
 func BytesToInt(bys []byte) uint {
 	var data uint
 	for i := 0; i < len(bys); i++ {

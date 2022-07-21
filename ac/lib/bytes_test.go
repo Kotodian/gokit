@@ -56,7 +56,7 @@ func TestBytesToInt(t *testing.T) {
 	t.Log(i)
 }
 
-// func TestIntToBytes(t *testing.T) {
-// 	b := IntToBytes(1648439200)
-// 	fmt.Println(b)
-// }
+func TestIntToBytes(t *testing.T) {
+	b := IntToBytes(16713477, 3)
+	t.Log(b)
+}
