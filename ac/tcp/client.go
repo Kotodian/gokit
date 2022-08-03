@@ -91,6 +91,7 @@ func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress strin
 		isClose:           false,
 		messageNumber:     0,
 		headerLengthIndex: headerLengthIndex,
+		headerLength:      headerLength,
 	}
 	return client
 }
