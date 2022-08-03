@@ -71,22 +71,26 @@ type Client struct {
 	data          sync.Map
 	// 加密解密方式
 	encrypt lib.Encrypt
+	// 长度索引
+	headerLengthIndex int
+	headerLength      int
 }
 
-func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress string, log *rabbitmq.Logger) lib.ClientInterface {
+func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress string, log *rabbitmq.Logger, headerLengthIndex, headerLength int) lib.ClientInterface {
 	client := &Client{
-		log:           log,
-		hub:           hub,
-		conn:          conn,
-		remoteAddress: remoteAddress,
-		send:          make(chan []byte, 5),
-		mqttMsgCh:     make(chan mqtt.MqttMessage, 5),
-		mqttRegCh:     make(chan mqtt.MqttMessage, 5),
-		close:         make(chan struct{}),
-		keepalive:     keepalive,
-		orderInterval: 30,
-		isClose:       false,
-		messageNumber: 0,
+		log:               log,
+		hub:               hub,
+		conn:              conn,
+		remoteAddress:     remoteAddress,
+		send:              make(chan []byte, 5),
+		mqttMsgCh:         make(chan mqtt.MqttMessage, 5),
+		mqttRegCh:         make(chan mqtt.MqttMessage, 5),
+		close:             make(chan struct{}),
+		keepalive:         keepalive,
+		orderInterval:     30,
+		isClose:           false,
+		messageNumber:     0,
+		headerLengthIndex: headerLengthIndex,
 	}
 	return client
 }
@@ -337,18 +341,29 @@ func (c *Client) ReadPump() {
 		return
 	}
 	reader := bufio.NewReader(c.conn)
-	msg := make([]byte, 256)
+
 	for {
 		if c.conn == nil {
-			break
+			return
 		}
 		err = c.conn.SetReadDeadline(time.Now().Add(readWait))
 		if err != nil {
-			break
+			return
 		}
+		var peek []byte
+		peek, err = reader.Peek(c.headerLengthIndex + 1)
+		if err != nil {
+			return
+		}
+		dataLength := int(peek[c.headerLengthIndex])
+		length := dataLength + c.headerLength
+		if reader.Buffered() < length {
+			continue
+		}
+		msg := make([]byte, dataLength+c.headerLength)
 		_, err = reader.Read(msg)
 		if err != nil {
-			break
+			return
 		}
 		ctx := context.WithValue(context.TODO(), "client", c)
 		go func(ctx context.Context, msg []byte) {
