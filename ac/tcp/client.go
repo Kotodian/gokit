@@ -19,6 +19,7 @@ import (
 	"github.com/Kotodian/protocol/golang/hardware/charger"
 	"github.com/Kotodian/protocol/golang/keys"
 	"github.com/Kotodian/protocol/interfaces"
+	"github.com/bytedance/gopkg/lang/mcache"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 )
@@ -342,7 +343,7 @@ func (c *Client) ReadPump() {
 		return
 	}
 	reader := bufio.NewReader(c.conn)
-
+	
 	for {
 		if c.conn == nil {
 			return
@@ -361,7 +362,8 @@ func (c *Client) ReadPump() {
 		if reader.Buffered() < length {
 			continue
 		}
-		msg := make([]byte, dataLength+c.headerLength)
+		msg := mcache.Malloc(dataLength + c.headerLength)
+		// msg := make([]byte, dataLength+c.headerLength)
 		_, err = reader.Read(msg)
 		if err != nil {
 			return
@@ -377,6 +379,7 @@ func (c *Client) ReadPump() {
 				if r := recover(); r != nil {
 					c.log.Sugar().Errorf("%v", r)
 				}
+				mcache.Free(msg)
 			}()
 
 			if payload, err = c.hub.TR.ToAPDU(ctx, msg); err != nil {
