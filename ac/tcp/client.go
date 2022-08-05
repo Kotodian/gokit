@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
@@ -365,12 +366,12 @@ func (c *Client) ReadPump() {
 		}
 		dataLength := int(peek[c.headerLengthIndex])
 		length := dataLength + c.headerLength
-		if reader.Buffered() < length {
-			continue
-		}
-		msg := mcache.Malloc(dataLength + c.headerLength)
+		// if reader.Buffered() < length {
+		// 	continue
+		// }
+		msg := mcache.Malloc(length)
 		// msg := make([]byte, dataLength+c.headerLength)
-		_, err = reader.Read(msg)
+		_, err = io.ReadFull(reader, msg)
 		if err != nil {
 			return
 		}
