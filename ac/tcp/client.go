@@ -75,9 +75,10 @@ type Client struct {
 	// 长度索引
 	headerLengthIndex int
 	headerLength      int
+	headerStart       byte
 }
 
-func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress string, log *rabbitmq.Logger, headerLengthIndex, headerLength int) lib.ClientInterface {
+func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress string, log *rabbitmq.Logger, headerLengthIndex, headerLength int, headerStart byte) lib.ClientInterface {
 	client := &Client{
 		log:               log,
 		hub:               hub,
@@ -93,6 +94,7 @@ func NewClient(hub *lib.Hub, conn net.Conn, keepalive int64, remoteAddress strin
 		messageNumber:     0,
 		headerLengthIndex: headerLengthIndex,
 		headerLength:      headerLength,
+		headerStart:       headerStart,
 	}
 	return client
 }
@@ -343,7 +345,7 @@ func (c *Client) ReadPump() {
 		return
 	}
 	reader := bufio.NewReader(c.conn)
-	
+
 	for {
 		if c.conn == nil {
 			return
@@ -356,6 +358,10 @@ func (c *Client) ReadPump() {
 		peek, err = reader.Peek(c.headerLengthIndex + 1)
 		if err != nil {
 			return
+		}
+		if peek[0] != c.headerStart {
+			_, _ = reader.Discard(reader.Buffered())
+			continue
 		}
 		dataLength := int(peek[c.headerLengthIndex])
 		length := dataLength + c.headerLength

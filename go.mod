@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/Kotodian/protocol v1.10.4
+	github.com/bytedance/gopkg v0.0.0-20220801033949-48202986124f
 	github.com/didi/gendry v1.7.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/golang/protobuf v1.5.2
@@ -33,7 +34,6 @@ require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
-	github.com/bytedance/gopkg v0.0.0-20220801033949-48202986124f // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/golang/mock v1.4.4 // indirect
