@@ -385,13 +385,22 @@ func (c *Client) ReadPump() {
 		if err != nil {
 			break
 		}
-		_, msg, err = c.conn.ReadMessage()
+		var r io.Reader
+		_, r, err = c.conn.NextReader()
+		// _, msg, err = c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure, websocket.CloseAbnormalClosure) {
 				c.log.Sugar().Errorf("error: %v", err)
 			}
 			break
 		}
+		buffer := bytebufferpool.Get()
+		_, err = buffer.ReadFrom(r)	
+		if err != nil {
+			bytebufferpool.Put(buffer)
+			break
+		}
+		msg = buffer.Bytes()
 
 		if c.debug {
 			fmt.Printf("[%s]received message from %s\n", time.Now().Format("2006-01-02 15:04:05"), c.chargeStation.SN())
@@ -415,6 +424,7 @@ func (c *Client) ReadPump() {
 				if err != nil {
 					c.ReplyError(ctx, err)
 				}
+				bytebufferpool.Put(buffer)
 			}()
 
 			var payload proto.Message
