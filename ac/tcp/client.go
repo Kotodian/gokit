@@ -351,16 +351,13 @@ func (c *Client) ReadPump() {
 		if c.conn == nil {
 			return
 		}
-		err = c.conn.SetReadDeadline(time.Now().Add(readWait))
-		if err != nil {
-			return
-		}
 		var peek []byte
 		peek, err = reader.Peek(c.headerLengthIndex + 1)
 		if err != nil {
 			return
 		}
 		if peek[0] != c.headerStart {
+			c.log.Error("first byte is invalid" + fmt.Sprintf("%X", reader.Buffered()))
 			_, _ = reader.Discard(reader.Buffered())
 			continue
 		}
@@ -372,6 +369,10 @@ func (c *Client) ReadPump() {
 		msg := mcache.Malloc(length)
 		// msg := make([]byte, dataLength+c.headerLength)
 		_, err = io.ReadFull(reader, msg)
+		if err != nil {
+			return
+		}
+		err = c.conn.SetReadDeadline(time.Now().Add(readWait))
 		if err != nil {
 			return
 		}
@@ -430,6 +431,7 @@ func (c *Client) ReadPump() {
 				}
 			}
 		}(ctx, msg)
+
 	}
 }
 
