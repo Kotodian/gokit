@@ -13,3 +13,43 @@ func TestKick(t *testing.T) {
 		return
 	}
 }
+
+func TestAuthorize(t *testing.T) {
+
+}
+
+func TestNotifyReport(t *testing.T) {
+
+}
+
+func TestBootNotification(t *testing.T) {
+
+}
+
+func TestReportChargingProfile(t *testing.T) {
+
+}
+
+func TestLogStatusNotification(t *testing.T) {
+
+}
+
+func TestReservationStatusUpdate(t *testing.T) {
+
+}
+
+func TestTransactionEventEnd(t *testing.T) {
+
+}
+
+func TestTransactionEventEndOffline(t *testing.T) {
+
+}
+
+func TestTransactionEventStart(t *testing.T) {
+
+}
+
+func TestFirmwareStatusNotification(t *testing.T) {
+
+}

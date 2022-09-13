@@ -14,7 +14,6 @@ import (
 	"github.com/Kotodian/gokit/sync/errgroup.v2"
 	"github.com/Kotodian/gokit/workpool"
 	mqttClient "github.com/eclipse/paho.mqtt.golang"
-	"github.com/sirupsen/logrus"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -55,12 +54,12 @@ func NewHub(protocol string, protocolVersion, username string, password string) 
 	//监听MQTT信息
 	hostname, _ := os.Hostname()
 	options := mqtt.NewMQTTOptions(hostname, username, password, func(c mqttClient.Client) {
-		logrus.Info("mqtt connected")
+		// logrus.Info("mqtt connected")
 	}, func(c mqttClient.Client, err error) {
-		logrus.Errorf("disconnect mqtt error, err:%s", err.Error())
+		// logrus.Errorf("disconnect mqtt error, err:%s", err.Error())
 		c.Publish("coregw/disconnect/"+hostname, 2, false, "")
 	}, func(c mqttClient.Client, m mqttClient.Message) {
-		logrus.Warnf("got mqtt unhandled msg:%v", m)
+		// logrus.Warnf("got mqtt unhandled msg:%v", m)
 	}, false)
 	// 设置遗愿消息
 	options = options.SetWill("coregw/disconnect/"+hostname, "", 2, false)
@@ -160,7 +159,7 @@ func (h *Hub) Run() {
 
 			var _client ClientInterface
 			if !ok {
-				logrus.Warnf("chargingStation:%d offline", coreID)
+				fmt.Printf("chargingStation:%d offline", coreID)
 				return
 			} else {
 				_client = c.(ClientInterface)
@@ -203,7 +202,7 @@ func (h *Hub) Run() {
 					)
 					token.WaitTimeout(time.Second * 3)
 					if err := token.Error(); err != nil {
-						logrus.Errorf("pub msg to topic:%s error, %s", m.Topic, err.Error())
+						// logrus.Errorf("pub msg to topic:%s error, %s", m.Topic, err.Error())
 					}
 					return workpool.FLAG_OK
 				})
@@ -223,7 +222,7 @@ func (h *Hub) Run() {
 
 			var _client ClientInterface
 			if !ok {
-				logrus.Warnf("kick client not found, topic:%s", message.Topic())
+				// logrus.Warnf("kick client not found, topic:%s", message.Topic())
 				return
 			} else {
 				_client = c.(ClientInterface)
