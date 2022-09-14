@@ -191,7 +191,7 @@ func LogStatusNotification(clientID string, req *charger.LogStatusNotificationRe
 	return nil
 }
 
-func ReservationStatusUpdate(clientID string, req *charger.ReservationStatusUpdate) error {
+func ReservationStatusUpdate(clientID string, req *charger.ReservationStatusUpdateReq) error {
 	url := coregwUrlPrefix + "/reservationStatusUpdate/" + clientID
 	message, err := sendRequest(url, req, nil)
 	if err != nil {
