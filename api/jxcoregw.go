@@ -134,6 +134,25 @@ func Heartbeat(clientID string, req *charger.HeartbeatReq) error {
 	return nil
 }
 
+func StatusNotification(clientID string, req *charger.StatusNotificationReq) error {
+	url := coregwUrlPrefix + "/statusNotification/" + clientID
+
+	message, err := sendRequest(url, req, nil)
+	if err != nil {
+		return err
+	}
+	resp := &Response{}
+	err = json.Unmarshal(message, resp)
+	if err != nil {
+		return err
+	}
+
+	if resp.Status == 1 {
+		return errors.New(resp.Msg)
+	}
+	return nil
+}
+
 func ReportChargingProfile(clientID string, req *charger.ReportChargingProfilesReq) error {
 	url := coregwUrlPrefix + "/reportChargingProfile/" + clientID
 
