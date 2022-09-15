@@ -24,6 +24,10 @@ const (
 
 var pool *redis.Pool
 
+func Pool() *redis.Pool {
+	return pool
+}
+
 func Init() {
 	addrs := strings.Split(os.Getenv(EnvRedisPool), ",")
 	auth := os.Getenv(EnvReidsAuth)
