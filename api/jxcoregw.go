@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 
@@ -14,6 +13,8 @@ const (
 	prefix = "/ac/v1"
 
 	coregwUrlPrefix = proto + host + prefix
+
+	HostHeader = "JX-AC-HOST"
 )
 
 type KickRequest struct {
@@ -23,267 +24,88 @@ type KickRequest struct {
 }
 
 func Kick(req *KickRequest) error {
-	reqBytes, err := json.Marshal(req)
-	if err != nil {
-		return err
-	}
-	client := NewClient()
-	reader := bytes.NewReader(reqBytes)
-	resp, err := client.Post("http://jx-coregw:8080/ac/v1/kickOffline", defaultContentType, reader)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	return nil
+	url := coregwUrlPrefix + "/kickOffline"
+	_, err := sendRequest(url, req, nil)
+	return err
 }
 
-func Authorize(clientID string, req *charger.AuthorizeReq) error {
+func Authorize(hostname, clientID string, req *charger.AuthorizeReq) error {
 	url := coregwUrlPrefix + "/authorize/" + clientID
-
-	message, err := sendRequest(url, req, nil)
-
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func NotifyReport(clientID string, req *charger.NotifyReportReq) error {
+func NotifyReport(hostname, clientID string, req *charger.NotifyReportReq) error {
 	url := coregwUrlPrefix + "/notifyReport/" + clientID
 
-	message, err := sendRequest(url, req, nil)
-
-	if err != nil {
-		return err
-	}
-
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func DeviceRegistration(clientID string, req *charger.DeviceRegistrationReq) error {
+func DeviceRegistration(hostname, clientID string, req *charger.DeviceRegistrationReq) error {
 	url := coregwUrlPrefix + "/deviceRegistration/" + clientID
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func BootNotification(clientID string, req *charger.BootNotificationReq) error {
+func BootNotification(hostname, clientID string, req *charger.BootNotificationReq) error {
 	url := coregwUrlPrefix + "/bootNotification/" + clientID
-
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func Heartbeat(clientID string, req *charger.HeartbeatReq) error {
+func Heartbeat(hostname, clientID string, req *charger.HeartbeatReq) error {
 	url := coregwUrlPrefix + "/heartbeat/" + clientID
 
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func StatusNotification(clientID string, req *charger.StatusNotificationReq) error {
+func StatusNotification(hostname, clientID string, req *charger.StatusNotificationReq) error {
 	url := coregwUrlPrefix + "/statusNotification/" + clientID
 
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func ReportChargingProfile(clientID string, req *charger.ReportChargingProfilesReq) error {
+func ReportChargingProfile(hostname, clientID string, req *charger.ReportChargingProfilesReq) error {
 	url := coregwUrlPrefix + "/reportChargingProfile/" + clientID
 
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func LogStatusNotification(clientID string, req *charger.LogStatusNotificationReq) error {
+func LogStatusNotification(hostname, clientID string, req *charger.LogStatusNotificationReq) error {
 	url := coregwUrlPrefix + "/logStatusNotification/" + clientID
 
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func ReservationStatusUpdate(clientID string, req *charger.ReservationStatusUpdateReq) error {
+func ReservationStatusUpdate(hostname, clientID string, req *charger.ReservationStatusUpdateReq) error {
 	url := coregwUrlPrefix + "/reservationStatusUpdate/" + clientID
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func TransactionEventEnd(clientID string, req *charger.StopTransactionReq) error {
+func TransactionEventEnd(hostname, clientID string, req *charger.StopTransactionReq) error {
 	url := coregwUrlPrefix + "/transactionEventEnd/" + clientID
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func TransactionEventEndOffline(clientID string, req *charger.TransactionReq) error {
+func TransactionEventEndOffline(hostname, clientID string, req *charger.TransactionReq) error {
 	url := coregwUrlPrefix + "/transactionEventEndOffline/" + clientID
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func TransactionEventStart(clientID string, req *charger.StartTransactionReq) error {
+func TransactionEventStart(hostname, clientID string, req *charger.StartTransactionReq) error {
 	url := coregwUrlPrefix + "/transactionEventStart/" + clientID
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func FirmwareStatusNotification(clientID string, req *charger.FirmwareStatusNotificationReq) error {
+func FirmwareStatusNotification(hostname, clientID string, req *charger.FirmwareStatusNotificationReq) error {
 	url := coregwUrlPrefix + "/firmwareStatusNotification/" + clientID
-	message, err := sendRequest(url, req, nil)
-	if err != nil {
-		return err
-	}
-	resp := &Response{}
-	err = json.Unmarshal(message, resp)
-	if err != nil {
-		return err
-	}
-
-	if resp.Status == 1 {
-		return errors.New(resp.Msg)
-	}
-	return nil
+	return handleRequest(url, hostname, req)
 }
 
-func NotifyEvent(clientID string, req *charger.WarningReq) error {
+func NotifyEvent(hostname, clientID string, req *charger.WarningReq) error {
 	url := coregwUrlPrefix + "/notifyEvent/" + clientID
-	message, err := sendRequest(url, req, nil)
+	return handleRequest(url, hostname, req)
+}
+
+func handleRequest(url, hostname string, req interface{}) error {
+	message, err := sendRequest(url, req, map[string]string{HostHeader: hostname})
 	if err != nil {
 		return err
 	}
