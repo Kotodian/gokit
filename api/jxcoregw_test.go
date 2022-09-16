@@ -60,7 +60,7 @@ func TestBootNotification(t *testing.T) {
 	err := BootNotification(ocppDefaultHost, testCoreID, req)
 	assert.Nil(t, err)
 
-	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID})
+	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID, Host: ocppDefaultHost})
 	assert.Nil(t, err)
 }
 
@@ -72,7 +72,7 @@ func TestHeartbeat(t *testing.T) {
 	err := Heartbeat(ocppDefaultHost, testCoreID, req)
 	assert.Nil(t, err)
 
-	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID})
+	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID, Host: ocppDefaultHost})
 	assert.Nil(t, err)
 
 }
@@ -86,13 +86,13 @@ func TestStatusNotification(t *testing.T) {
 	assert.Nil(t, err)
 	req := &charger.StatusNotificationReq{
 		EvseId:         "1",
-		ConnectorId:    "1",
+		ConnectorId:    "2",
 		ConnectorState: int32(interfaces.KindConnectorStateAvailable),
 	}
 	err = StatusNotification(ocppDefaultHost, testCoreID, req)
 	assert.Nil(t, err)
 
-	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID})
+	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID, Host: ocppDefaultHost})
 	assert.Nil(t, err)
 }
 
@@ -111,7 +111,7 @@ func TestNotifyEvent(t *testing.T) {
 	}
 	err = NotifyEvent(ocppDefaultHost, testCoreID, req)
 	assert.Nil(t, err)
-	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID})
+	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID, Host: ocppDefaultHost})
 	assert.Nil(t, err)
 }
 
@@ -144,7 +144,7 @@ func TestNotifyReport(t *testing.T) {
 	err = NotifyReport(ocppDefaultHost, testCoreID, req)
 
 	assert.Nil(t, err)
-	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID})
+	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID, Host: ocppDefaultHost})
 	assert.Nil(t, err)
 }
 
@@ -223,7 +223,7 @@ func TestTransactionEvent(t *testing.T) {
 	err = TransactionEventEnd(ocppDefaultHost, testCoreID, stopTransactionReq)
 	assert.Nil(t, err)
 
-	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID})
+	err = Kick(&KickRequest{Reason: "websocket关闭连接", CoreID: testCoreID, Host: ocppDefaultHost})
 	assert.Nil(t, err)
 
 }
