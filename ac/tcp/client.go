@@ -126,8 +126,6 @@ func (c *Client) Close(err error) error {
 		c.data = sync.Map{}
 		close(c.send)
 		close(c.close)
-		close(c.mqttRegCh)
-		close(c.mqttMsgCh)
 
 		c.clientOfflineNotifyFunc(err)
 		c.isClose = true

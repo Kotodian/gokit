@@ -291,3 +291,82 @@ func FloatToBytes(f float64, bit int) []byte {
 	decimal := int(f * math.Pow(10, float64(bit)))
 	return Int16ToBytes(decimal)
 }
+
+// type Endpoint struct {
+// 	// parse header
+// 	hu HeaderUnmarshaler
+// 	// parse header
+// 	bu BodyUnmarshaler
+
+// 	hw HeaderMarshaler
+
+// 	bw BodyMarhshaler
+// 	// parse encrypted data and encrypt data
+// 	en map[EncryptType]Encrypt
+// }
+
+type Reader interface {
+	Next(n int) []byte
+}
+
+// type HeaderMarshalerReader interface {
+// 	Reader
+// 	HeaderUnmarshaler
+// }
+
+// func NewHeaderUnmarshaler(body []byte) HeaderUnmarshaler {
+
+// }
+
+// func Unmarshal() {
+
+// }
+
+// type HeaderUnmarshaler interface {
+// 	ReadStart(b byte) int
+// 	ReadLength(b byte) int
+// 	ReadEncrypt(byte) EncryptType
+// }
+
+// type Writer interface {
+// 	Write(b []byte)
+// }
+
+type BodyReaderUnmarshaler interface {
+	Reader
+	ReadInt16(b []byte) int16
+	ReadInt32(b []byte) int32
+	ReadString(b []byte) string
+	ReadDateTime(b []byte) time.Time
+	ReadFloat(b []byte) float64
+}
+
+type BodyUnmarshaler interface {
+	ReadInt16(b []byte) int16
+	ReadInt32(b []byte) int32
+	ReadString(b []byte) string
+	ReadDateTime(b []byte) time.Time
+	ReadFloat(b []byte) float64
+}
+
+// type HeaderMarshaler interface {
+// 	Writer
+// 	WriteStart()
+// 	WriteLength(int)
+// }
+
+// type BodyMarhshaler interface {
+// 	Writer
+// 	WriteInt16(int16)
+// 	WriteInt32(int32)
+// 	WriteString(string)
+// 	WriteDateTime(time.Time)
+// 	WriteFloat(float64, int)
+// }
+
+// type LoginRequest struct {
+// }
+
+// func (r *LoginRequest) Unmarshal(u BodyUnmarshaler) error {
+// 	return nil
+// }
