@@ -27,3 +27,22 @@ func TestWriteAPIBlocking(t *testing.T) {
 		}
 	}
 }
+
+func TestQuery(t *testing.T) {
+	os.Setenv("INFLUXDB_POOL", "10.43.0.15:8086")
+	os.Setenv("INFLUXDB_ORG", "joyson")
+	os.Setenv("INFLUXDB_AUTH_TOKEN", "CwcKwmhdhDL5vPdiKLenll5aOgqT_aPmSSkGzo1nUB5BxdFTXaAkJQRPmfd3Yrf6zoQjmAJ6UQZ8wRXPDO5lfw==")
+	Init()
+
+	result, err := Query(`from(bucket: "jxcsms-runtime")
+  |> range(start: -1y)
+  |> filter(fn: (r) => r["ConnectorId"] == "281536629641989")
+  |> max()`)
+	if err != nil {
+		t.Error(err)
+	} else {
+		for result.Next() {
+			t.Logf("%s: %f", result.Record().Field(), result.Record().Value())
+		}
+	}
+}

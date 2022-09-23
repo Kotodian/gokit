@@ -2,6 +2,8 @@ package influxdb
 
 import (
 	"context"
+	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -23,7 +25,20 @@ func Init() {
 	token = os.Getenv("INFLUXDB_AUTH_TOKEN")
 	url = "http://" + os.Getenv("INFLUXDB_POOL")
 	client = influxdb.NewClient(url, token)
-	client.Options().HTTPOptions()
+	client.Options().SetHTTPClient(&http.Client{
+		Timeout: time.Second * 20,
+		Transport: &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout: 5 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout: 5 * time.Second,
+			MaxIdleConns:        2000,
+			MaxIdleConnsPerHost: 500,
+			IdleConnTimeout:     90 * time.Second,
+		},
+	},
+	)
+
 }
 
 // GetClient Deprecated
