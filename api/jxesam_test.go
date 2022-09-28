@@ -6,6 +6,7 @@ import (
 )
 
 func TestAccessVerify(t *testing.T) {
+	Init()
 	verify, err := AccessVerify(&AccessVerifyRequest{
 		DeviceSerialNumber: "T1641735213",
 		RemoteAddress:      "127.0.0.1",

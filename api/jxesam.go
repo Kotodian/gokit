@@ -1,10 +1,8 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 )
 
 type AccessVerifyRequest struct {
@@ -50,20 +48,13 @@ func AccessVerify(request *AccessVerifyRequest) (*Equipment, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := NewClient()
-	r := bytes.NewReader(body)
 	url := defaultURL + device + verify + defaultVersion + "/accessVerify"
-	resp, err := client.Post(url, defaultContentType, r)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err = ioutil.ReadAll(resp.Body)
+	resp, err := sendPostRequest(url, body, nil)
 	if err != nil {
 		return nil, err
 	}
 	response := &registerStatusResponse{}
-	err = json.Unmarshal(body, &response)
+	err = json.Unmarshal(resp, &response)
 	if err != nil {
 		return nil, err
 	}

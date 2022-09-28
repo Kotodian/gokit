@@ -33,7 +33,7 @@ func Init() {
 		ReadTimeout:         10 * time.Second,
 		WriteTimeout:        10 * time.Second,
 		MaxIdleConnDuration: 60 * time.Second,
-		MaxConnsPerHost:     1000,
+		MaxConnsPerHost:     2000,
 	}
 }
 
