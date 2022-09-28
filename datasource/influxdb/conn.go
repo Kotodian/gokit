@@ -24,20 +24,19 @@ func Init() {
 	org = os.Getenv("INFLUXDB_ORG")
 	token = os.Getenv("INFLUXDB_AUTH_TOKEN")
 	url = "http://" + os.Getenv("INFLUXDB_POOL")
-	client = influxdb.NewClient(url, token)
-	client.Options().SetHTTPClient(&http.Client{
-		Timeout: time.Second * 20,
-		Transport: &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout: 5 * time.Second,
-			}).DialContext,
-			TLSHandshakeTimeout: 5 * time.Second,
-			MaxIdleConns:        2000,
-			MaxIdleConnsPerHost: 500,
-			IdleConnTimeout:     90 * time.Second,
+	client = influxdb.NewClientWithOptions(url, token, influxdb.DefaultOptions().SetHTTPClient(
+		&http.Client{
+			Timeout: time.Second * 20,
+			Transport: &http.Transport{
+				DialContext: (&net.Dialer{
+					Timeout: 5 * time.Second,
+				}).DialContext,
+				MaxIdleConns:        2000,
+				MaxIdleConnsPerHost: 500,
+				IdleConnTimeout:     90 * time.Second,
+			},
 		},
-	},
-	)
+	))
 
 }
 
