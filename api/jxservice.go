@@ -1,9 +1,7 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
-	"io/ioutil"
 
 	"github.com/Kotodian/gokit/datasource"
 )
@@ -21,14 +19,7 @@ func PushInterval(req *PushIntervalRequest) (*PushIntervalResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := NewClient()
-	reader := bytes.NewReader(reqBytes)
-	resp, err := client.Post("http://jx-services:8080/equip/v1/getEquipmentCallerPushOrderInterval", defaultContentType, reader)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := sendPostRequest("http://jx-services:8080/equip/v1/getEquipmentCallerPushOrderInterval", reqBytes, nil)
 	if err != nil {
 		return nil, err
 	}

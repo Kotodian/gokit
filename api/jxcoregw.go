@@ -94,6 +94,11 @@ func TransactionEventStart(hostname, clientID string, req *charger.StartTransact
 	return handleRequest(url, hostname, req)
 }
 
+func TransactionEventUpdate(hostname, clientID string, req *charger.ChargingInfoReq) error {
+	url := coregwUrlPrefix + "/transactionEventUpdate/" + clientID
+	return handleRequest(url, hostname, req)
+}
+
 func FirmwareStatusNotification(hostname, clientID string, req *charger.FirmwareStatusNotificationReq) error {
 	url := coregwUrlPrefix + "/firmwareStatusNotification/" + clientID
 	return handleRequest(url, hostname, req)

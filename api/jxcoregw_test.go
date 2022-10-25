@@ -11,9 +11,11 @@ import (
 )
 
 func TestKick(t *testing.T) {
+	Init()
 	req := &KickRequest{
+		Host: ocppDefaultHost,
 		Reason: "why",
-		CoreID: "T1641735210",
+		CoreID: testCoreID,
 	}
 	err := Kick(req)
 	if err != nil {
@@ -22,7 +24,7 @@ func TestKick(t *testing.T) {
 	}
 }
 
-const testCoreID = "326757047857158"
+const testCoreID = "336379858853894"
 const ocppDefaultHost = "jx-ac-ocpp-cluster-0"
 
 func TestAuthorize(t *testing.T) {
@@ -49,7 +51,7 @@ func TestDeviceRegistration(t *testing.T) {
 func TestBootNotification(t *testing.T) {
 	Init()
 	req := &charger.BootNotificationReq{
-		SerialNumber:    "JX00000007k",
+		SerialNumber:    "T18220000qk",
 		PartNumber:      "NJC0P121B0",
 		VendorId:        "MT01CNJQX0",
 		FirmwareVersion: "0.0.1",
@@ -193,6 +195,31 @@ func TestTransactionEvent(t *testing.T) {
 		ConnectorChargingState: charger.ChargerStatus_CHS_Charging,
 	}
 	err = TransactionEventStart(ocppDefaultHost, testCoreID, req)
+	assert.Nil(t, err)
+
+	err = TransactionEventUpdate(ocppDefaultHost, testCoreID, &charger.ChargingInfoReq{
+		EvseId:      "1",
+		ConnectorId: "1",
+		Timestamp:   time.Now().Unix(),
+		Electricity: 0,
+		CurrentA:    0,
+		CurrentB:    0,
+		CurrentC:    0,
+		VoltageA:    0,
+		VoltageB:    0,
+		VoltageC:    0,
+		Soc:         0,
+		BatteryTemp: 0,
+		Power:       0,
+		RecordId:    transactionId,
+		Tariff: &charger.Tariff{
+			Id:     -1,
+			Valley: 0,
+			Sharp:  0,
+			Flat:   0,
+			Peak:   0,
+		},
+	})
 	assert.Nil(t, err)
 
 	stopTransactionReq := &charger.StopTransactionReq{
