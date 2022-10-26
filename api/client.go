@@ -38,6 +38,7 @@ func Init() {
 			DNSCacheDuration: 1 * time.Hour,
 		}).Dial,
 		MaxIdemponentCallAttempts: 7,
+		MaxConnsPerHost:           5000,
 	}
 }
 
