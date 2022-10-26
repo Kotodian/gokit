@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"time"
 
@@ -19,6 +20,7 @@ func NewClient() *http.Client {
 var headerContentTypeJson = []byte("application/json")
 
 var client *fasthttp.Client
+var defaultDialer = &fasthttp.TCPDialer{Concurrency: 200}
 
 var (
 	ErrBodyIsNil = errors.New("body is nil")
@@ -33,10 +35,16 @@ func Init() {
 		ReadTimeout:         10 * time.Second,
 		WriteTimeout:        10 * time.Second,
 		MaxIdleConnDuration: 10 * time.Second,
-		Dial: (&fasthttp.TCPDialer{
-			Concurrency:      8 * 1024,
-			DNSCacheDuration: 1 * time.Hour,
-		}).Dial,
+		Dial: func(addr string) (net.Conn, error) {
+			idx := 3 // 重试三次
+			for {
+				idx--
+				conn, err := defaultDialer.DialTimeout(addr, 10*time.Second) // tcp连接超时时间10s
+				if err != fasthttp.ErrDialTimeout || idx == 0 {
+					return conn, err
+				}
+			}
+		},
 		MaxIdemponentCallAttempts: 7,
 		MaxConnsPerHost:           5000,
 	}
