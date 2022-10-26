@@ -32,8 +32,12 @@ func Init() {
 	client = &fasthttp.Client{
 		ReadTimeout:         10 * time.Second,
 		WriteTimeout:        10 * time.Second,
-		MaxIdleConnDuration: 60 * time.Second,
-		MaxConnsPerHost:     2000,
+		MaxIdleConnDuration: 10 * time.Second,
+		Dial: (&fasthttp.TCPDialer{
+			Concurrency:      8 * 1024,
+			DNSCacheDuration: 1 * time.Hour,
+		}).Dial,
+		MaxIdemponentCallAttempts: 7,
 	}
 }
 
