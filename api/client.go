@@ -20,7 +20,7 @@ func NewClient() *http.Client {
 var headerContentTypeJson = []byte("application/json")
 
 var client *fasthttp.Client
-var defaultDialer = &fasthttp.TCPDialer{Concurrency: 200}
+var defaultDialer = &fasthttp.TCPDialer{Concurrency: 4 * 1024}
 
 var (
 	ErrBodyIsNil = errors.New("body is nil")
