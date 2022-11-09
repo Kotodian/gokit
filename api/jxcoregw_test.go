@@ -13,7 +13,7 @@ import (
 func TestKick(t *testing.T) {
 	Init()
 	req := &KickRequest{
-		Host: ocppDefaultHost,
+		Host:   ocppDefaultHost,
 		Reason: "why",
 		CoreID: testCoreID,
 	}
@@ -24,7 +24,7 @@ func TestKick(t *testing.T) {
 	}
 }
 
-const testCoreID = "336379858853894"
+const testCoreID = "336379858853895"
 const ocppDefaultHost = "jx-ac-ocpp-cluster-0"
 
 func TestAuthorize(t *testing.T) {
@@ -34,7 +34,7 @@ func TestAuthorize(t *testing.T) {
 func TestDeviceRegistration(t *testing.T) {
 	Init()
 	req := &charger.DeviceRegistrationReq{
-		SerialNumber:    "JX00000007k",
+		SerialNumber:    "T18230000qk",
 		PartNumber:      "NJC0P121B0",
 		VendorId:        "MT01CNJQX0",
 		FirmwareVersion: "0.0.1",
