@@ -282,14 +282,14 @@ func ReserveBytes(b []byte) []byte {
 }
 
 func BytesToFloat(b []byte, bit int) float64 {
-	decimal := BytesToInt16(b)
+	decimal := BytesToInt(b)
 	pow := math.Pow(10, float64(bit))
 	return float64(decimal) / pow
 }
 
-func FloatToBytes(f float64, bit int) []byte {
-	decimal := int(f * math.Pow(10, float64(bit)))
-	return Int16ToBytes(decimal)
+func FloatToBytes(f float64, length, bit int) []byte {
+	decimal := uint(f * math.Pow(10, float64(bit)))
+	return IntToBytes(decimal, length)
 }
 
 // type Endpoint struct {

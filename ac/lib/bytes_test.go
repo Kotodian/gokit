@@ -47,7 +47,7 @@ func TestBytesToFloat(t *testing.T) {
 }
 
 func TestFloatToBytes(t *testing.T) {
-	b := FloatToBytes(1.23, 2)
+	b := FloatToBytes(700.23, 4, 2)
 	t.Logf("%X\n", b)
 }
 
