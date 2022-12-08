@@ -10,7 +10,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.5.0
-	github.com/influxdata/influxdb-client-go/v2 v2.8.2
+	github.com/influxdata/influxdb-client-go/v2 v2.12.1
 	github.com/json-iterator/go v1.1.12
 	github.com/makasim/amqpextra v0.16.4
 	github.com/nacos-group/nacos-sdk-go/v2 v2.0.3
@@ -34,9 +34,11 @@ require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/golang/mock v1.4.4 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
@@ -85,5 +87,5 @@ require (
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
