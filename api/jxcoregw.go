@@ -109,9 +109,36 @@ func NotifyEvent(hostname, clientID string, req *charger.WarningReq) error {
 	return handleRequest(url, hostname, req)
 }
 
-func QRCode(hostname, clientID string, req *charger.QRCodeReq) error {
+type QRCodeResponse struct {
+	Response
+	QRCode string `json:"qrCode"`
+}
+
+func QRCode(hostname, clientID string, req *charger.QRCodeReq) (string, error) {
 	url := coregwUrlPrefix + "/qrCode/" + clientID
-	return handleRequest(url, hostname, req)
+	resp := &QRCodeResponse{}
+	err := handleRequestWithResponse(url, hostname, req, resp)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.Status == 1 {
+		return "", errors.New(resp.Msg)
+	}
+	return resp.QRCode, nil
+}
+
+func handleRequestWithResponse(url, hostname string, req, resp interface{}) error {
+	message, err := sendRequest(url, req, map[string]string{HostHeader: hostname})
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(message, resp)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func handleRequest(url, hostname string, req interface{}) error {
