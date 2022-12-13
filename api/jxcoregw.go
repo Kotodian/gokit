@@ -109,6 +109,11 @@ func NotifyEvent(hostname, clientID string, req *charger.WarningReq) error {
 	return handleRequest(url, hostname, req)
 }
 
+func QRCode(hostname, clientID string, req *charger.QRCodeReq) error {
+	url := coregwUrlPrefix + "/qrCode/" + clientID
+	return handleRequest(url, hostname, req)
+}
+
 func handleRequest(url, hostname string, req interface{}) error {
 	message, err := sendRequest(url, req, map[string]string{HostHeader: hostname})
 	if err != nil {
