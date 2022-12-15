@@ -1,6 +1,10 @@
 package api
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestPushInterval(t *testing.T) {
 	Init()
@@ -10,4 +14,16 @@ func TestPushInterval(t *testing.T) {
 	} else {
 		t.Log(pushIntervalResponse)
 	}
+}
+
+func TestServiceQRCode(t *testing.T) {
+	Init()
+	qrCode, err := ServiceQRCode(&ServiceQRCodeRequest{
+		ConnectorId: 363981844624133,
+	})
+	t.Log(qrCode)
+	assert.Nil(t, err)
+	assert.Condition(t, func() (success bool) {
+		return len(qrCode) > 0
+	})
 }
