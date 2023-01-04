@@ -3,7 +3,7 @@ module github.com/Kotodian/gokit
 go 1.18
 
 require (
-	github.com/Kotodian/protocol v1.10.39
+	github.com/Kotodian/protocol v1.10.40
 	github.com/bytedance/gopkg v0.0.0-20220801033949-48202986124f
 	github.com/didi/gendry v1.7.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
