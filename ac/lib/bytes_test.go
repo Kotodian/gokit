@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseCP56Time2a(t *testing.T) {
@@ -59,4 +61,14 @@ func TestBytesToInt(t *testing.T) {
 func TestIntToBytes(t *testing.T) {
 	b := IntToBytes(16713477, 3)
 	t.Log(b)
+}
+
+func TestFloatToInt(t *testing.T) {
+	i := FloatToInt(700.23, 2)
+	assert.Equal(t, 70023, i)
+}
+
+func TestIntToFloat(t *testing.T) {
+	f := IntToFloat(70023, 2)
+	assert.Equal(t, 700.23, f)
 }

@@ -287,9 +287,18 @@ func BytesToFloat(b []byte, bit int) float64 {
 	return float64(decimal) / pow
 }
 
+func IntToFloat(i int, bit int) float64 {
+	pow := math.Pow(10, float64(bit))
+	return float64(i) / pow
+}
+
 func FloatToBytes(f float64, length, bit int) []byte {
 	decimal := uint(f * math.Pow(10, float64(bit)))
 	return IntToBytes(decimal, length)
+}
+
+func FloatToInt(f float64, bit int) int {
+	return int(f * math.Pow(10, float64(bit)))
 }
 
 // type Endpoint struct {

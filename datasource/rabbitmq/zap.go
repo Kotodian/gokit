@@ -65,9 +65,9 @@ func (r *rabbitmqHook) push(data []byte) (err error) {
 func NewEncoderConfig() zapcore.EncoderConfig {
 	return zapcore.EncoderConfig{
 		// Keys can be anything except the empty string.
-		TimeKey:        "date_time",
-		LevelKey:       "level",
-		NameKey:        "name",
+		TimeKey:  "date_time",
+		LevelKey: "level",
+		NameKey:  "name",
 		// CallerKey:      "caller",
 		MessageKey:     "message",
 		StacktraceKey:  "caller",
@@ -232,7 +232,6 @@ func (l *Logger) setSyncers() {
 }
 
 func (l *Logger) cores() zap.Option {
-	
 
 	errPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 		return lvl > zapcore.WarnLevel && zapcore.WarnLevel-l.zapConfig.Level.Level() > -1
@@ -279,7 +278,6 @@ func (l *Logger) cores() zap.Option {
 			zapcore.NewCore(consoleEncoder, debugConsoleWS, warnPriority),
 		}...)
 	}
-	
 
 	if l.Opts.Index != "" {
 		cores = append(cores, []zapcore.Core{
