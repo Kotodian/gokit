@@ -69,6 +69,6 @@ func TestFloatToInt(t *testing.T) {
 }
 
 func TestIntToFloat(t *testing.T) {
-	f := IntToFloat(70023, 2)
-	assert.Equal(t, 700.23, f)
+	f := IntToFloat(70023, 4)
+	assert.Equal(t, 7.0023, f)
 }
