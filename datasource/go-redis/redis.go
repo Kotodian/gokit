@@ -17,6 +17,7 @@ const (
 	EnvMaxActiveConns = "REDIS_MAX_ACTIVE_CONNS"
 	EnvRedisPool      = "REDIS_POOL"
 	EnvReidsAuth      = "REDIS_AUTH"
+	EnvRedisMaster    = "REDIS_MASTER"
 )
 
 const (
@@ -36,8 +37,12 @@ func Init() {
 		return
 	}
 	if len(addrs) > 1 {
+		master := os.Getenv(EnvRedisMaster)
+		if len(master) == 0 {
+			master = "mymaster"
+		}
 		opts := &redis.FailoverOptions{
-			MasterName:     "mymaster",
+			MasterName:     master,
 			SentinelAddrs:  addrs,
 			RouteByLatency: true,
 		}
