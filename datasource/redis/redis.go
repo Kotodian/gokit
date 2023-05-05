@@ -20,6 +20,7 @@ const (
 	EnvMaxActiveConns = "REDIS_MAX_ACTIVE_CONNS"
 	EnvRedisPool      = "REDIS_POOL"
 	EnvReidsAuth      = "REDIS_AUTH"
+	EnvRedisMaster    = "REDIS_MASTER"
 )
 
 var pool *redis.Pool
@@ -58,9 +59,13 @@ func Init() {
 			},
 		}
 	} else {
+		master := os.Getenv(EnvRedisMaster)
+		if len(master) == 0 {
+			master = "mymaster"
+		}
 		sntnl := &sentinel.Sentinel{
 			Addrs:      addrs,
-			MasterName: "mymaster",
+			MasterName: master,
 			Dial: func(addr string) (redis.Conn, error) {
 				timeout := 500 * time.Millisecond
 				c, err := redis.DialTimeout("tcp", addr, timeout, timeout, timeout)
