@@ -36,20 +36,21 @@ type Equipment struct {
 
 const defaultURL = "http://jx-esam:8080"
 
-//const defaultURL = "http://10.43.0.51:8080"
+// const defaultURL = "http://10.43.0.51:8080"
 const device = "/device"
 const defaultContentType = "application/json"
 const defaultVersion = "/v1"
 const verify = "/verify"
 
 // AccessVerify 设备接入校验接口
-func AccessVerify(request *AccessVerifyRequest) (*Equipment, error) {
+func AccessVerify(ticket string, request *AccessVerifyRequest) (*Equipment, error) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
+	header := map[string]string{"ServiceInternalTickets": ticket}
 	url := defaultURL + device + verify + defaultVersion + "/accessVerify"
-	resp, err := sendPostRequest(url, body, nil)
+	resp, err := sendPostRequest(url, body, header)
 	if err != nil {
 		return nil, err
 	}
