@@ -49,7 +49,7 @@ func AccessVerify(ticket string, request *AccessVerifyRequest) (*Equipment, erro
 		return nil, err
 	}
 	header := map[string]string{"ServiceInternalTickets": ticket}
-	url := defaultURL + device + verify + defaultVersion + "/accessVerify"
+	url := defaultURL + device + verify
 	resp, err := sendPostRequest(url, body, header)
 	if err != nil {
 		return nil, err

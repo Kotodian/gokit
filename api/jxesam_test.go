@@ -7,7 +7,7 @@ import (
 
 func TestAccessVerify(t *testing.T) {
 	Init()
-	verify, err := AccessVerify("#YPD?%&Wj!,3hiG5YX1zq1", &AccessVerifyRequest{
+	verify, err := AccessVerify("lYMFB!X#87,7woq?$C#W~z", &AccessVerifyRequest{
 		DeviceSerialNumber: "T1641735213",
 		RemoteAddress:      "127.0.0.1",
 		RequestPort:        "32887",
