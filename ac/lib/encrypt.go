@@ -6,8 +6,6 @@ import (
 	"crypto/cipher"
 	"crypto/des"
 	"errors"
-
-	"github.com/wumansgy/goEncrypt"
 )
 
 type Encrypt interface {
@@ -126,17 +124,6 @@ func (a *aesEncrypt) pkcs5Padding(ciphertext []byte, blockSize int) []byte {
 	return append(ciphertext, padtext...)
 }
 
-type eccEncrypt struct {
-}
-
-func (e *eccEncrypt) Encode(data []byte, publicKey []byte) ([]byte, error) {
-	return goEncrypt.EccEncrypt(data, publicKey)
-}
-
-func (e *eccEncrypt) Decode(encrypted []byte, privateKey []byte) ([]byte, error) {
-	return goEncrypt.EccDecrypt(encrypted, privateKey)
-}
-
 type rsaEncrypt struct {
 }
 
@@ -148,21 +135,21 @@ func (r *rsaEncrypt) Decode(data []byte, key []byte) ([]byte, error) {
 	panic("implement me")
 }
 
-//@brief:填充明文
+// @brief:填充明文
 func PKCS5Padding(plaintext []byte, blockSize int) []byte {
 	padding := blockSize - len(plaintext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(plaintext, padtext...)
 }
 
-//@brief:去除填充数据
+// @brief:去除填充数据
 func PKCS5UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
 	return origData[:(length - unpadding)]
 }
 
-//@brief:AES加密
+// @brief:AES加密
 func AesEncrypt(origData, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -178,7 +165,7 @@ func AesEncrypt(origData, key []byte) ([]byte, error) {
 	return crypted, nil
 }
 
-//@brief:AES解密
+// @brief:AES解密
 func AesDecrypt(crypted, key []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {

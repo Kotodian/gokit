@@ -8,7 +8,6 @@ require (
 	github.com/bytedance/gopkg v0.0.0-20230512060433-7f5f1dee0b1e
 	github.com/didi/gendry v1.8.0
 	github.com/eclipse/paho.mqtt.golang v1.4.2
-	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang/protobuf v1.5.3
 	github.com/gomodule/redigo v1.8.9
 	github.com/gorilla/websocket v1.5.0
@@ -18,9 +17,9 @@ require (
 	github.com/makasim/amqpextra v1.2.1
 	github.com/nacos-group/nacos-sdk-go/v2 v2.2.1
 	github.com/olivere/elastic/v7 v7.0.32
+	github.com/rabbitmq/amqp091-go v1.5.0
 	github.com/redis/go-redis/v9 v9.0.4
 	github.com/silenceper/pool v1.0.0
-	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.8.2
 	github.com/thinkgos/go-iecp5 v1.2.1
 	github.com/tidwall/gjson v1.14.4
@@ -65,7 +64,6 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/rabbitmq/amqp091-go v1.5.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect

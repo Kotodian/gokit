@@ -9,7 +9,7 @@ import (
 	"github.com/makasim/amqpextra"
 	"github.com/makasim/amqpextra/consumer"
 	"github.com/makasim/amqpextra/publisher"
-	"github.com/streadway/amqp"
+	"github.com/rabbitmq/amqp091-go"
 )
 
 var dialer *amqpextra.Dialer
@@ -44,7 +44,7 @@ func Publish(ctx context.Context,
 	return p.Publish(publisher.Message{
 		Context: ctx,
 		Key:     key,
-		Publishing: amqp.Publishing{
+		Publishing: amqp091.Publishing{
 			Headers:     headers,
 			ContentType: "application/json",
 			Body:        bytes,
@@ -57,7 +57,7 @@ func PublishJSON(ctx context.Context,
 	return p.Publish(publisher.Message{
 		Context: ctx,
 		Key:     key,
-		Publishing: amqp.Publishing{
+		Publishing: amqp091.Publishing{
 			Headers:     headers,
 			ContentType: "application/json",
 			Body:        body,
@@ -65,7 +65,7 @@ func PublishJSON(ctx context.Context,
 	})
 }
 
-func Consume(ctx context.Context, queue string, handler func(ctx context.Context, msg amqp.Delivery) interface{}) error {
+func Consume(ctx context.Context, queue string, handler func(ctx context.Context, msg amqp091.Delivery) interface{}) error {
 	h := consumer.HandlerFunc(handler)
 	_, err := dialer.Consumer(
 		consumer.WithContext(ctx),
