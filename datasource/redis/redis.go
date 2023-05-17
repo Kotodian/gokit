@@ -21,6 +21,7 @@ const (
 	EnvRedisPool      = "REDIS_POOL"
 	EnvReidsAuth      = "REDIS_AUTH"
 	EnvRedisMaster    = "REDIS_MASTER"
+	EnvRedisDB        = "REDIS_DB"
 )
 
 var pool *redis.Pool
@@ -32,6 +33,15 @@ func Pool() *redis.Pool {
 func Init() {
 	addrs := strings.Split(os.Getenv(EnvRedisPool), ",")
 	auth := os.Getenv(EnvReidsAuth)
+	db := int64(0)
+
+	if redisDB := os.Getenv(EnvRedisDB); len(redisDB) > 0 {
+		var err error
+		db, err = strconv.ParseInt(redisDB, 10, 64)
+		if err != nil {
+			panic(err)
+		}
+	}
 	if len(addrs) == 0 {
 		return
 	}
@@ -44,6 +54,7 @@ func Init() {
 				conn, err := redis.Dial("tcp", addrs[0],
 					redis.DialConnectTimeout(time.Second),
 					redis.DialWriteTimeout(3*time.Second),
+					redis.DialDatabase(int(db)),
 				)
 				if err != nil {
 					return nil, err
@@ -67,8 +78,11 @@ func Init() {
 			Addrs:      addrs,
 			MasterName: master,
 			Dial: func(addr string) (redis.Conn, error) {
-				timeout := 500 * time.Millisecond
-				c, err := redis.DialTimeout("tcp", addr, timeout, timeout, timeout)
+				c, err := redis.Dial("tcp", addr,
+					redis.DialConnectTimeout(time.Second),
+					redis.DialWriteTimeout(3*time.Second),
+					// redis.DialDatabase(int(db)),
+				)
 				if err != nil {
 					return nil, err
 				}
@@ -84,7 +98,11 @@ func Init() {
 				if err != nil {
 					return nil, err
 				}
-				c, err := redis.Dial("tcp", addr)
+				c, err := redis.Dial("tcp", addr,
+					redis.DialConnectTimeout(time.Second),
+					redis.DialWriteTimeout(3*time.Second),
+					redis.DialDatabase(int(db)),
+				)
 				if err != nil {
 					return nil, err
 				}
@@ -94,7 +112,6 @@ func Init() {
 						return nil, err
 					}
 				}
-				// c = redis.NewLoggingConn(c, log.Default(), "redis")
 				return c, nil
 			},
 		}

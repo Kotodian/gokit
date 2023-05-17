@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
+	redis "github.com/go-redis/redis/v8"
+
 	"github.com/Kotodian/gokit/retry"
 	"github.com/Kotodian/gokit/retry/strategy"
-	redis "github.com/go-redis/redis/v8"
 )
 
 const (
@@ -18,6 +20,7 @@ const (
 	EnvRedisPool      = "REDIS_POOL"
 	EnvReidsAuth      = "REDIS_AUTH"
 	EnvRedisMaster    = "REDIS_MASTER"
+	EnvRedisDB        = "REDIS_DB"
 )
 
 const (
@@ -32,9 +35,18 @@ func Redis() redis.Cmdable {
 
 func Init() {
 	addrs := strings.Split(os.Getenv(EnvRedisPool), ",")
-	auth := os.Getenv(EnvReidsAuth)
 	if len(addrs) == 0 {
 		return
+	}
+	auth := os.Getenv(EnvReidsAuth)
+	db := int64(0)
+
+	if redisDB := os.Getenv(EnvRedisDB); len(redisDB) > 0 {
+		var err error
+		db, err = strconv.ParseInt(redisDB, 10, 64)
+		if err != nil {
+			panic(err)
+		}
 	}
 	if len(addrs) > 1 {
 		master := os.Getenv(EnvRedisMaster)
@@ -45,6 +57,7 @@ func Init() {
 			MasterName:     master,
 			SentinelAddrs:  addrs,
 			RouteByLatency: true,
+			DB:             int(db),
 		}
 		if len(auth) > 0 {
 			opts.Password = auth
@@ -53,6 +66,7 @@ func Init() {
 	} else {
 		opts := &redis.Options{
 			Addr: addrs[0],
+			DB:   int(db),
 		}
 		if len(auth) > 0 {
 			opts.Password = auth
