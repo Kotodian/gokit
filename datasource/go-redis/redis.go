@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	redis "github.com/go-redis/redis/v8"
+	redis "github.com/redis/go-redis/v9"
 
 	"github.com/Kotodian/gokit/retry"
 	"github.com/Kotodian/gokit/retry/strategy"
@@ -27,9 +27,10 @@ const (
 	Forever = 0 * time.Second
 )
 
-var rdb redis.Cmdable
+var rdb redis.UniversalClient
+var db int64
 
-func Redis() redis.Cmdable {
+func Redis() redis.UniversalClient {
 	return rdb
 }
 
@@ -38,8 +39,8 @@ func Init() {
 	if len(addrs) == 0 {
 		return
 	}
+
 	auth := os.Getenv(EnvReidsAuth)
-	db := int64(0)
 
 	if redisDB := os.Getenv(EnvRedisDB); len(redisDB) > 0 {
 		var err error
@@ -48,31 +49,20 @@ func Init() {
 			panic(err)
 		}
 	}
+	opts := redis.UniversalOptions{
+		Addrs:    addrs,
+		Password: auth,
+		DB:       int(db),
+	}
+	master := os.Getenv(EnvRedisMaster)
 	if len(addrs) > 1 {
-		master := os.Getenv(EnvRedisMaster)
 		if len(master) == 0 {
 			master = "mymaster"
 		}
-		opts := &redis.FailoverOptions{
-			MasterName:     master,
-			SentinelAddrs:  addrs,
-			RouteByLatency: true,
-			DB:             int(db),
-		}
-		if len(auth) > 0 {
-			opts.Password = auth
-		}
-		rdb = redis.NewFailoverClusterClient(opts)
-	} else {
-		opts := &redis.Options{
-			Addr: addrs[0],
-			DB:   int(db),
-		}
-		if len(auth) > 0 {
-			opts.Password = auth
-		}
-		rdb = redis.NewClient(opts)
+		opts.MasterName = master
 	}
+
+	rdb = redis.NewUniversalClient(&opts)
 }
 
 type SetFunc func(key string, val interface{}, keepalive int64)

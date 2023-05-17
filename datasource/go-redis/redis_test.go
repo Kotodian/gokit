@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Kotodian/gokit/datasource"
 )
 
@@ -65,12 +67,13 @@ type Model struct {
 }
 
 func TestSet(t *testing.T) {
-	os.Setenv("REDIS_POOL", "redis-sentinel-0.redis-sentinel-headless.default:26379,redis-sentinel-1.redis-sentinel-headless.default:26379,redis-sentinel-2.redis-sentinel-headless.default:26379")
-	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
+	os.Setenv("REDIS_POOL", "192.168.0.101:26379,192.168.0.103:26379,192.168.0.107:26379")
+	os.Setenv("REDIS_AUTH", "Q1RjaGluYUBAMjAyMw==")
+	os.Setenv("REDIS_MASTER", "nfcore_master")
+	os.Setenv("REDIS_DB", "1")
 	Init()
 	ctx := context.Background()
-	err := rdb.Set(ctx, "foo", "bar", 10*time.Second).Err()
-	if err != nil {
-		t.Error(err)
-	}
+	err := Redis().Set(ctx, "foo5", "bar2", 0*time.Second).Err()
+	assert.Nil(t, err)
+
 }
