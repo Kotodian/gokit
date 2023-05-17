@@ -14,7 +14,7 @@ var _workerIdList []int32 // 当前已注册的WorkerId
 var _loopCount = 0        // 循环数量
 var _lifeIndex = -1       // WorkerId本地生命时序（本地多次注册时，生命时序会不同）
 
-var _WorkerIdLifeTimeSeconds = 42    // IdGen:WorkerId:Value:xx 的值在 redis 中的有效期（单位秒，最好是3的整数倍）
+var _WorkerIdLifeTimeSeconds = 300   // IdGen:WorkerId:Value:xx 的值在 redis 中的有效期（单位秒，最好是3的整数倍）
 var _MaxLoopCount = 10               // 最大循环次数（无可用WorkerId时循环查找）
 var _SleepMillisecondEveryLoop = 200 // 每次循环后，暂停时间
 var _MaxWorkerId int32 = 0           // 最大WorkerId值，超过此值从0开始
