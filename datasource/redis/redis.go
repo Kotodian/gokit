@@ -81,7 +81,7 @@ func Init() {
 				c, err := redis.Dial("tcp", addr,
 					redis.DialConnectTimeout(time.Second),
 					redis.DialWriteTimeout(3*time.Second),
-					// redis.DialDatabase(int(db)),
+					redis.DialDatabase(int(db)),
 				)
 				if err != nil {
 					return nil, err
