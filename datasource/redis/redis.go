@@ -82,6 +82,9 @@ func Init() {
 			},
 		}
 		pool = &redis.Pool{
+			MaxActive:   getIntEnv(EnvMaxActiveConns, 10000),
+			MaxIdle:     getIntEnv(EnvMaxIdleConns, 10),
+			IdleTimeout: 300 * time.Second,
 			Dial: func() (redis.Conn, error) {
 				masterAddr, err := sntnl.MasterAddr()
 				if err != nil {
