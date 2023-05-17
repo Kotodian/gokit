@@ -94,14 +94,13 @@ type Model struct {
 }
 
 func TestHGet(t *testing.T) {
-	os.Setenv("REDIS_POOL", "redis-sentinel-0.redis-sentinel-headless.default:26379,redis-sentinel-1.redis-sentinel-headless.default:26379,redis-sentinel-2.redis-sentinel-headless.default:26379")
-	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
+	os.Setenv("REDIS_POOL", "192.168.0.101:26379,192.168.0.103:26379,192.168.0.107:26379")
+	os.Setenv("REDIS_AUTH", "Q1RjaGluYUBAMjAyMw==")
+	os.Setenv("REDIS_MASTER", "nfcore_master")
 	os.Setenv("REDIS_DB", "1")
 	Init()
 	_, err := GetRedis().Do("set", "foo", "bar")
-	if err != nil {
-		t.Error(err)
-	}
+	assert.Nil(t, err)
 	// m := &Model{}
 	// err := HGet(redisConn, "equip:manufacturer:list", "JQXNY", m)
 	// if err != nil {
