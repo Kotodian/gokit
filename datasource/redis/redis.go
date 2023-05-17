@@ -73,32 +73,38 @@ func Init() {
 			Addrs:      addrs,
 			MasterName: master,
 			Dial: func(addr string) (redis.Conn, error) {
-				c, err := redis.Dial("tcp", addr,
-					redis.DialConnectTimeout(time.Second),
-					redis.DialWriteTimeout(3*time.Second),
-					redis.DialDatabase(int(db)),
-					redis.DialPassword(auth),
-				)
+				timeout := 500 * time.Millisecond
+				c, err := redis.DialTimeout("tcp", addr, timeout, timeout, timeout)
 				if err != nil {
 					return nil, err
 				}
-				// c = redis.NewLoggingConn(c, log.Default(), "redis")
 				return c, nil
 			},
 		}
 		pool = &redis.Pool{
-			MaxIdle:     1000,
-			IdleTimeout: 240 * time.Second,
 			Dial: func() (redis.Conn, error) {
-				addr, err := sntnl.MasterAddr()
+				masterAddr, err := sntnl.MasterAddr()
 				if err != nil {
 					return nil, err
 				}
-				c, err := sntnl.Dial(addr)
+				c, err := redis.Dial("tcp", masterAddr)
 				if err != nil {
 					return nil, err
+				}
+				if auth != "" {
+					if _, err := c.Do("AUTH", auth); err != nil {
+						c.Close()
+						return nil, err
+					}
+				}
+				if db != 0 {
+					if _, err := c.Do("SELECT", db); err != nil {
+						c.Close()
+						return nil, err
+					}
 				}
 				return c, nil
+
 			},
 		}
 	}
