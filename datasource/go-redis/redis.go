@@ -50,9 +50,10 @@ func Init() {
 		}
 	}
 	opts := redis.UniversalOptions{
-		Addrs:    addrs,
-		Password: auth,
-		DB:       int(db),
+		Addrs:          addrs,
+		Password:       auth,
+		DB:             int(db),
+		RouteByLatency: true,
 	}
 	master := os.Getenv(EnvRedisMaster)
 	if len(addrs) > 1 {
