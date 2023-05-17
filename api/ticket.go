@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
 type TicketManager interface {
@@ -11,10 +11,10 @@ type TicketManager interface {
 }
 
 type redisTicketManager struct {
-	redis redis.Cmdable
+	redis redis.UniversalClient
 }
 
-func NewRedisTicketManager(redis redis.Cmdable) TicketManager {
+func NewRedisTicketManager(redis redis.UniversalClient) TicketManager {
 	return &redisTicketManager{redis: redis}
 }
 
