@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Kotodian/gokit/datasource"
 )
 
@@ -71,14 +73,13 @@ func TestInit(t *testing.T) {
 func TestDo(t *testing.T) {
 	os.Setenv("REDIS_POOL", "10.43.0.20:6379")
 	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
+	os.Setenv("REDIS_DB", "1")
 	Init()
 	redisConn := GetRedis()
 	defer redisConn.Close()
 
-	do, err := redisConn.Do("hget", "order:meterage:238024419472261", "charging_effect")
-	if err != nil {
-		t.Log(err)
-	}
+	do, err := redisConn.Do("set", "order:meterage:238024419472261", "charging_effect")
+	assert.Nil(t, err)
 	if do == nil {
 		t.Log("nil")
 	} else {
@@ -95,6 +96,7 @@ type Model struct {
 func TestHGet(t *testing.T) {
 	os.Setenv("REDIS_POOL", "redis-sentinel-0.redis-sentinel-headless.default:26379,redis-sentinel-1.redis-sentinel-headless.default:26379,redis-sentinel-2.redis-sentinel-headless.default:26379")
 	os.Setenv("REDIS_AUTH", "LhBIOQumQdgIm4ro")
+	os.Setenv("REDIS_DB", "1")
 	Init()
 	_, err := GetRedis().Do("set", "foo", "bar")
 	if err != nil {

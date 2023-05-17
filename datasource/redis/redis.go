@@ -55,17 +55,12 @@ func Init() {
 					redis.DialConnectTimeout(time.Second),
 					redis.DialWriteTimeout(3*time.Second),
 					redis.DialDatabase(int(db)),
+					redis.DialPassword(auth),
 				)
 				if err != nil {
 					return nil, err
 				}
 				// conn = redis.NewLoggingConn(conn, log.Default(), "redis")
-				if len(auth) > 0 {
-					_, err = conn.Do("auth", auth)
-					if err != nil {
-						return nil, err
-					}
-				}
 				return conn, nil
 			},
 		}
@@ -82,6 +77,7 @@ func Init() {
 					redis.DialConnectTimeout(time.Second),
 					redis.DialWriteTimeout(3*time.Second),
 					redis.DialDatabase(int(db)),
+					redis.DialPassword(auth),
 				)
 				if err != nil {
 					return nil, err
@@ -98,19 +94,9 @@ func Init() {
 				if err != nil {
 					return nil, err
 				}
-				c, err := redis.Dial("tcp", addr,
-					redis.DialConnectTimeout(time.Second),
-					redis.DialWriteTimeout(3*time.Second),
-					redis.DialDatabase(int(db)),
-				)
+				c, err := sntnl.Dial(addr)
 				if err != nil {
 					return nil, err
-				}
-				if len(auth) > 0 {
-					_, err = c.Do("auth", auth)
-					if err != nil {
-						return nil, err
-					}
 				}
 				return c, nil
 			},
