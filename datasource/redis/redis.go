@@ -86,6 +86,12 @@ func Init() {
 				if err != nil {
 					return nil, err
 				}
+				if len(auth) > 0 {
+					_, err = c.Do("auth", auth)
+					if err != nil {
+						return nil, err
+					}
+				}
 				// c = redis.NewLoggingConn(c, log.Default(), "redis")
 				return c, nil
 			},
