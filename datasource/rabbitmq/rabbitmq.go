@@ -13,7 +13,7 @@ import (
 )
 
 var dialer *amqpextra.Dialer
-var p *publisher.Publisher
+var P *publisher.Publisher
 
 func Init() {
 	var err error
@@ -28,7 +28,7 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	p, err = dialer.Publisher()
+	P, err = dialer.Publisher()
 	if err != nil {
 		panic(err)
 	}
@@ -41,7 +41,7 @@ func Publish(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	return p.Publish(publisher.Message{
+	return P.Publish(publisher.Message{
 		Context: ctx,
 		Key:     key,
 		Publishing: amqp091.Publishing{
@@ -54,7 +54,7 @@ func Publish(ctx context.Context,
 
 func PublishJSON(ctx context.Context,
 	key string, headers map[string]interface{}, body []byte) error {
-	return p.Publish(publisher.Message{
+	return P.Publish(publisher.Message{
 		Context: ctx,
 		Key:     key,
 		Publishing: amqp091.Publishing{

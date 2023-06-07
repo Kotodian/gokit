@@ -25,7 +25,6 @@ require (
 	github.com/tidwall/gjson v1.14.4
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/fasthttp v1.47.0
-	github.com/wumansgy/goEncrypt v1.1.0
 	github.com/yitter/idgenerator-go v1.3.3
 	go.mongodb.org/mongo-driver v1.11.6
 	go.uber.org/zap v1.24.0
